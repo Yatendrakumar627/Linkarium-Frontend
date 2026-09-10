@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      '/api': 'http://localhost:5000',
+      '/api': 'https://linkarium-backend.onrender.com',
     },
   },
   build: {
@@ -14,19 +14,19 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (id.includes('node_modules')) {
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) {
+            if (id.includes('/node_modules/react/') || id.includes('/node_modules/react-dom/') || id.includes('/node_modules/react-router-dom/')) {
               return 'vendor-react';
             }
-            if (id.includes('three') || id.includes('@react-three')) {
+            if (id.includes('/node_modules/three/') || id.includes('/node_modules/@react-three/')) {
               return 'vendor-three';
             }
-            if (id.includes('@mantine')) {
+            if (id.includes('/node_modules/@mantine/')) {
               return 'vendor-mantine';
             }
-            if (id.includes('framer-motion')) {
+            if (id.includes('/node_modules/framer-motion/')) {
               return 'vendor-motion';
             }
-            if (id.includes('@tabler/icons-react')) {
+            if (id.includes('/node_modules/@tabler/icons-react/')) {
               return 'vendor-icons';
             }
           }
