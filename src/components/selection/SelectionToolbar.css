@@ -1,0 +1,86 @@
+.selection-toolbar {
+  position: relative;
+  z-index: 100;
+  padding: 0 0 14px;
+  animation: toolbar-slide-up 250ms cubic-bezier(0.33, 1, 0.68, 1);
+}
+@keyframes toolbar-slide-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.selection-toolbar-inner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border-radius: 16px;
+  background: rgba(30, 27, 46, 0.92);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(139, 92, 246, 0.15);
+}
+.selection-close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.selection-close-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: var(--text-primary);
+}
+.selection-count {
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+.selection-toolbar-spacer {
+  flex: 1;
+}
+.selection-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 12px;
+  border-radius: 10px;
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.selection-action-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: var(--text-primary);
+}
+.selection-action-btn.danger {
+  color: #f87171;
+}
+.selection-action-btn.danger:hover {
+  background: rgba(239, 68, 68, 0.18);
+  color: #fca5a5;
+}
+
+@media (max-width: 600px) {
+  .selection-toolbar {
+    padding: 0 0 10px;
+  }
+  .selection-toolbar-inner {
+    padding: 8px 10px;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+  .selection-action-btn {
+    padding: 7px 9px;
+  }
+}

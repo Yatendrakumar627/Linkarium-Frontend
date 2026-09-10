@@ -1,0 +1,223 @@
+.sidebar {
+  width: var(--sidebar-w);
+  flex-shrink: 0;
+  height: calc(100vh - 32px);
+  display: flex;
+  flex-direction: column;
+  padding: 20px 14px;
+  margin: 16px;
+  margin-right: 0;
+  background: var(--surface-glass-strong);
+  border: 1px solid var(--border-glass);
+  border-radius: 20px;
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  overflow: hidden;
+}
+
+@media (max-width: 62em) {
+  .sidebar {
+    position: fixed;
+    left: 12px;
+    top: 12px;
+    bottom: 12px;
+    z-index: 60;
+    width: 232px;
+    margin: 0;
+    transform: translateX(-110%);
+    transition: transform 0.3s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  .sidebar.open {
+    transform: translateX(0);
+  }
+}
+
+.section-label {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-faint);
+  margin: 18px 10px 6px;
+}
+
+.sidebar-section-toggle {
+  cursor: pointer;
+  user-select: none;
+}
+.sidebar-section-title {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.sidebar-scroll > .section-label-head:first-child {
+  margin-top: 6px;
+}
+
+/* The single scrollable region between the brand and the bottom edge */
+.sidebar-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 2px 8px 18px;
+  flex-shrink: 0;
+}
+.sidebar-brand-name {
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-size: 19px;
+  font-weight: 600;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.section-label-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-right: 6px;
+}
+.sidebar-collections {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.sidebar-collections-empty {
+  color: var(--text-faint);
+  font-size: 12px;
+  padding: 6px 12px;
+}
+.sidebar-tags {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Minimal, subtle scrollbar for the sidebar scroll region */
+.sidebar-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+.sidebar-scroll::-webkit-scrollbar {
+  width: 5px;
+}
+.sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.sidebar-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+}
+.sidebar-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+/* Collapsed icon rail (desktop): narrow column, hover expands back to full width */
+@media (min-width: 62.001em) {
+  .sidebar {
+    transition: width 0.25s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  .sidebar.sidebar-collapsed {
+    position: relative;
+    width: 68px;
+    padding-left: 10px;
+    padding-right: 10px;
+    align-items: stretch;
+    overflow: hidden;
+  }
+  .sidebar.sidebar-collapsed .sidebar-scroll {
+    scrollbar-width: none;
+  }
+  .sidebar.sidebar-collapsed .sidebar-scroll::-webkit-scrollbar {
+    display: none;
+  }
+  .sidebar.sidebar-collapsed .nav-label,
+  .sidebar.sidebar-collapsed .nav-count,
+  .sidebar.sidebar-collapsed .sidebar-brand-name,
+  .sidebar.sidebar-collapsed .section-label,
+  .sidebar.sidebar-collapsed .sidebar-collections-empty,
+  .sidebar.sidebar-collapsed .collection-edit,
+  .sidebar.sidebar-collapsed .collection-delete {
+    display: none;
+  }
+  .sidebar.sidebar-collapsed .sidebar-brand {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+  }
+  .sidebar.sidebar-collapsed .nav-item {
+    justify-content: center;
+  }
+  .sidebar.sidebar-collapsed .section-label-head {
+    justify-content: center;
+    margin-right: 0;
+  }
+  .sidebar.sidebar-collapsed .sidebar-rail-toggle {
+    position: absolute;
+    top: 18px;
+    right: 10px;
+    padding: 6px;
+    border-radius: 10px;
+    color: var(--text-faint);
+  }
+  .sidebar.sidebar-collapsed .sidebar-rail-toggle:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.06);
+  }
+}
+
+/* Toggle button normally hidden; only visible on the collapsed rail (desktop) */
+.sidebar-rail-toggle {
+  display: none;
+}
+.collection-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.collection-edit {
+  padding: 3px;
+  margin-left: 2px;
+}
+.collection-delete {
+  padding: 3px;
+}
+.sidebar-collections .collection-edit,
+.sidebar-collections .collection-delete {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--dur-fast) var(--ease), visibility 0s linear var(--dur-fast);
+}
+.sidebar-collections .nav-item:hover .collection-edit,
+.sidebar-collections .nav-item:hover .collection-delete,
+.sidebar-collections .nav-item:focus-within .collection-edit,
+.sidebar-collections .nav-item:focus-within .collection-delete {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity var(--dur-fast) var(--ease), visibility 0s;
+}
+.nav-action-btn {
+  padding: 4px;
+}
+
+.sidebar-tag-icon {
+  color: var(--text-faint);
+}
+
+.mobile-scrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 4, 24, 0.6);
+  z-index: 50;
+  backdrop-filter: blur(4px);
+}

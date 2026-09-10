@@ -1,0 +1,48 @@
+.collection-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.collection-color-label {
+  font-size: 13px;
+  margin-bottom: 8px;
+  color: var(--text-primary);
+}
+.collection-colors {
+  display: flex;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+.collection-swatch {
+  position: relative;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.collection-swatch:hover {
+  transform: translateY(-1px);
+}
+.collection-swatch.selected {
+  border-color: transparent;
+  box-shadow: 0 0 0 2px var(--bg-deep), 0 0 0 4px #fff;
+  transform: scale(1.06);
+}
+.collection-swatch.selected::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #fff;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+.collection-form .collection-submit {
+  background: var(--accent-gradient);
+  border: none;
+}

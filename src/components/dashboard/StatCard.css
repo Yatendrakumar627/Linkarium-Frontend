@@ -1,0 +1,95 @@
+.stat-tile {
+  --lift: 0px;
+  --rx: 0deg;
+  --ry: 0deg;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-radius: 14px;
+  background: var(--surface-glass);
+  border: 1px solid var(--border-glass);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  padding: 10px 14px;
+  transform: perspective(950px) translateY(var(--lift)) rotateX(var(--rx)) rotateY(var(--ry));
+  transform-style: preserve-3d;
+  transition:
+    transform var(--dur-slow) var(--ease),
+    box-shadow var(--dur-slow) var(--ease),
+    border-color var(--dur-fast) var(--ease),
+    background var(--dur-fast) var(--ease);
+  will-change: transform;
+  overflow: hidden;
+}
+.stat-tile::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(240px 140px at var(--glow-x, 50%) var(--glow-y, 50%), rgba(139, 92, 246, 0.16), transparent 70%);
+  opacity: 0;
+  transition: opacity var(--dur-slow) var(--ease);
+  pointer-events: none;
+}
+.stat-tile:hover {
+  --lift: -4px;
+  border-color: var(--border-glass-strong);
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: var(--shadow-card), 0 0 0 1px rgba(139, 92, 246, 0.12);
+}
+.stat-tile:hover::before {
+  opacity: 1;
+}
+.stat-tile-inner {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  transition: transform var(--dur-slow) var(--ease);
+}
+.stat-tile:hover .stat-tile-inner {
+  transform: scale(1.02);
+}
+.stat-tile .stat-value {
+  font-size: 22px;
+}
+.stat-tile .stat-label {
+  font-size: 11.5px;
+  margin-top: 1px;
+}
+.stat-tile-body {
+  min-width: 0;
+}
+.stat-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.stat-icon.tint-violet {
+  color: #c4b5fd;
+  background: rgba(139, 92, 246, 0.14);
+}
+.stat-icon.tint-indigo {
+  color: #a5b4fc;
+  background: rgba(99, 102, 241, 0.14);
+}
+.stat-icon.tint-amber {
+  color: #fcd34d;
+  background: rgba(251, 191, 36, 0.13);
+}
+.stat-icon.tint-cyan {
+  color: #67e8f9;
+  background: rgba(34, 211, 238, 0.13);
+}
+.stat-value.skeleton {
+  width: 70px;
+  height: 22px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.035) 25%, rgba(255, 255, 255, 0.08) 50%, rgba(255, 255, 255, 0.035) 75%);
+  background-size: 1200px 100%;
+  animation: shimmer 2s infinite linear;
+}

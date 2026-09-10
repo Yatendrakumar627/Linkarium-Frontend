@@ -1,0 +1,11 @@
+.empty-state-title {
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+}
+.empty-state-subtitle {
+  color: var(--text-secondary);
+  font-size: 13.5px;
+  margin-top: 6px;
+  max-width: 380px;
+}

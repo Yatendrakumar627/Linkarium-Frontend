@@ -1,0 +1,120 @@
+.auth-page {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+}
+.auth-stage {
+  position: relative;
+  z-index: 2;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 72px;
+  padding: 40px 7vw;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+.auth-brand {
+  flex: 1;
+  max-width: 520px;
+  display: none;
+  flex-direction: column;
+  gap: 22px;
+}
+@media (min-width: 75em) {
+  .auth-brand {
+    display: flex;
+  }
+}
+.auth-brand-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.auth-brand-name {
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-size: 26px;
+  font-weight: 600;
+}
+.auth-brand-title {
+  font-size: 42px;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin: 6px 0 0;
+}
+.auth-brand-tagline {
+  color: var(--text-secondary);
+  font-size: 15px;
+  margin: 0 0 8px;
+}
+.auth-features {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.auth-feature {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.auth-feature-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  flex-shrink: 0;
+}
+.auth-feature-text {
+  color: var(--text-secondary);
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  padding: 34px;
+  margin: auto;
+  z-index: 3;
+}
+.auth-card-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 22px;
+}
+.auth-card-title {
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 20px;
+}
+.auth-card-subtitle {
+  color: var(--text-secondary);
+  font-size: 12.5px;
+}
+.auth-error {
+  margin-bottom: 14px;
+  padding: 8px 12px;
+  font-size: 12.5px;
+}
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.auth-form .mantine-Input-label {
+  font-size: 12.5px;
+}
+.auth-submit {
+  margin-top: 6px;
+  background: var(--accent-gradient);
+  border: none;
+}
+.auth-switch {
+  text-align: center;
+  margin-top: 18px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.auth-switch-link {
+  color: var(--accent-1);
+  font-weight: 600;
+}

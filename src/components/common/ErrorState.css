@@ -1,0 +1,20 @@
+.error-orb {
+  color: #ef4444;
+}
+.error-state-title {
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+}
+.error-state-message {
+  color: var(--text-secondary);
+  font-size: 13.5px;
+  margin-top: 6px;
+  max-width: 380px;
+}
+.error-state-retry {
+  margin-top: 16px;
+}
+.empty-wrap .error-state-retry {
+  color: var(--text-primary);
+}
