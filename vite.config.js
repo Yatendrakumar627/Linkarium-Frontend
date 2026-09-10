@@ -12,23 +12,24 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          // React core — tiny, changes rarely
-          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-          // Three.js ecosystem — very large, changes rarely
-          'vendor-three': ['three', '@react-three/fiber', '@react-three/drei'],
-          // Mantine UI — large, changes rarely
-          'vendor-mantine': [
-            '@mantine/core',
-            '@mantine/hooks',
-            '@mantine/modals',
-            '@mantine/notifications',
-            '@mantine/charts',
-          ],
-          // Animation — medium, separate cache entry
-          'vendor-motion': ['framer-motion'],
-          // Icons — large icon set
-          'vendor-icons': ['@tabler/icons-react'],
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) {
+              return 'vendor-react';
+            }
+            if (id.includes('three') || id.includes('@react-three')) {
+              return 'vendor-three';
+            }
+            if (id.includes('@mantine')) {
+              return 'vendor-mantine';
+            }
+            if (id.includes('framer-motion')) {
+              return 'vendor-motion';
+            }
+            if (id.includes('@tabler/icons-react')) {
+              return 'vendor-icons';
+            }
+          }
         },
       },
     },
