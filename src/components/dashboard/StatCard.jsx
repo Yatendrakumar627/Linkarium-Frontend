@@ -3,7 +3,7 @@ import './StatCard.css'
 
 const clamp = (v, min, max) => Math.min(Math.max(v, min), max)
 
-export default function StatCard({ icon: Icon, label, value, tint = 'violet', loading = false }) {
+export default function StatCard({ icon: Icon, label, value, tint = 'violet', loading = false, onClick }) {
   const ref = useRef(null)
 
   const handleMove = (e) => {
@@ -28,7 +28,25 @@ export default function StatCard({ icon: Icon, label, value, tint = 'violet', lo
   }
 
   return (
-    <div className="stat-tile" ref={ref} onPointerMove={handleMove} onPointerLeave={handleLeave}>
+    <div
+      className={`stat-tile${onClick ? ' clickable' : ''}`}
+      ref={ref}
+      onPointerMove={handleMove}
+      onPointerLeave={handleLeave}
+      onClick={onClick}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={
+        onClick
+          ? (e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                onClick()
+              }
+            }
+          : undefined
+      }
+    >
       <div className="stat-tile-inner">
         <div className={`stat-icon tint-${tint}`}>
           <Icon size={18} stroke={1.9} />
