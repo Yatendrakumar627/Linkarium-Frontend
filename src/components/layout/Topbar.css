@@ -32,8 +32,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  flex: 1 1 140px;
-  min-width: 0;
+  flex: 1 1 auto;
 }
 .search-input {
   flex: 1;
@@ -44,7 +43,7 @@
 }
 .topbar-sort {
   flex-shrink: 0;
-  width: 150px;
+  width: 130px;
 }
 .topbar .search-input .mantine-Input-input,
 .topbar .topbar-sort .mantine-Input-input {
@@ -106,7 +105,7 @@
   transform: translateY(-1px);
 }
 
-/* Desktop row ordering: ☰ title search sort · 3D New Link · ⋯ avatar */
+/* Desktop row ordering: ☰ title search sort · quick-save · 3D New Link · ⋯ avatar */
 .topbar .menu-btn {
   order: 1;
 }
@@ -116,17 +115,20 @@
 .topbar .topbar-controls {
   order: 3;
 }
-.topbar .topbar-spacer {
+.topbar .quick-save {
   order: 4;
 }
-.topbar .topbar-visual-desktop {
+.topbar .topbar-spacer {
   order: 5;
 }
-.topbar .topbar-newlink-desktop {
+.topbar .topbar-visual-desktop {
   order: 6;
 }
-.topbar .topbar-right {
+.topbar .topbar-newlink-desktop {
   order: 7;
+}
+.topbar .topbar-right {
+  order: 8;
 }
 
 @media (max-width: 75em) {
@@ -139,10 +141,17 @@
   .topbar-title {
     max-width: 24%;
   }
+  .topbar .quick-save {
+    flex-basis: 196px;
+  }
 }
 
-/* Mobile header: swap to the compact layout (☰ search add link 3D avatar) */
+/* Mobile header: swap to the compact layout (☰ search add 3D avatar + full-width quick-save below) */
 @media (max-width: 62em) {
+  .topbar {
+    flex-wrap: wrap;
+    gap: 8px 6px;
+  }
   .topbar .topbar-title,
   .topbar .topbar-sort,
   .topbar .topbar-spacer,
@@ -160,15 +169,34 @@
   }
   .topbar .topbar-controls {
     order: 2;
-  }
-  .topbar .topbar-newlink-mobile {
-    order: 3;
+    flex: 1 1 0%;
+    min-width: 0;
   }
   .topbar .topbar-visual-mobile {
+    order: 3;
+  }
+  .topbar .topbar-newlink-mobile {
     order: 4;
   }
   .topbar .topbar-right {
     order: 5;
+  }
+  .topbar .quick-save {
+    order: 6;
+    flex: 1 1 100%;
+  }
+  .quick-save-box {
+    height: 40px;
+  }
+  .topbar .search-input {
+    min-width: 0;
+    width: 100%;
+  }
+  .topbar-newlink-mobile .new-link-label {
+    display: none;
+  }
+  .topbar-newlink-mobile {
+    padding: 0 10px;
   }
   .topbar-right {
     gap: 6px;

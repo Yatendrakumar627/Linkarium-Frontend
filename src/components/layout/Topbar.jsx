@@ -5,6 +5,7 @@ import { useUiStore } from '../../store/uiStore'
 import { linksApi } from '../../api/endpoints'
 import ProfileDropdown from '../profile/ProfileDropdown'
 import ImportLinksModal from '../ImportLinksModal'
+import QuickSave from './QuickSave'
 import './Topbar.css'
 
 // Determines if we are on a mobile-sized viewport
@@ -117,17 +118,17 @@ export default function Topbar({ onMenu }) {
         </div>
       )}
 
+      <QuickSave />
+
       <div className="topbar-spacer" />
 
-      {/* Desktop: labelled toggle */}
+      {/* Desktop: visual toggle */}
       <button className={`visual-toggle topbar-visual-desktop ${visualMode ? 'active' : ''}`} onClick={toggleVisual} title="Toggle visual view">
         {visualMode ? <IconLayoutGrid size={15} /> : <IconBox size={15} />}
-        <span className="vt-label">{visualMode ? 'Grid View' : 'Visual View'}</span>
       </button>
       {/* Mobile: compact 3D toggle */}
       <button className={`visual-toggle topbar-visual-mobile ${visualMode ? 'active' : ''}`} onClick={toggleVisual} aria-label="Toggle visual view">
         {visualMode ? <IconLayoutGrid size={15} /> : <IconBox size={15} />}
-        <span className="vt-label">{visualMode ? 'Grid' : '3D'}</span>
       </button>
 
       {/* Desktop: New Link */}
