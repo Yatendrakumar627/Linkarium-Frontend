@@ -7,6 +7,7 @@ export class ApiError extends Error {
   constructor(message, status) {
     super(message)
     this.status = status
+    this.data = null
   }
 }
 
@@ -47,7 +48,9 @@ async function request(path, { method = 'GET', body, auth = true } = {}) {
   }
 
   if (!res.ok) {
-    throw new ApiError(data?.error || res.statusText || 'Request failed', res.status)
+    const err = new ApiError(data?.error || res.statusText || 'Request failed', res.status)
+    err.data = data
+    throw err
   }
   return data
 }

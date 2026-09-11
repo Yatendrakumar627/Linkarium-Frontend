@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Button, Combobox, InputBase, Loader, Modal, TagsInput, TextInput, Textarea, Switch, useCombobox } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
-import { IconCheck, IconCornerDownLeft, IconEdit, IconLink, IconSparkles } from '@tabler/icons-react'
+import { IconAlertTriangle, IconCheck, IconCornerDownLeft, IconEdit, IconLink, IconSparkles } from '@tabler/icons-react'
 import { ACCENT_COLORS } from '../../constants'
 import { useLinkStore } from '../../store/linkStore'
 import { useUiStore } from '../../store/uiStore'
@@ -108,6 +108,7 @@ function LinkEditorForm({ link: editingLink, links, collections, tags, addLink, 
   const [extractError, setExtractError] = useState(false)
   const [siteName, setSiteName] = useState('')
   const [suggested, setSuggested] = useState(false)
+  const [duplicate, setDuplicate] = useState(null)
 
   const suggestSeq = useRef(0)
   const busyRef = useRef(false)
@@ -185,6 +186,32 @@ function LinkEditorForm({ link: editingLink, links, collections, tags, addLink, 
       }
       onClose()
     } catch (err) {
+      if (err.status === 409 && err.data?.existing && !editingLink) {
+        setDuplicate(err.data.existing)
+        return
+      }
+      notifications.show({ message: err.message || 'Something went wrong', color: 'red' })
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const replaceWithMine = async () => {
+    if (busy || !duplicate) return
+    setBusy(true)
+    try {
+      await updateLink(duplicate._id, {
+        title: title.trim(),
+        url: url.trim(),
+        description: description.trim(),
+        tags: linkTags,
+        collectionId: collectionId || undefined,
+        color,
+        favorite,
+      })
+      notifications.show({ message: 'Replaced with your new link', color: 'green' })
+      onClose()
+    } catch (err) {
       notifications.show({ message: err.message || 'Something went wrong', color: 'red' })
     } finally {
       setBusy(false)
@@ -222,6 +249,51 @@ function LinkEditorForm({ link: editingLink, links, collections, tags, addLink, 
     )
   } else {
     previewStatus = 'Enter a valid URL to fetch its site info'
+  }
+
+  if (duplicate) {
+    return (
+      <div className="le-conflict">
+        <div className="le-conflict-header">
+          <IconAlertTriangle size={20} className="le-conflict-icon" />
+          <div>
+            <div className="le-conflict-title">Duplicate link found</div>
+            <div className="le-conflict-sub">
+              This URL is already saved. Choose which link to keep — only one will be kept.
+            </div>
+          </div>
+        </div>
+
+        <div className="le-conflict-compare">
+          <div className="le-conflict-card">
+            <div className="le-conflict-card-head">Existing link</div>
+            <div className="le-conflict-card-title">{duplicate.title || 'Untitled'}</div>
+            <div className="le-conflict-card-url">{duplicate.url}</div>
+            <div className="le-conflict-card-meta">
+              Saved {new Date(duplicate.createdAt).toLocaleDateString()}
+            </div>
+          </div>
+          <div className="le-conflict-vs">vs</div>
+          <div className="le-conflict-card le-conflict-card-new">
+            <div className="le-conflict-card-head">Your new link</div>
+            <div className="le-conflict-card-title">{title.trim() || 'Untitled'}</div>
+            <div className="le-conflict-card-url">{url.trim()}</div>
+          </div>
+        </div>
+
+        <div className="le-conflict-actions">
+          <Button type="button" size="md" variant="light" className="le-cancel" onClick={() => setDuplicate(null)} disabled={busy}>
+            Edit
+          </Button>
+          <Button type="button" size="md" variant="light" className="le-cancel" onClick={onClose} disabled={busy}>
+            Keep existing
+          </Button>
+          <Button type="button" size="md" loading={busy} className="le-submit gradient-btn" onClick={replaceWithMine}>
+            Replace with mine
+          </Button>
+        </div>
+      </div>
+    )
   }
 
   return (

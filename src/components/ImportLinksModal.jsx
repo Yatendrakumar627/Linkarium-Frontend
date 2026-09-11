@@ -93,6 +93,11 @@ export default function ImportLinksModal({ opened, onClose }) {
                 <Text size="sm"><strong>{result.imported}</strong> link(s) imported successfully.</Text>
               </Alert>
             )}
+            {result.skipped > 0 && (
+              <Alert color="yellow" icon={<IconX size={16} />} radius="md" mt="sm">
+                <Text size="sm"><strong>{result.skipped}</strong> duplicate link(s) skipped — already saved.</Text>
+              </Alert>
+            )}
             {result.errors?.length > 0 && (
               <Alert color="red" icon={<IconX size={16} />} radius="md" mt="sm">
                 <Text size="sm" fw={500} mb={4}>{result.errors.length} error(s):</Text>
