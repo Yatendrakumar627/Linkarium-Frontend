@@ -17,6 +17,7 @@ const SORTS = [
   { value: 'oldest', label: 'Oldest first' },
   { value: 'visits', label: 'Most visited' },
   { value: 'favorite', label: 'Favorites first' },
+  { value: 'name', label: 'Name (A–Z)' },
 ]
 
 function viewTitle(view) {
