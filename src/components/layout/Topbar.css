@@ -1,0 +1,299 @@
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 0 14px;
+  flex-wrap: nowrap;
+}
+.page-title {
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-primary);
+}
+.page-subtitle {
+  color: var(--text-secondary);
+  font-size: 12px;
+  margin-top: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.topbar-title {
+  flex: 0 0 auto;
+  min-width: 0;
+}
+.topbar-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.search-input {
+  flex: 1 1 200px;
+  min-width: 140px;
+  max-width: 340px;
+}
+.search-filter-btn {
+  flex-shrink: 0;
+}
+.search-kbd,
+.search-kbd-btn {
+  font-size: 11px;
+  font-family: inherit;
+  font-weight: 600;
+  color: var(--text-faint);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 5px;
+  padding: 1px 6px;
+  margin-right: 4px;
+  line-height: 1.4;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.search-kbd-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #fff;
+}
+.topbar-spacer {
+  flex: 0 0 6px;
+}
+.topbar-sort {
+  flex-shrink: 0;
+  width: 135px;
+  min-width: 125px;
+}
+.topbar .search-input .mantine-Input-input,
+.topbar .topbar-sort .mantine-Input-input {
+  background: var(--surface-glass);
+  border-color: var(--border-glass);
+  border-radius: 12px;
+  font-size: 13px;
+  transition: all var(--dur-fast) var(--ease);
+}
+.topbar .search-input .mantine-Input-input:focus,
+.topbar .topbar-sort .mantine-Input-input:focus {
+  border-color: rgba(99, 102, 241, 0.5);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+.topbar .topbar-new-link {
+  flex-shrink: 0;
+  white-space: nowrap;
+  background: var(--accent-gradient);
+  border: none;
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.35);
+}
+.topbar .visual-toggle {
+  height: 36px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px;
+  border-radius: 10px;
+  background: var(--surface-glass);
+  border: 1px solid var(--border-glass);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all var(--dur-fast) var(--ease);
+}
+.topbar .visual-toggle:hover {
+  color: #fff;
+  border-color: var(--border-glass-strong);
+  background: rgba(255, 255, 255, 0.08);
+}
+.topbar .visual-toggle.active {
+  background: rgba(99, 102, 241, 0.18);
+  border-color: rgba(99, 102, 241, 0.45);
+  color: #a5b4fc;
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.25);
+}
+.topbar .action-btn.mobile-only {
+  padding: 6px;
+  border-radius: 10px;
+}
+
+/* Mobile-only variants (topbar-visual-mobile / topbar-newlink-mobile) are hidden on desktop */
+.topbar .topbar-visual-mobile,
+.topbar .topbar-newlink-mobile {
+  display: none;
+}
+
+/* Right-side cluster: more menu, avatar */
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+.topbar-icon-btn {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid var(--border-glass);
+  background: var(--surface-glass);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition:
+    color var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease),
+    background var(--dur-fast) var(--ease),
+    transform var(--dur-fast) var(--ease);
+}
+.topbar-icon-btn:hover {
+  color: #fff;
+  border-color: var(--border-glass-strong);
+  background: rgba(255, 255, 255, 0.06);
+  transform: translateY(-1px);
+}
+
+/* Desktop row ordering: ☰ title search sort · quick-save · 3D New Link · ⋯ avatar */
+.topbar .menu-btn {
+  order: 1;
+}
+.topbar .topbar-title {
+  order: 2;
+}
+.topbar .topbar-controls {
+  order: 3;
+}
+.topbar .quick-save {
+  order: 4;
+}
+.topbar .topbar-spacer {
+  order: 5;
+}
+.topbar .topbar-visual-desktop {
+  order: 6;
+}
+.topbar .topbar-newlink-desktop {
+  order: 7;
+}
+.topbar .topbar-right {
+  order: 8;
+}
+
+@media (max-width: 80em) {
+  .topbar {
+    gap: 9px;
+  }
+  .page-title {
+    font-size: 20px;
+  }
+  .page-subtitle {
+    display: none;
+  }
+  .topbar-title {
+    max-width: 180px;
+  }
+  .topbar-sort {
+    width: 120px;
+  }
+  .visual-toggle-label {
+    display: none;
+  }
+  .topbar .visual-toggle {
+    padding: 0 10px;
+  }
+}
+
+@media (max-width: 68em) {
+  .topbar-sort {
+    display: none !important;
+  }
+}
+
+/* Mobile header: swap to the compact layout (☰ search add 3D avatar + full-width quick-save below) */
+@media (max-width: 62em) {
+  .topbar {
+    flex-wrap: wrap;
+    gap: 8px 6px;
+  }
+  .topbar .topbar-title,
+  .topbar .topbar-sort,
+  .topbar .topbar-spacer,
+  .topbar .topbar-visual-desktop,
+  .topbar .topbar-newlink-desktop,
+  .topbar .more-wrap {
+    display: none !important;
+  }
+  .topbar .topbar-visual-mobile,
+  .topbar .topbar-newlink-mobile {
+    display: inline-flex;
+  }
+  .topbar .menu-btn {
+    order: 1;
+  }
+  .topbar .topbar-controls {
+    order: 2;
+    flex: 1 1 0%;
+    min-width: 0;
+  }
+  .topbar .topbar-visual-mobile {
+    order: 3;
+  }
+  .topbar .topbar-newlink-mobile {
+    order: 4;
+  }
+  .topbar .topbar-right {
+    order: 5;
+  }
+  .topbar .quick-save {
+    order: 6;
+    flex: 1 1 100%;
+  }
+  .quick-save-box {
+    height: 40px;
+  }
+  .topbar .search-input {
+    min-width: 0;
+    width: 100%;
+  }
+  .search-box {
+    flex: 1 1 auto;
+  }
+  .topbar-newlink-mobile .new-link-label {
+    display: none;
+  }
+  .topbar-newlink-mobile {
+    padding: 0 10px;
+  }
+  .topbar-right {
+    gap: 6px;
+  }
+  .topbar .topbar-icon-btn,
+  .topbar .pd-trigger {
+    width: 36px;
+    height: 36px;
+  }
+  .topbar .pd-trigger .pd-avatar {
+    width: 27px;
+    height: 27px;
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 30em) {
+  .topbar {
+    gap: 6px;
+    padding-bottom: 12px;
+  }
+  .search-input {
+    min-width: 64px;
+  }
+}

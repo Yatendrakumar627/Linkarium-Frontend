@@ -1,0 +1,533 @@
+.triage-modal-content {
+  background: rgba(11, 15, 25, 0.96) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 18px !important;
+  box-shadow: 
+    0 0 0 1px rgba(255, 255, 255, 0.05),
+    0 24px 64px -12px rgba(0, 0, 0, 0.85),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14) !important;
+  backdrop-filter: blur(28px) !important;
+  -webkit-backdrop-filter: blur(28px) !important;
+  max-width: min(840px, calc(100vw - 20px)) !important;
+  margin: 10px auto !important;
+}
+
+.triage-modal-header {
+  background: transparent !important;
+  padding: 1.1rem 1.4rem !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07) !important;
+}
+
+.triage-modal-body {
+  padding: 1.1rem 1.4rem !important;
+  max-height: calc(85vh - 70px) !important;
+  overflow-y: auto;
+}
+
+.triage-title-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.triage-title-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(6, 182, 212, 0.2) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #34d399;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.triage-main-title {
+  display: block;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #f8fafc;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.triage-sub-title {
+  display: block;
+  font-size: 0.78rem;
+  color: #64748b;
+  font-weight: 400;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.triage-progress-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.triage-progress-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.triage-progress-label {
+  font-size: 0.82rem;
+  color: #94a3b8;
+  line-height: 1.35;
+}
+
+.triage-progress-highlight {
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.triage-progress-pct {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #34d399;
+  font-family: inherit;
+  flex-shrink: 0;
+}
+
+.triage-cluster-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.triage-cluster-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.18s ease;
+}
+
+.triage-cluster-card:hover {
+  background: rgba(255, 255, 255, 0.045);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.triage-card-header {
+  display: flex;
+  flex-direction: column;
+  padding: 12px 14px;
+  gap: 8px;
+}
+
+/* Card Top Row */
+.triage-card-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+
+.triage-card-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+
+.triage-favicon-box {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.triage-favicon {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  z-index: 1;
+}
+
+.triage-fallback-icon {
+  position: absolute;
+  color: #64748b;
+}
+
+.triage-domain-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+
+.triage-domain-text {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #f1f5f9;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.triage-count-pill {
+  background: rgba(56, 189, 248, 0.14);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: #38bdf8;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 999px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.triage-card-tools {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.triage-expand-toggle,
+.triage-delete-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #94a3b8;
+  border-radius: 6px;
+  padding: 5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.triage-expand-toggle:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f8fafc;
+}
+
+.triage-delete-btn:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #f87171;
+}
+
+.triage-preview-text {
+  font-size: 0.74rem;
+  color: #64748b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.3;
+}
+
+/* Card Actions Row */
+.triage-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 2px;
+  flex-wrap: wrap;
+}
+
+.triage-move-inline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 200px;
+}
+
+.triage-select {
+  flex: 1;
+  min-width: 120px;
+}
+
+.triage-move-btn {
+  flex-shrink: 0;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.triage-new-btn {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.triage-new-desktop {
+  display: inline;
+}
+
+.triage-new-mobile {
+  display: none;
+}
+
+/* Inline Creator Drawer */
+.triage-inline-creator {
+  background: rgba(0, 0, 0, 0.28);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 10px 14px;
+}
+
+.triage-creator-label {
+  font-size: 0.76rem;
+  color: #94a3b8;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.triage-creator-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.triage-creator-input {
+  flex: 1;
+  min-width: 140px;
+}
+
+.triage-color-picker {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.triage-swatch {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: transform 0.12s ease;
+}
+
+.triage-swatch:hover,
+.triage-swatch.active {
+  transform: scale(1.2);
+  border-color: #ffffff;
+}
+
+.triage-expanded-tray {
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 8px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+.triage-link-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.78rem;
+  padding: 3px 0;
+}
+
+.triage-link-title {
+  color: #cbd5e1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.triage-link-url {
+  color: #38bdf8;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  text-decoration: none;
+  font-size: 0.72rem;
+  flex-shrink: 0;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.triage-link-url:hover {
+  text-decoration: underline;
+}
+
+.triage-complete-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+  text-align: center;
+}
+
+.triage-complete-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(56, 189, 248, 0.2) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #34d399;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.triage-complete-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #f8fafc;
+  margin: 0 0 6px;
+}
+
+.triage-complete-sub {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  max-width: 360px;
+  margin: 0 0 1.25rem;
+}
+
+.triage-done-btn {
+  padding: 0.5rem 1.5rem;
+}
+
+/* =========================================================================
+   Mobile Responsiveness Overhauls (< 640px)
+   ========================================================================= */
+@media (max-width: 640px) {
+  .triage-modal-content {
+    border-radius: 14px !important;
+    margin: 8px auto !important;
+    max-width: calc(100vw - 16px) !important;
+  }
+
+  .triage-modal-header {
+    padding: 10px 12px !important;
+  }
+
+  .triage-modal-body {
+    padding: 10px 10px !important;
+    max-height: calc(82vh - 56px) !important;
+  }
+
+  .triage-main-title {
+    font-size: 0.95rem;
+  }
+
+  .triage-sub-title {
+    font-size: 0.72rem;
+  }
+
+  .triage-progress-card {
+    padding: 8px 10px;
+    margin-bottom: 10px;
+  }
+
+  .triage-progress-label {
+    font-size: 0.76rem;
+  }
+
+  .triage-progress-pct {
+    font-size: 0.76rem;
+  }
+
+  .triage-card-header {
+    padding: 10px 10px;
+    gap: 7px;
+  }
+
+  .triage-favicon-box {
+    width: 26px;
+    height: 26px;
+  }
+
+  .triage-favicon {
+    width: 14px;
+    height: 14px;
+  }
+
+  .triage-domain-text {
+    font-size: 0.86rem;
+  }
+
+  .triage-count-pill {
+    font-size: 0.62rem;
+    padding: 1px 6px;
+  }
+
+  .triage-card-actions {
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .triage-move-inline {
+    min-width: 0;
+    gap: 5px;
+  }
+
+  .triage-select {
+    min-width: 80px;
+  }
+
+  .triage-move-btn {
+    padding: 0 8px;
+    font-size: 0.72rem;
+    height: 30px;
+  }
+
+  .triage-new-btn {
+    padding: 0 8px;
+    font-size: 0.72rem;
+    height: 30px;
+  }
+
+  .triage-new-desktop {
+    display: none;
+  }
+
+  .triage-new-mobile {
+    display: inline;
+  }
+
+  .triage-creator-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .triage-creator-input {
+    width: 100%;
+  }
+
+  .triage-color-picker {
+    justify-content: flex-start;
+  }
+
+  .triage-link-url {
+    max-width: 140px;
+  }
+}

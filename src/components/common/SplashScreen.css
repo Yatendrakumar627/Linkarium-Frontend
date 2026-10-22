@@ -1,0 +1,24 @@
+.splash-screen {
+  height: 100%;
+  display: grid;
+  place-items: center;
+  background: var(--bg-deep);
+}
+.splash-inner {
+  text-align: center;
+}
+.splash-logo {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 18px;
+}
+.splash-title {
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-size: 22px;
+  font-weight: 600;
+}
+.splash-subtitle {
+  color: var(--text-faint);
+  font-size: 13px;
+  margin-top: 4px;
+}
