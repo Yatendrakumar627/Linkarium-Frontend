@@ -21,10 +21,25 @@ console.warn = (...args) => {
 
 import App from './App.jsx'
 import { theme } from './theme'
-import { initOfflineSync } from './pwa/offline'
+import { initOfflineSync, getCachedLinks, removeCachedLinks } from './pwa/offline'
+import { useLinkStore } from './store/linkStore'
 import { api } from './api/client'
 
-initOfflineSync(api)
+// Replay queued offline mutations, then reconcile the optimistic local state:
+// offline-created links have temporary ids, so refetching the active view is
+// the simplest way to pick up the real server records.
+initOfflineSync(api, async () => {
+  const cached = await getCachedLinks().catch(() => [])
+  const tempIds = cached
+    .filter((l) => l.offline || String(l._id).startsWith('offline-'))
+    .map((l) => l._id)
+  if (tempIds.length) await removeCachedLinks(tempIds).catch(() => {})
+  const store = useLinkStore.getState()
+  await Promise.allSettled([
+    store.fetchLinks(store.lastParams || {}, { reset: true }),
+    store.fetchMeta(),
+  ])
+})
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

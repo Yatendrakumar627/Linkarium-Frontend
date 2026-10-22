@@ -6,7 +6,15 @@ import {
   analyticsApi,
   linkHealthApi,
 } from '../api/endpoints'
-import { cacheLinks, cacheCollections, cacheTags, getCachedLinks } from '../pwa/offline'
+import {
+  cacheLinks,
+  cacheCollections,
+  cacheTags,
+  getCachedLinks,
+  queueMutation,
+  removeCachedLinks,
+  clearOutbox,
+} from '../pwa/offline'
 
 const PAGE_SIZE = 50
 // The trash view renders "select all" over the visible list; fetch up to the
@@ -23,6 +31,29 @@ export const useLinkStore = create((set, get) => {
   let requestId = 0
   // Client-side mirror of the server's visit debounce window.
   const lastVisitAt = new Map()
+
+  // A write that fails because the network is gone is queued in IndexedDB and
+  // replayed by initOfflineSync() once the browser is back online.
+  const isOfflineError = (err) => {
+    if (err?.status === 0) return true
+    return typeof navigator !== 'undefined' && navigator.onLine === false && err?.status === undefined
+  }
+
+  const queueIfOffline = async (err, method, path, body) => {
+    if (!isOfflineError(err)) return false
+    await queueMutation(method, path, body)
+    return true
+  }
+
+  // Temporary id for a link created while offline. It is replaced by the real
+  // server record when the outbox is replayed and the list is refetched.
+  const offlineLinkId = () => {
+    const random =
+      typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(16).slice(2)}`
+    return `offline-${random}`
+  }
 
   // True when the current list is narrowed by something a mutation can change
   // (a query, tag, collection or the favorites view). Mutating a link locally
@@ -69,6 +100,9 @@ export const useLinkStore = create((set, get) => {
     // second user on the same device never sees the previous user's links.
     reset() {
       requestId++ // invalidate any in-flight pagination responses
+      // A queued mutation belongs to the account that was signed in when it
+      // was made; never replay it into a different account.
+      clearOutbox().catch(() => {})
       set({
         links: [],
         total: 0,
@@ -229,22 +263,61 @@ export const useLinkStore = create((set, get) => {
     },
 
     async addLink(payload) {
-      const link = await linksApi.create(payload)
+      let link
+      let queued = false
+      try {
+        link = await linksApi.create(payload)
+      } catch (err) {
+        queued = await queueIfOffline(err, 'POST', '/links', payload)
+        if (!queued) throw err
+        const now = new Date().toISOString()
+        link = {
+          _id: offlineLinkId(),
+          tags: [],
+          favorite: false,
+          visits: 0,
+          note: '',
+          ...payload,
+          createdAt: now,
+          updatedAt: now,
+          offline: true,
+        }
+      }
+
+      await cacheLinks([link]).catch(() => {})
+
       // Refetch through the active filter instead of blindly splicing the new
       // link in — it may not match the current view (favorites/tag/collection)
-      // and would corrupt total/hasMore and the pagination offset.
+      // and would corrupt total/hasMore and the pagination offset. While
+      // offline there is no server list to refetch, so show it optimistically.
       const params = get().lastParams
-      set((s) => ({
-        mapLinks: s.mapLoaded ? [link, ...s.mapLinks] : s.mapLinks,
-      }))
-      if (params) await get().fetchLinks(params, { reset: true })
+      if (queued) {
+        set((s) => ({
+          links: [link, ...s.links],
+          total: s.total + 1,
+          mapLinks: s.mapLoaded ? [link, ...s.mapLinks] : s.mapLinks,
+        }))
+      } else {
+        set((s) => ({
+          mapLinks: s.mapLoaded ? [link, ...s.mapLinks] : s.mapLinks,
+        }))
+        if (params) await get().fetchLinks(params, { reset: true })
+      }
       get().refreshTags()
       get().refreshSummary()
       return link
     },
 
     async updateLink(id, payload) {
-      const updated = await linksApi.update(id, payload)
+      let updated
+      try {
+        updated = await linksApi.update(id, payload)
+      } catch (err) {
+        if (!(await queueIfOffline(err, 'PATCH', `/links/${id}`, payload))) throw err
+        const existing = get().links.find((l) => l._id === id)
+        updated = { ...(existing || { _id: id }), ...payload }
+      }
+      await cacheLinks([updated]).catch(() => {})
       set((s) => ({
         links: s.links.map((l) => (l._id === id ? updated : l)),
         mapLinks: s.mapLoaded ? s.mapLinks.map((l) => (l._id === id ? updated : l)) : s.mapLinks,
@@ -255,7 +328,12 @@ export const useLinkStore = create((set, get) => {
     },
 
     async removeLink(id) {
-      await linksApi.remove(id)
+      try {
+        await linksApi.remove(id)
+      } catch (err) {
+        if (!(await queueIfOffline(err, 'DELETE', `/links/${id}`))) throw err
+      }
+      await removeCachedLinks([id]).catch(() => {})
       set((s) => ({
         links: s.links.filter((l) => l._id !== id),
         mapLinks: s.mapLoaded ? s.mapLinks.filter((l) => l._id !== id) : s.mapLinks,
@@ -266,7 +344,12 @@ export const useLinkStore = create((set, get) => {
     },
 
     async bulkDelete(ids) {
-      await linksApi.bulkDelete(ids)
+      try {
+        await linksApi.bulkDelete(ids)
+      } catch (err) {
+        if (!(await queueIfOffline(err, 'POST', '/links/bulk-delete', { ids }))) throw err
+      }
+      await removeCachedLinks(ids).catch(() => {})
       const idSet = new Set(ids)
       set((s) => ({
         links: s.links.filter((l) => !idSet.has(l._id)),
@@ -278,8 +361,16 @@ export const useLinkStore = create((set, get) => {
     },
 
     async bulkMove(ids, collectionId) {
-      await linksApi.bulkMove(ids, collectionId)
+      try {
+        await linksApi.bulkMove(ids, collectionId)
+      } catch (err) {
+        if (!(await queueIfOffline(err, 'POST', '/links/bulk-move', { ids, collectionId }))) throw err
+      }
       const idSet = new Set(ids)
+      const touched = get()
+        .links.filter((l) => idSet.has(l._id))
+        .map((l) => ({ ...l, collectionId }))
+      await cacheLinks(touched).catch(() => {})
       set((s) => ({
         links: s.links.map((l) => (idSet.has(l._id) ? { ...l, collectionId } : l)),
         mapLinks: s.mapLoaded
@@ -310,14 +401,18 @@ export const useLinkStore = create((set, get) => {
             : s.links,
         }))
       } catch (err) {
-        // Revert to the state before the optimistic update.
-        if (previous) {
-          set((s) => ({
-            links: s.links.map((l) => (l._id === id ? previous : l)),
-            mapLinks: s.mapLoaded ? s.mapLinks.map((l) => (l._id === id ? previous : l)) : s.mapLinks,
-          }))
+        // Queued for replay: the optimistic removal above is the correct local
+        // state, so keep it instead of reverting.
+        if (!(await queueIfOffline(err, 'POST', `/links/${id}/archive`))) {
+          // Revert to the state before the optimistic update.
+          if (previous) {
+            set((s) => ({
+              links: s.links.map((l) => (l._id === id ? previous : l)),
+              mapLinks: s.mapLoaded ? s.mapLinks.map((l) => (l._id === id ? previous : l)) : s.mapLinks,
+            }))
+          }
+          throw err
         }
-        throw err
       }
       get().refreshSummary()
       get().refreshHealth()
@@ -339,19 +434,25 @@ export const useLinkStore = create((set, get) => {
           }))
         }
       } catch (err) {
-        if (previous) {
-          set((s) => ({
-            links: s.links.map((l) => (l._id === id ? previous : l)),
-          }))
+        if (!(await queueIfOffline(err, 'POST', `/links/${id}/unarchive`))) {
+          if (previous) {
+            set((s) => ({
+              links: s.links.map((l) => (l._id === id ? previous : l)),
+            }))
+          }
+          throw err
         }
-        throw err
       }
       get().refreshSummary()
       get().refreshHealth()
     },
 
     async bulkArchive(ids) {
-      await linksApi.bulkArchive(ids)
+      try {
+        await linksApi.bulkArchive(ids)
+      } catch (err) {
+        if (!(await queueIfOffline(err, 'POST', '/links/bulk-archive', { ids }))) throw err
+      }
       const idSet = new Set(ids)
       set((s) => ({
         links: isArchiveView(s.lastParams) ? s.links : s.links.filter((l) => !idSet.has(l._id)),
@@ -362,7 +463,11 @@ export const useLinkStore = create((set, get) => {
     },
 
     async bulkUnarchive(ids) {
-      await linksApi.bulkUnarchive(ids)
+      try {
+        await linksApi.bulkUnarchive(ids)
+      } catch (err) {
+        if (!(await queueIfOffline(err, 'POST', '/links/bulk-unarchive', { ids }))) throw err
+      }
       const idSet = new Set(ids)
       set((s) => ({
         links: s.links.filter((l) => !idSet.has(l._id)),
@@ -380,7 +485,11 @@ export const useLinkStore = create((set, get) => {
     },
 
     async bulkTag(ids, tags, mode = 'add') {
-      await linksApi.bulkTag(ids, tags, mode)
+      try {
+        await linksApi.bulkTag(ids, tags, mode)
+      } catch (err) {
+        if (!(await queueIfOffline(err, 'POST', '/links/bulk-tag', { ids, tags, mode }))) throw err
+      }
       const idSet = new Set(ids)
       const apply = (arr) =>
         arr.map((l) => {
@@ -398,6 +507,8 @@ export const useLinkStore = create((set, get) => {
           }
           return { ...l, tags: merged }
         })
+      const touched = apply(get().links)
+      await cacheLinks(touched).catch(() => {})
       set((s) => ({
         links: apply(s.links),
         mapLinks: s.mapLoaded ? apply(s.mapLinks) : s.mapLinks,
@@ -469,7 +580,11 @@ export const useLinkStore = create((set, get) => {
     },
 
     async restoreLink(id) {
-      await linksApi.restore(id)
+      try {
+        await linksApi.restore(id)
+      } catch (err) {
+        if (!(await queueIfOffline(err, 'POST', `/links/${id}/restore`))) throw err
+      }
       set((s) => ({
         trashLinks: s.trashLinks.filter((l) => l._id !== id),
         trashTotal: Math.max(s.trashTotal - 1, 0),
@@ -478,7 +593,12 @@ export const useLinkStore = create((set, get) => {
     },
 
     async deleteForever(id) {
-      await linksApi.permanentDelete(id)
+      try {
+        await linksApi.permanentDelete(id)
+      } catch (err) {
+        if (!(await queueIfOffline(err, 'DELETE', `/links/${id}/permanent`))) throw err
+      }
+      await removeCachedLinks([id]).catch(() => {})
       set((s) => ({
         trashLinks: s.trashLinks.filter((l) => l._id !== id),
         trashTotal: Math.max(s.trashTotal - 1, 0),
@@ -487,7 +607,11 @@ export const useLinkStore = create((set, get) => {
     },
 
     async bulkRestore(ids) {
-      await linksApi.bulkRestore(ids)
+      try {
+        await linksApi.bulkRestore(ids)
+      } catch (err) {
+        if (!(await queueIfOffline(err, 'POST', '/links/bulk-restore', { ids }))) throw err
+      }
       const idSet = new Set(ids)
       set((s) => ({
         trashLinks: s.trashLinks.filter((l) => !idSet.has(l._id)),
@@ -497,7 +621,12 @@ export const useLinkStore = create((set, get) => {
     },
 
     async bulkPermanentDelete(ids) {
-      await linksApi.bulkPermanentDelete(ids)
+      try {
+        await linksApi.bulkPermanentDelete(ids)
+      } catch (err) {
+        if (!(await queueIfOffline(err, 'POST', '/links/bulk-permanent-delete', { ids }))) throw err
+      }
+      await removeCachedLinks(ids).catch(() => {})
       const idSet = new Set(ids)
       set((s) => ({
         trashLinks: s.trashLinks.filter((l) => !idSet.has(l._id)),
@@ -507,7 +636,11 @@ export const useLinkStore = create((set, get) => {
     },
 
     async emptyTrash() {
-      await linksApi.emptyTrash()
+      try {
+        await linksApi.emptyTrash()
+      } catch (err) {
+        if (!(await queueIfOffline(err, 'POST', '/links/trash/empty'))) throw err
+      }
       set({ trashLinks: [], trashTotal: 0, trashHasMore: false })
       get().refreshSummary()
     },
@@ -521,19 +654,23 @@ export const useLinkStore = create((set, get) => {
       }))
       try {
         const updated = await linksApi.update(link._id, { favorite: next })
+        await cacheLinks([updated]).catch(() => {})
         const applyUpdate = (arr) => arr.map((l) => (l._id === link._id ? updated : l))
         set((s) => ({
           links: applyUpdate(s.links),
           mapLinks: s.mapLoaded ? applyUpdate(s.mapLinks) : s.mapLinks,
         }))
-      } catch {
-        // Revert only the toggled flag — not the whole captured object, which
-        // would clobber interim changes (e.g. a visit bump).
-        const revert = (arr) => arr.map((l) => (l._id === link._id ? { ...l, favorite: link.favorite } : l))
-        set((s) => ({
-          links: revert(s.links),
-          mapLinks: s.mapLoaded ? revert(s.mapLinks) : s.mapLinks,
-        }))
+      } catch (err) {
+        // Offline: queue the write and keep the optimistic flag.
+        if (!(await queueIfOffline(err, 'PATCH', `/links/${link._id}`, { favorite: next }))) {
+          // Revert only the toggled flag — not the whole captured object, which
+          // would clobber interim changes (e.g. a visit bump).
+          const revert = (arr) => arr.map((l) => (l._id === link._id ? { ...l, favorite: link.favorite } : l))
+          set((s) => ({
+            links: revert(s.links),
+            mapLinks: s.mapLoaded ? revert(s.mapLinks) : s.mapLinks,
+          }))
+        }
       }
       await refreshActiveFilteredList()
       get().refreshSummary()
