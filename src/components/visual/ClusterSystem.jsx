@@ -8,11 +8,14 @@ import {
   IconMovie,
   IconBrain,
   IconQuestionMark,
+  IconHash,
+  IconTag,
 } from '@tabler/icons-react'
 import { safeUrl, faviconUrl, hostOf } from '../../utils'
 
-// Helper to determine icon based on collection name
-const getCollectionIcon = (name) => {
+// Helper to determine icon based on collection or tag
+const getCollectionIcon = (name, isTag = false) => {
+  if (isTag) return <IconTag size={20} />
   const n = name.toLowerCase()
   if (n.includes('work') || n.includes('job')) return <IconBriefcase size={22} />
   if (n.includes('entertainment') || n.includes('movie')) return <IconMovie size={22} />
@@ -22,7 +25,7 @@ const getCollectionIcon = (name) => {
 }
 
 // Individual Planet with safe fallback and no 404 errors
-function PlanetNode({ link, isOverflow, overflowCount, isMatch, isDimmed, colorHex, onOpenSheet }) {
+function PlanetNode({ link, isOverflow, overflowCount, isMatch, isDimmed, colorHex, onOpenSheet, isTag = false }) {
   const [imgFailed, setImgFailed] = useState(false)
   const host = hostOf(link?.url) || 'link'
   const initial = (link?.title || host || 'L')[0].toUpperCase()
@@ -36,7 +39,7 @@ function PlanetNode({ link, isOverflow, overflowCount, isMatch, isDimmed, colorH
           e.stopPropagation()
           onOpenSheet()
         }}
-        title={`View all ${overflowCount} more links in this collection`}
+        title={`View all ${overflowCount} more links in this ${isTag ? 'tag' : 'collection'}`}
       >
         <span>+{overflowCount}</span>
       </div>
@@ -84,6 +87,7 @@ export default function ClusterSystem({
   onClick,
   isActive = false,
   search = '',
+  isTag = false,
 }) {
   const groupRef = useRef()
   const planetsRef = useRef()
@@ -236,7 +240,7 @@ export default function ClusterSystem({
             onClick(clusterId)
           }}
         >
-          {getCollectionIcon(name)}
+          {getCollectionIcon(name, isTag || collection?.isTag)}
         </div>
         <div className={`cluster-label ${isClusterDimmed ? 'dimmed' : ''}`}>
           <h4>{name}</h4>
@@ -291,6 +295,7 @@ export default function ClusterSystem({
                 isDimmed={data.isDimmed}
                 colorHex={colorHex}
                 onOpenSheet={() => onClick(clusterId)}
+                isTag={isTag || collection?.isTag}
               />
             </Html>
           </group>

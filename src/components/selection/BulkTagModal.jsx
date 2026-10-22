@@ -42,6 +42,17 @@ export default function BulkTagModal({ opened, onClose, onConfirm }) {
           placeholder="Type a tag and press Enter"
           data={(tags || []).map((t) => t.tag)}
           clearable
+          openOnFocus={false}
+          maxDropdownHeight={160}
+          comboboxProps={{
+            position: 'bottom-start',
+            middlewares: {
+              flip: { fallbackStrategy: 'bestFit', padding: 8 },
+              shift: { padding: 8 },
+            },
+            offset: 4,
+            withinPortal: true,
+          }}
         />
         <Group justify="flex-end">
           <Button variant="subtle" color="gray" onClick={onClose}>

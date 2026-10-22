@@ -77,6 +77,14 @@ function CollectionSelect({ collections, value, onChange, addCollection }) {
           selectExisting(val)
         }
       }}
+      position="bottom-start"
+      middlewares={{
+        flip: { fallbackStrategy: 'bestFit', padding: 8 },
+        shift: { padding: 8 },
+      }}
+      offset={4}
+      withinPortal
+      transitionProps={{ duration: 120, transition: 'fade' }}
     >
       <Combobox.Target>
         <InputBase
@@ -157,12 +165,65 @@ function LinkEditorForm({ link: editingLink, links, collections, tags, addLink, 
     busyRef.current = busy
   })
 
+  const [tagSearch, setTagSearch] = useState('')
+
   const existingTags = Array.from(new Set(tags.map((t) => t.tag)))
+
+  const availableExistingTags = useMemo(() => {
+    return existingTags.filter((t) => !linkTags.includes(t))
+  }, [existingTags, linkTags])
 
   const suggestedTags = useMemo(() => {
     if (!isLikelyUrl(url)) return []
     return suggestTagsForUrl(url, title || siteName, linkTags)
   }, [url, title, siteName, linkTags])
+
+  // All candidate tags (URL suggested + library tags, unique, excluding already added tags)
+  const allCandidateTags = useMemo(() => {
+    const map = new Map()
+    for (const t of suggestedTags) {
+      if (t && typeof t === 'string') {
+        const tr = t.trim()
+        if (tr) map.set(tr.toLowerCase(), tr)
+      }
+    }
+    for (const t of existingTags) {
+      if (t && typeof t === 'string') {
+        const tr = t.trim()
+        if (tr) map.set(tr.toLowerCase(), tr)
+      }
+    }
+    const current = new Set(linkTags.map((t) => t.toLowerCase().trim()))
+    return Array.from(map.values()).filter((t) => !current.has(t.toLowerCase()))
+  }, [suggestedTags, existingTags, linkTags])
+
+  // Logical letter-by-letter matching:
+  // 1. Exact match first
+  // 2. Starts with query (prefix matches)
+  // 3. Contains query (substring matches)
+  const matchingTags = useMemo(() => {
+    const q = tagSearch.trim().toLowerCase()
+    if (!q) return []
+
+    const exact = []
+    const startsWith = []
+    const contains = []
+
+    for (const tag of allCandidateTags) {
+      const lower = tag.toLowerCase()
+      if (lower === q) {
+        exact.push(tag)
+      } else if (lower.startsWith(q)) {
+        startsWith.push(tag)
+      } else if (lower.includes(q)) {
+        contains.push(tag)
+      }
+    }
+
+    return [...exact, ...startsWith, ...contains]
+  }, [tagSearch, allCandidateTags])
+
+  const isDropdownOpened = tagSearch.trim().length > 0 && matchingTags.length > 0
 
   const runExtract = useCallback(async (rawUrl) => {
     const v = String(rawUrl || '').trim()
@@ -597,17 +658,112 @@ function LinkEditorForm({ link: editingLink, links, collections, tags, addLink, 
           <TagsInput
             label="Tags"
             placeholder="Add tags (press Enter)..."
-            data={existingTags}
+            data={matchingTags}
+            filter={({ options }) => options}
             value={linkTags}
-            onChange={setLinkTags}
+            onChange={(newTags) => {
+              setLinkTags(newTags)
+              setTagSearch('')
+            }}
+            searchValue={tagSearch}
+            onSearchChange={setTagSearch}
+            dropdownOpened={isDropdownOpened}
             clearable
+            maxDropdownHeight={180}
+            comboboxProps={{
+              position: 'bottom-start',
+              middlewares: {
+                flip: { fallbackStrategy: 'bestFit', padding: 8 },
+                shift: { padding: 8 },
+              },
+              offset: 4,
+              withinPortal: true,
+              shadow: 'lg',
+              transitionProps: { duration: 120, transition: 'fade' },
+            }}
+            renderOption={({ option }) => {
+              const label = option.label || option.value
+              const q = tagSearch.trim()
+              if (!q) {
+                return (
+                  <div className="le-tag-option-row">
+                    <span className="le-tag-option-hash">#</span>
+                    <span>{label}</span>
+                  </div>
+                )
+              }
+              const idx = label.toLowerCase().indexOf(q.toLowerCase())
+              if (idx === -1) {
+                return (
+                  <div className="le-tag-option-row">
+                    <span className="le-tag-option-hash">#</span>
+                    <span>{label}</span>
+                  </div>
+                )
+              }
+              const before = label.slice(0, idx)
+              const match = label.slice(idx, idx + q.length)
+              const after = label.slice(idx + q.length)
+              return (
+                <div className="le-tag-option-row">
+                  <span className="le-tag-option-hash">#</span>
+                  <span>
+                    {before}
+                    <strong className="le-tag-option-match">{match}</strong>
+                    {after}
+                  </span>
+                </div>
+              )
+            }}
             leftSection={<IconTags size={15} className="le-field-icon" />}
             leftSectionPointerEvents="none"
             classNames={{ dropdown: 'le-dropdown' }}
           />
 
+          {/* Letter-by-letter live matching chips when typing */}
+          {tagSearch.trim().length > 0 && matchingTags.length > 0 && (
+            <div className="le-suggested-tags">
+              <span className="le-suggested-label">Matching:</span>
+              <div className="le-suggested-chips">
+                {matchingTags.slice(0, 10).map((tag) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    className="le-tag-chip le-tag-chip-match"
+                    onClick={() => {
+                      setLinkTags((prev) => [...prev, tag])
+                      setTagSearch('')
+                    }}
+                    title={`Add matching tag "${tag}"`}
+                  >
+                    + {tag}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
-          {suggestedTags.length > 0 && (
+          {/* Default chips when search input is empty */}
+          {tagSearch.trim().length === 0 && availableExistingTags.length > 0 && linkTags.length < 6 && (
+            <div className="le-suggested-tags">
+              <span className="le-suggested-label">Your tags:</span>
+              <div className="le-suggested-chips">
+                {availableExistingTags.slice(0, 8).map((tag) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    className="le-tag-chip le-tag-chip-existing"
+                    onClick={() => setLinkTags((prev) => [...prev, tag])}
+                    title={`Add existing tag "${tag}"`}
+                  >
+                    + {tag}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {tagSearch.trim().length === 0 && suggestedTags.length > 0 && (
             <div className="le-suggested-tags">
               <span className="le-suggested-label">Suggested:</span>
               <div className="le-suggested-chips">

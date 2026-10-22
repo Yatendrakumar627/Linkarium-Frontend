@@ -1,16 +1,15 @@
 .sidebar {
   width: var(--sidebar-w);
   flex-shrink: 0;
-  height: calc(100vh - 32px);
+  height: calc(100vh - 20px);
   display: flex;
   flex-direction: column;
-  padding: 18px 12px;
-  margin: 16px;
-  margin-right: 0;
+  padding: 14px 10px;
+  margin: 10px 0 10px 10px;
   background: var(--surface-glass-strong);
   border: 1px solid var(--border-glass);
   box-shadow: var(--border-specular), 0 20px 48px -8px rgba(0, 0, 0, 0.55);
-  border-radius: 20px;
+  border-radius: 16px;
   backdrop-filter: blur(28px) saturate(160%);
   -webkit-backdrop-filter: blur(28px) saturate(160%);
   overflow: hidden;
@@ -202,7 +201,8 @@
   padding: 4px;
 }
 .sidebar-collections .collection-edit,
-.sidebar-collections .collection-delete {
+.sidebar-collections .collection-delete,
+.sidebar-tags .collection-edit {
   opacity: 0;
   visibility: hidden;
   transition: opacity var(--dur-fast) var(--ease), visibility 0s linear var(--dur-fast);
@@ -210,7 +210,9 @@
 .sidebar-collections .nav-item:hover .collection-edit,
 .sidebar-collections .nav-item:hover .collection-delete,
 .sidebar-collections .nav-item:focus-within .collection-edit,
-.sidebar-collections .nav-item:focus-within .collection-delete {
+.sidebar-collections .nav-item:focus-within .collection-delete,
+.sidebar-tags .nav-item:hover .collection-edit,
+.sidebar-tags .nav-item:focus-within .collection-edit {
   opacity: 1;
   visibility: visible;
   transition: opacity var(--dur-fast) var(--ease), visibility 0s;

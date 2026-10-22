@@ -1,26 +1,41 @@
 :root {
-  --bg-deep: #07090e;
-  --bg-soft: #0c0e17;
-  --surface-glass: rgba(255, 255, 255, 0.038);
-  --surface-glass-strong: rgba(13, 16, 26, 0.75);
-  --surface-glass-card: rgba(18, 22, 36, 0.65);
-  --border-glass: rgba(255, 255, 255, 0.075);
-  --border-glass-strong: rgba(255, 255, 255, 0.15);
+  /* Minimalist Luxury: Jet Black, Royal Amethyst & Electric Cyan */
+  --bg-deep: #050505; /* Deep Jet Black */
+  --bg-soft: #08060c; /* Silky Obsidian */
+  --surface-glass: rgba(255, 255, 255, 0.032);
+  --surface-glass-strong: rgba(10, 6, 16, 0.82);
+  --surface-glass-card: rgba(14, 10, 22, 0.68);
+  --border-glass: rgba(255, 255, 255, 0.065);
+  --border-glass-strong: rgba(255, 255, 255, 0.14);
   --border-specular: inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  --text-primary: #f8fafc;
+  --text-primary: #ffffff;
   --text-secondary: #94a3b8;
-  --text-faint: #64748b;
-  --accent-1: #8b5cf6;
-  --accent-2: #6366f1;
-  --accent-3: #06b6d4;
-  --accent-gradient: linear-gradient(135deg, #a78bfa 0%, #6366f1 45%, #06b6d4 100%);
-  --accent-glow: 0 0 24px rgba(99, 102, 241, 0.35);
-  --radius-card: 18px;
-  --radius-inner: 12px;
-  --shadow-card: 0 16px 48px -8px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  --text-faint: #59677b;
+
+  /* Theme Core Tokens */
+  --color-jet-black: #050505;
+  --color-royal-amethyst: #3b0a6b;
+  --color-electric-cyan: #00e5ff;
+
+  /* Accent Hierarchy: Royal Amethyst velvet body + Electric Cyan laser accents */
+  --accent-1: #6a18b8; /* Royal Amethyst */
+  --accent-2: #3b0a6b; /* Deep Velvet Amethyst */
+  --accent-3: #00e5ff; /* Electric Cyan */
+  --accent-cyan: #00e5ff;
+  --accent-amethyst: #6a18b8;
+
+  /* Luxury Velvet & Cyan Laser Gradient */
+  --accent-gradient: linear-gradient(135deg, #5b10a0 0%, #3b0a6b 50%, #00e5ff 100%);
+  --accent-gradient-cyan: linear-gradient(135deg, #00e5ff 0%, #00b4d8 100%);
+  --accent-glow: 0 0 20px rgba(0, 229, 255, 0.25);
+  --accent-glow-amethyst: 0 0 28px rgba(59, 10, 107, 0.35);
+
+  --radius-card: 16px;
+  --radius-inner: 11px;
+  --shadow-card: 0 16px 40px -10px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.04);
   --sidebar-w: 260px;
   --dur-fast: 0.18s;
-  --dur-slow: 0.32s;
+  --dur-slow: 0.3s;
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -48,9 +63,9 @@ body {
   margin: 0;
   color: var(--text-primary);
   background:
-    radial-gradient(1100px 700px at 85% -10%, rgba(99, 102, 241, 0.12), transparent 60%),
-    radial-gradient(900px 700px at -10% 25%, rgba(139, 92, 246, 0.1), transparent 55%),
-    radial-gradient(800px 600px at 55% 105%, rgba(6, 182, 212, 0.06), transparent 55%),
+    radial-gradient(1000px 650px at 85% -10%, rgba(0, 229, 255, 0.07), transparent 60%),
+    radial-gradient(900px 700px at -10% 25%, rgba(59, 10, 107, 0.22), transparent 55%),
+    radial-gradient(800px 600px at 55% 105%, rgba(0, 229, 255, 0.05), transparent 55%),
     var(--bg-deep);
   background-attachment: fixed;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -60,11 +75,12 @@ body {
 }
 
 ::selection {
-  background: rgba(139, 92, 246, 0.35);
+  background: rgba(0, 229, 255, 0.35);
+  color: #fff;
 }
 
 :focus-visible {
-  outline: 2px solid rgba(139, 92, 246, 0.65);
+  outline: 2px solid rgba(0, 229, 255, 0.7);
   outline-offset: 2px;
 }
 
@@ -118,10 +134,11 @@ body {
 }
 
 .mantine-Modal-content {
-  background: rgba(18, 18, 42, 0.92) !important;
+  background: rgba(10, 5, 20, 0.94) !important;
   backdrop-filter: blur(28px) saturate(160%);
   -webkit-backdrop-filter: blur(28px) saturate(160%);
   border: 1px solid var(--border-glass-strong);
+  box-shadow: 0 24px 64px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(0, 229, 255, 0.1) !important;
 }
 .mantine-Modal-title {
   font-family: 'Space Grotesk', 'Inter', sans-serif;

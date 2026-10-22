@@ -1,10 +1,11 @@
-import { useEffect, useState, Suspense, useRef } from 'react'
+import { useEffect, useState, useMemo, Suspense, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Menu } from '@mantine/core'
 import { 
   IconLayoutGrid, 
   IconLink, 
   IconFolder, 
+  IconTag,
   IconChevronDown, 
   IconFocusCentered, 
   IconPlus, 
@@ -18,7 +19,7 @@ import {
 } from '@tabler/icons-react'
 import { useLinkStore } from '../../store/linkStore'
 import { useUiStore } from '../../store/uiStore'
-import { safeUrl, hostOf, faviconUrl } from '../../utils'
+import { safeUrl, hostOf, faviconUrl, getTagColor } from '../../utils'
 import ErrorState from '../common/ErrorState'
 import SpaceScene from './SpaceScene'
 import './VisualView.css'
@@ -36,13 +37,35 @@ export default function VisualView() {
   const setView = useUiStore((s) => s.setView)
   const openProfile = useUiStore((s) => s.openProfile)
 
+  // 3D Clustering mode: 'collections' | 'tags'
+  const [groupBy, setGroupBy] = useState(() => {
+    try {
+      return localStorage.getItem('linkarium_3d_mode') || 'collections'
+    } catch {
+      return 'collections'
+    }
+  })
+
   const [activeClusterId, setActiveClusterId] = useState(null)
-  
   const controlsRef = useRef(null)
 
   useEffect(() => {
     fetchAllLinks()
   }, [fetchAllLinks])
+
+  const handleModeChange = (mode) => {
+    if (mode === groupBy) return
+    setGroupBy(mode)
+    setActiveClusterId(null)
+    try {
+      localStorage.setItem('linkarium_3d_mode', mode)
+    } catch {
+      /* ignore */
+    }
+    if (controlsRef.current) {
+      controlsRef.current.reset()
+    }
+  }
 
   const handleRecenter = () => {
     if (controlsRef.current) {
@@ -70,14 +93,90 @@ export default function VisualView() {
     }
   }
 
+  // Derive dynamic clusters based on active mode (Collections or Tags)
+  const currentClusters = useMemo(() => {
+    if (groupBy === 'tags') {
+      const tagMap = new Map()
+      let untaggedCount = 0
+
+      for (const link of mapLinks) {
+        const rawTags = Array.isArray(link.tags) ? link.tags.filter(Boolean) : []
+        if (rawTags.length === 0) {
+          untaggedCount++
+        } else {
+          for (const rawTag of rawTags) {
+            const cleanTag = String(rawTag).trim()
+            if (!cleanTag) continue
+            const key = cleanTag.toLowerCase()
+            if (!tagMap.has(key)) {
+              tagMap.set(key, {
+                id: key,
+                name: `#${cleanTag}`,
+                rawName: cleanTag,
+                color: getTagColor(key),
+                count: 0,
+                isTag: true,
+              })
+            }
+            tagMap.get(key).count++
+          }
+        }
+      }
+
+      const list = Array.from(tagMap.values()).sort((a, b) => b.count - a.count)
+      if (untaggedCount > 0) {
+        list.push({
+          id: 'untagged',
+          name: 'Untagged',
+          rawName: 'Untagged',
+          color: '#64748b',
+          count: untaggedCount,
+          isTag: true,
+        })
+      }
+      return list
+    }
+
+    // Collections mode
+    const list = collections.map((c) => ({
+      id: c.id,
+      name: c.name,
+      color: c.color || '#3b82f6',
+      count: c.count || mapLinks.filter((l) => l.collectionId === c.id).length,
+      isTag: false,
+    }))
+    const uncategorizedCount = mapLinks.filter((l) => !l.collectionId).length
+    list.push({
+      id: 'uncategorized',
+      name: 'Uncategorized',
+      color: '#6b7280',
+      count: uncategorizedCount,
+      isTag: false,
+    })
+    return list
+  }, [groupBy, mapLinks, collections])
+
   // Get active cluster details for the bottom sheet
   const activeCluster = activeClusterId 
-    ? collections.find(c => c.id === activeClusterId) || { id: 'uncategorized', name: 'Uncategorized', color: '#6b7280' }
+    ? currentClusters.find(c => c.id === activeClusterId) || null
     : null
 
-  const activeClusterLinks = activeClusterId
-    ? mapLinks.filter(l => l.collectionId === activeClusterId || (activeClusterId === 'uncategorized' && !l.collectionId))
-    : []
+  const activeClusterLinks = useMemo(() => {
+    if (!activeClusterId) return []
+    if (groupBy === 'tags') {
+      if (activeClusterId === 'untagged') {
+        return mapLinks.filter((l) => !l.tags || l.tags.length === 0)
+      }
+      return mapLinks.filter(
+        (l) => Array.isArray(l.tags) && l.tags.some((t) => String(t).toLowerCase() === activeClusterId)
+      )
+    }
+    // Collections mode
+    if (activeClusterId === 'uncategorized') {
+      return mapLinks.filter((l) => !l.collectionId)
+    }
+    return mapLinks.filter((l) => l.collectionId === activeClusterId)
+  }, [activeClusterId, groupBy, mapLinks])
 
   if (mapError) {
     return <ErrorState message={mapError} onRetry={() => fetchAllLinks(true)} />
@@ -100,6 +199,7 @@ export default function VisualView() {
           <SpaceScene 
             mapLinks={mapLinks} 
             collections={collections}
+            groupBy={groupBy}
             activeCluster={activeClusterId}
             setActiveCluster={setActiveClusterId}
             controlsRef={controlsRef}
@@ -114,12 +214,38 @@ export default function VisualView() {
         {/* Floating Top HUD Bar */}
         <div className="space-hud-top">
           <div className="space-hud-left">
+            {/* Mode Switcher: Collections vs Tags */}
+            <div className="space-mode-toggle" role="tablist" aria-label="3D View Grouping">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={groupBy === 'collections'}
+                className={`space-mode-btn ${groupBy === 'collections' ? 'active' : ''}`}
+                onClick={() => handleModeChange('collections')}
+                title="Cluster 3D universe by Collections"
+              >
+                <IconFolder size={14} />
+                <span>Collections</span>
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={groupBy === 'tags'}
+                className={`space-mode-btn ${groupBy === 'tags' ? 'active' : ''}`}
+                onClick={() => handleModeChange('tags')}
+                title="Cluster 3D universe by Tags"
+              >
+                <IconTag size={14} />
+                <span>Tags</span>
+              </button>
+            </div>
+
             <div className="space-hud-chip stats-chip">
               <IconLink size={15} />
               <span>{mapLinks.length} Links</span>
               <span className="hud-sep">·</span>
-              <IconFolder size={15} />
-              <span>{collections.length + 1} Clusters</span>
+              {groupBy === 'tags' ? <IconTag size={15} /> : <IconFolder size={15} />}
+              <span>{currentClusters.length} {groupBy === 'tags' ? 'Tags' : 'Clusters'}</span>
               {search && (
                 <>
                   <span className="hud-sep">·</span>
@@ -141,12 +267,12 @@ export default function VisualView() {
             {/* Functional Cluster Selector Menu */}
             <Menu shadow="md" width={220} position="bottom-start">
               <Menu.Target>
-                <button className="space-hud-chip cluster-select-btn" aria-label="Select collection cluster">
+                <button className="space-hud-chip cluster-select-btn" aria-label={`Select ${groupBy === 'tags' ? 'tag' : 'collection'} cluster`}>
                   <span 
                     className="cluster-color-pip" 
                     style={{ background: activeCluster ? activeCluster.color : '#8b5cf6' }} 
                   />
-                  <span>{activeCluster ? activeCluster.name : 'All Clusters'}</span>
+                  <span>{activeCluster ? activeCluster.name : `All ${groupBy === 'tags' ? 'Tags' : 'Clusters'}`}</span>
                   <IconChevronDown size={14} />
                 </button>
               </Menu.Target>
@@ -156,24 +282,18 @@ export default function VisualView() {
                   onClick={() => setActiveClusterId(null)}
                   leftSection={<span className="cluster-color-pip" style={{ background: '#8b5cf6' }} />}
                 >
-                  All Clusters ({mapLinks.length})
+                  All {groupBy === 'tags' ? 'Tags' : 'Clusters'} ({mapLinks.length})
                 </Menu.Item>
                 <Menu.Divider />
-                {collections.map(c => (
+                {currentClusters.map(c => (
                   <Menu.Item
                     key={c.id}
                     onClick={() => setActiveClusterId(c.id)}
                     leftSection={<span className="cluster-color-pip" style={{ background: c.color || '#3b82f6' }} />}
                   >
-                    {c.name} ({c.count || mapLinks.filter(l => l.collectionId === c.id).length})
+                    {c.name} ({c.count})
                   </Menu.Item>
                 ))}
-                <Menu.Item
-                  onClick={() => setActiveClusterId('uncategorized')}
-                  leftSection={<span className="cluster-color-pip" style={{ background: '#6b7280' }} />}
-                >
-                  Uncategorized ({mapLinks.filter(l => !l.collectionId).length})
-                </Menu.Item>
               </Menu.Dropdown>
             </Menu>
           </div>
@@ -222,11 +342,11 @@ export default function VisualView() {
                 <div className="space-sheet-header">
                   <div className="space-sheet-title-area">
                     <div className="space-sheet-icon" style={{ backgroundColor: `${activeCluster.color}33`, color: activeCluster.color }}>
-                      <IconFolder size={22} />
+                      {activeCluster.isTag ? <IconTag size={22} /> : <IconFolder size={22} />}
                     </div>
                     <div>
                       <h2 className="space-sheet-title">{activeCluster.name}</h2>
-                      <p className="space-sheet-subtitle">{activeClusterLinks.length} links in cluster</p>
+                      <p className="space-sheet-subtitle">{activeClusterLinks.length} links in {groupBy === 'tags' ? 'tag' : 'cluster'}</p>
                     </div>
                   </div>
                   <button className="space-sheet-close" onClick={() => setActiveClusterId(null)} aria-label="Close drawer">
@@ -269,7 +389,7 @@ export default function VisualView() {
                     )
                   })}
                   {activeClusterLinks.length === 0 && (
-                    <div style={{ color: '#a0a5cc', fontSize: 13, padding: '20px 0' }}>No links in this collection.</div>
+                    <div style={{ color: '#a0a5cc', fontSize: 13, padding: '20px 0' }}>No links in this {groupBy === 'tags' ? 'tag' : 'collection'}.</div>
                   )}
                 </div>
               </motion.div>

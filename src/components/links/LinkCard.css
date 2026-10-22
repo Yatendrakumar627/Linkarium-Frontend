@@ -25,7 +25,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(420px 200px at var(--glow-x, 50%) var(--glow-y, 0%), rgba(139, 92, 246, 0.16), transparent 70%);
+  background: radial-gradient(420px 180px at var(--glow-x, 50%) var(--glow-y, 0%), rgba(0, 229, 255, 0.09), transparent 70%);
   opacity: 0;
   transition: opacity var(--dur-slow) var(--ease);
   pointer-events: none;
@@ -33,14 +33,14 @@
 .link-card:hover,
 .link-card.expanded,
 .link-card:focus-within {
-  border-color: var(--border-glass-strong);
+  border-color: rgba(255, 255, 255, 0.18);
   background:
-    linear-gradient(160deg, rgba(139, 92, 246, 0.1), rgba(139, 92, 246, 0.03) 30%, rgba(255, 255, 255, 0.045));
+    linear-gradient(160deg, rgba(59, 10, 107, 0.18) 0%, rgba(14, 10, 22, 0.7) 40%, rgba(255, 255, 255, 0.03) 100%);
   box-shadow:
-    inset 0 1px 0 rgba(167, 139, 250, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
     var(--shadow-card),
-    0 0 0 1px rgba(139, 92, 246, 0.16);
-  transform: translateY(-2px) scale(1.005);
+    0 0 24px rgba(59, 10, 107, 0.3);
+  transform: translateY(-2px);
 }
 .link-card:hover::before {
   opacity: 1;
@@ -51,26 +51,26 @@
   top: 0;
   bottom: 0;
   width: 3px;
-  background: var(--link-color, #8b5cf6);
-  box-shadow: 0 0 14px color-mix(in srgb, var(--link-color, #8b5cf6) 50%, transparent);
+  background: var(--link-color, var(--accent-3));
+  box-shadow: 0 0 10px color-mix(in srgb, var(--link-color, var(--accent-3)) 40%, transparent);
   pointer-events: none;
 }
 .link-card.selected .link-color-bar {
   opacity: 0.85;
 }
 .link-card:active {
-  transform: translateY(0) scale(0.985);
+  transform: translateY(0) scale(0.99);
 }
 .link-card:hover .link-favicon,
 .link-card:hover .link-card-head img {
-  transform: scale(1.03);
+  transform: scale(1.02);
 }
 
 /* Selection mode */
 .link-card.selected {
-  border-color: var(--mantine-color-violet-5, #8b5cf6);
-  background: rgba(139, 92, 246, 0.12);
-  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.3), var(--shadow-card);
+  border-color: rgba(0, 229, 255, 0.7);
+  background: rgba(30, 8, 55, 0.45);
+  box-shadow: 0 0 0 1px rgba(0, 229, 255, 0.5), 0 0 20px rgba(0, 229, 255, 0.15), var(--shadow-card);
 }
 .link-card.selected::before {
   opacity: 0;
@@ -88,7 +88,7 @@
   height: 22px;
   border-radius: 7px;
   border: 2px solid rgba(255, 255, 255, 0.25);
-  background: rgba(0, 0, 0, 0.25);
+  background: rgba(0, 0, 0, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -96,12 +96,12 @@
   transition: all 0.15s ease;
 }
 .checkbox-inner:hover {
-  border-color: rgba(255, 255, 255, 0.45);
+  border-color: #00e5ff;
 }
 .checkbox-inner.checked {
-  background: var(--mantine-color-violet-5, #8b5cf6);
-  border-color: var(--mantine-color-violet-5, #8b5cf6);
-  color: #fff;
+  background: #00e5ff;
+  border-color: #00e5ff;
+  color: #050505;
 }
 .link-card-head {
   display: flex;
@@ -374,54 +374,72 @@
   border-color: var(--border-glass-strong);
 }
 
-/* Portaled compact action menu */
+/* Portaled compact action menu - anchored via Mantine Menu (Floating-UI) */
 .link-card-menu {
-  width: 168px;
-  min-width: 168px;
-  max-width: min(184px, calc(100vw - 24px));
-  padding: 5px;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  background: rgba(18, 18, 42, 0.95);
+  width: 176px;
+  min-width: 176px;
+  max-width: min(190px, calc(100vw - 24px));
+  padding: 6px;
+  background: rgba(10, 5, 20, 0.95) !important;
   backdrop-filter: blur(28px) saturate(160%);
   -webkit-backdrop-filter: blur(28px) saturate(160%);
-  border: 1px solid var(--border-glass-strong);
-  border-radius: 14px;
-  box-shadow: var(--shadow-card), 0 0 0 1px rgba(139, 92, 246, 0.08);
+  border: 1px solid rgba(0, 229, 255, 0.22) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.75), 0 0 24px rgba(59, 10, 107, 0.35) !important;
   z-index: 300;
-  animation: kcFadeUp var(--dur-fast) var(--ease) both;
 }
+
+.link-card-menu .mantine-Menu-item,
 .link-card-menu-item {
   display: flex;
   align-items: center;
   gap: 8px;
   width: 100%;
-  min-height: 40px;
-  padding: 0 8px;
+  min-height: 38px;
+  padding: 0 10px;
   border: none;
   border-radius: 8px;
   background: transparent;
   color: var(--text-secondary);
   font-size: 13px;
   font-family: inherit;
+  font-weight: 500;
   text-align: left;
   text-decoration: none;
   box-sizing: border-box;
   cursor: pointer;
   transition: color var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
 }
+
+.link-card-menu .mantine-Menu-item:hover,
+.link-card-menu .mantine-Menu-item:focus,
 .link-card-menu-item:hover,
 .link-card-menu-item:focus-visible {
-  color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
 }
+
+.link-card-menu .mantine-Menu-item[data-hovered] {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.link-card-menu .mantine-Menu-item[data-color='red'],
 .link-card-menu-item.danger {
   color: #ff6b6b;
 }
+
+.link-card-menu .mantine-Menu-item[data-color='red']:hover,
+.link-card-menu .mantine-Menu-item[data-color='red'][data-hovered],
 .link-card-menu-item.danger:hover,
 .link-card-menu-item.danger:focus-visible {
-  background: rgba(255, 107, 107, 0.08);
+  color: #ff8585;
+  background: rgba(255, 107, 107, 0.12);
+}
+
+.link-card-menu .mantine-Menu-divider {
+  border-color: rgba(255, 255, 255, 0.08);
+  margin: 4px 0;
 }
 
 @keyframes kcFadeUp {

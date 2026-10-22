@@ -5,23 +5,24 @@ import { useUiStore } from '../../store/uiStore'
 import Sidebar from './Sidebar'
 import Topbar from './Topbar'
 import Hub from '../views/Hub'
-import AddEditLinkModal from '../links/AddEditLinkModal'
-import CollectionEditorModal from '../collections/CollectionEditorModal'
-import ProfileModal from '../profile/ProfileModal'
-import CommandPalette from '../common/CommandPalette'
-import SmartTriageModal from '../collections/SmartTriageModal'
-import ShortcutsModal from '../common/ShortcutsModal'
 import ClipboardSniffer from '../common/ClipboardSniffer'
-import SavedViewEditor from '../savedViews/SavedViewEditor'
-import RuleEditor from '../rules/RuleEditor'
-import ReaderModal from '../links/ReaderModal'
-import SessionsModal from '../profile/SessionsModal'
-import ApiKeysModal from '../profile/ApiKeysModal'
 import InstallPrompt from './InstallPrompt'
 import './AppShell.css'
 
 const Background3D = lazy(() => import('../Background3D'))
 const VisualView = lazy(() => import('../visual/VisualView'))
+const AddEditLinkModal = lazy(() => import('../links/AddEditLinkModal'))
+const CollectionEditorModal = lazy(() => import('../collections/CollectionEditorModal'))
+const ProfileModal = lazy(() => import('../profile/ProfileModal'))
+const CommandPalette = lazy(() => import('../common/CommandPalette'))
+const SmartTriageModal = lazy(() => import('../collections/SmartTriageModal'))
+const ShortcutsModal = lazy(() => import('../common/ShortcutsModal'))
+const SavedViewEditor = lazy(() => import('../savedViews/SavedViewEditor'))
+const RuleEditor = lazy(() => import('../rules/RuleEditor'))
+const ReaderModal = lazy(() => import('../links/ReaderModal'))
+const SessionsModal = lazy(() => import('../profile/SessionsModal'))
+const ApiKeysModal = lazy(() => import('../profile/ApiKeysModal'))
+const AddWebsitesToTagModal = lazy(() => import('../tags/AddWebsitesToTagModal'))
 
 export default function AppShell() {
   const fetchMeta = useLinkStore((s) => s.fetchMeta)
@@ -143,9 +144,11 @@ export default function AppShell() {
 
   return (
     <>
-      <Suspense fallback={null}>
-        <Background3D />
-      </Suspense>
+      {!visualMode && (
+        <Suspense fallback={null}>
+          <Background3D />
+        </Suspense>
+      )}
       <div className="scene-underlay" />
 
       <div className="shell">
@@ -173,19 +176,23 @@ export default function AppShell() {
         </div>
       </div>
 
-      <AddEditLinkModal />
-      <CollectionEditorModal />
-      <ProfileModal />
-      <SavedViewEditor />
-      <RuleEditor />
-      <ReaderModal />
-      <SessionsModal />
-      <ApiKeysModal />
+      <Suspense fallback={null}>
+        {editorOpen && <AddEditLinkModal />}
+        {collectionEditor && <CollectionEditorModal />}
+        {profileOpen && <ProfileModal />}
+        <SavedViewEditor />
+        <RuleEditor />
+        <ReaderModal />
+        <SessionsModal />
+        <ApiKeysModal />
+        <AddWebsitesToTagModal />
 
-      {/* Pro Features */}
-      <CommandPalette />
-      <SmartTriageModal />
-      <ShortcutsModal />
+        {/* Pro Features */}
+        {commandPaletteOpen && <CommandPalette />}
+        {triageOpen && <SmartTriageModal />}
+        {shortcutsOpen && <ShortcutsModal />}
+      </Suspense>
+
       <ClipboardSniffer />
       <InstallPrompt />
     </>

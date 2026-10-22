@@ -109,7 +109,7 @@ export default function Dashboard() {
               </div>
             ) : hasVisits ? (
               <div className="dash-panel-body">
-                <GradientAreaChart h={220} data={chartData} />
+                <GradientAreaChart h={185} data={chartData} />
               </div>
             ) : (
               <div className="dash-panel-body dash-panel-empty">

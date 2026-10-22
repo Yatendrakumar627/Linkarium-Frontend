@@ -176,3 +176,29 @@ export function suggestTagsForUrl(url, title = '', existingTags = []) {
     return []
   }
 }
+
+export const CELESTIAL_TAG_COLORS = [
+  '#00e5ff', // Electric Cyan
+  '#a855f7', // Velvet Amethyst / Purple
+  '#10b981', // Emerald
+  '#f59e0b', // Amber
+  '#ec4899', // Hot Pink
+  '#3b82f6', // Azure Blue
+  '#06b6d4', // Teal Cyan
+  '#f43f5e', // Rose Coral
+  '#8b5cf6', // Violet
+  '#eab308', // Radiant Gold
+  '#6366f1', // Indigo
+  '#14b8a6', // Persian Green
+]
+
+export function getTagColor(tag) {
+  if (!tag || String(tag).toLowerCase() === 'untagged') return '#64748b'
+  let hash = 0
+  const str = String(tag).toLowerCase().replace(/^#/, '')
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i)
+    hash |= 0
+  }
+  return CELESTIAL_TAG_COLORS[Math.abs(hash) % CELESTIAL_TAG_COLORS.length]
+}

@@ -2,10 +2,10 @@ import { useId } from 'react'
 import { AreaChart } from '@mantine/charts'
 
 // Matches the app accent palette (see styles/base.css -> --accent-gradient).
-const GRADIENT_FROM = '#8b5cf6'
-const GRADIENT_TO = '#22d3ee'
+const GRADIENT_FROM = '#6a18b8' // Royal Amethyst
+const GRADIENT_TO = '#00e5ff'   // Electric Cyan
 
-const DEFAULT_SERIES = [{ name: 'visits', color: 'violet.5' }]
+const DEFAULT_SERIES = [{ name: 'visits', color: 'cyan.5' }]
 
 /**
  * Area chart filled with the violet -> cyan accent gradient.

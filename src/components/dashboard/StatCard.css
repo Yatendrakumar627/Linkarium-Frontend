@@ -11,7 +11,7 @@
   box-shadow: var(--border-specular), 0 10px 32px -6px rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(20px) saturate(160%);
   -webkit-backdrop-filter: blur(20px) saturate(160%);
-  padding: 18px 20px;
+  padding: 12px 14px;
   transform: perspective(950px) translateY(var(--lift)) rotateX(var(--rx)) rotateY(var(--ry));
   transform-style: preserve-3d;
   transition:
@@ -61,7 +61,7 @@
 .stat-tile-inner {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 8px;
   width: 100%;
 }
 
@@ -73,12 +73,12 @@
 }
 
 .stat-subtext {
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 500;
   color: var(--text-faint);
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.05);
-  padding: 2px 8px;
+  padding: 1.5px 7px;
   border-radius: 999px;
   letter-spacing: -0.01em;
 }
@@ -86,12 +86,12 @@
 .stat-tile-body {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
 }
 
 .stat-tile .stat-value {
   font-family: 'Space Grotesk', 'Inter', sans-serif;
-  font-size: 30px;
+  font-size: 25px;
   font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 1.1;
@@ -99,16 +99,16 @@
 }
 
 .stat-tile .stat-label {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--text-secondary);
   letter-spacing: -0.01em;
 }
 
 .stat-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
   display: grid;
   place-items: center;
   flex-shrink: 0;

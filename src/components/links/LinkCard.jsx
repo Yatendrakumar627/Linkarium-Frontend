@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
-import { createPortal } from 'react-dom'
+import { useEffect, useRef, useState, useCallback, useMemo, memo } from 'react'
+import { Menu } from '@mantine/core'
 import {
   IconExternalLink,
   IconCopy,
@@ -35,7 +35,7 @@ function useTouch() {
 
 const TRASH_RETENTION_DAYS = 7
 
-export default function LinkCard({ link, trashMode = false }) {
+function LinkCard({ link, trashMode = false }) {
   const recordVisit = useLinkStore((s) => s.recordVisit)
   const toggleFavorite = useLinkStore((s) => s.toggleFavorite)
   const removeLink = useLinkStore((s) => s.removeLink)
@@ -49,79 +49,50 @@ export default function LinkCard({ link, trashMode = false }) {
   const openReader = useUiStore((s) => s.openReader)
 
   const selectionMode = useUiStore((s) => s.selectionMode)
-  const selectedIds = useUiStore((s) => s.selectedIds)
+  const isSelected = useUiStore((s) => s.selectedIds.has(link._id))
   const enterSelectionMode = useUiStore((s) => s.enterSelectionMode)
   const toggleSelect = useUiStore((s) => s.toggleSelect)
 
   const isTouch = useTouch()
   const [expanded, setExpanded] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
-  const [menuPos, setMenuPos] = useState(null)
   const [mergeOpen, setMergeOpen] = useState(false)
   const cardRef = useRef(null)
-  const menuBtnRef = useRef(null)
-  const menuRef = useRef(null)
   const menuOpenRef = useRef(false)
-  const firstMenuItemRef = useRef(null)
   const longPressTimer = useRef(null)
   const didLongPress = useRef(false)
-  const isSelected = selectedIds.has(link._id)
 
   useEffect(() => {
     menuOpenRef.current = menuOpen
   })
 
+  const rectRef = useRef(null)
+
+  const handlePointerEnter = () => {
+    if (cardRef.current) {
+      rectRef.current = cardRef.current.getBoundingClientRect()
+    }
+  }
+
   const handleGlow = (e) => {
     const el = cardRef.current
     if (!el) return
-    const rect = el.getBoundingClientRect()
+    let rect = rectRef.current
+    if (!rect) {
+      rect = el.getBoundingClientRect()
+      rectRef.current = rect
+    }
     el.style.setProperty('--glow-x', `${e.clientX - rect.left}px`)
     el.style.setProperty('--glow-y', `${e.clientY - rect.top}px`)
   }
 
   const handleGlowReset = () => {
+    rectRef.current = null
     const el = cardRef.current
     if (!el) return
     el.style.removeProperty('--glow-x')
     el.style.removeProperty('--glow-y')
   }
-
-  const positionMenu = () => {
-    const btn = menuBtnRef.current
-    if (!btn) return
-    const r = btn.getBoundingClientRect()
-    const menuWidth = 150
-    let left = r.right - menuWidth
-    if (left < 12) left = 12
-    if (left + menuWidth > window.innerWidth - 12) left = window.innerWidth - 12 - menuWidth
-    setMenuPos({ left, top: r.bottom + 8 })
-  }
-
-  const toggleMenu = () => {
-    if (!menuOpen) positionMenu()
-    setMenuOpen((v) => !v)
-  }
-
-  useEffect(() => {
-    if (!menuOpen) return
-    const onDown = (e) => {
-      const target = e.target
-      const inMenu = menuRef.current?.contains(target)
-      const inTrigger = menuBtnRef.current?.contains(target)
-      if (!inMenu && !inTrigger) setMenuOpen(false)
-    }
-    const onKey = (e) => {
-      if (e.key === 'Escape') setMenuOpen(false)
-    }
-    document.addEventListener('click', onDown)
-    document.addEventListener('keydown', onKey)
-    const id = window.requestAnimationFrame(() => firstMenuItemRef.current?.focus())
-    return () => {
-      document.removeEventListener('click', onDown)
-      document.removeEventListener('keydown', onKey)
-      window.cancelAnimationFrame(id)
-    }
-  }, [menuOpen])
 
   useEffect(() => {
     if (!expanded) return
@@ -345,6 +316,7 @@ export default function LinkCard({ link, trashMode = false }) {
       role="link"
       tabIndex={0}
       onKeyDown={handleOpenKey}
+      onPointerEnter={handlePointerEnter}
       onPointerMove={handleGlow}
       onPointerLeave={() => { handleGlowReset(); handlePointerLeave() }}
       onPointerDown={handlePointerDown}
@@ -370,6 +342,7 @@ export default function LinkCard({ link, trashMode = false }) {
             src={favicon}
             alt=""
             loading="lazy"
+            decoding="async"
             onError={(e) => {
               const host = hostOf(link.url);
               if (!host) {
@@ -449,22 +422,175 @@ export default function LinkCard({ link, trashMode = false }) {
         )}
 
         {!selectionMode && (
-          <button
-            type="button"
-            ref={menuBtnRef}
-            className="link-card-menu-btn"
-            aria-haspopup="menu"
-            aria-expanded={menuOpen}
-            aria-label="More actions"
-            title="More actions"
-            onClick={(e) => {
-              e.stopPropagation()
-              toggleMenu()
-            }}
-            onPointerDown={(e) => e.stopPropagation()}
+          <Menu
+            position="bottom-end"
+            offset={6}
+            shadow="xl"
+            withinPortal
+            opened={menuOpen}
+            onChange={setMenuOpen}
+            closeOnItemClick
+            zIndex={300}
+            transitionProps={{ duration: 120, transition: 'fade' }}
           >
-            <IconDotsVertical size={18} />
-          </button>
+            <Menu.Target>
+              <button
+                type="button"
+                className="link-card-menu-btn"
+                aria-haspopup="menu"
+                aria-expanded={menuOpen}
+                aria-label="More actions"
+                title="More actions"
+                onClick={(e) => {
+                  e.stopPropagation()
+                }}
+                onPointerDown={(e) => e.stopPropagation()}
+              >
+                <IconDotsVertical size={18} />
+              </button>
+            </Menu.Target>
+
+            <Menu.Dropdown className="link-card-menu">
+              {trashMode ? (
+                <>
+                  <Menu.Item
+                    leftSection={<IconExternalLink size={16} />}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      openInTab()
+                    }}
+                  >
+                    Open
+                  </Menu.Item>
+                  <Menu.Item
+                    leftSection={<IconCopy size={16} />}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleCopy(e)
+                    }}
+                  >
+                    Copy
+                  </Menu.Item>
+                  <Menu.Item
+                    leftSection={<IconArrowBackUp size={16} />}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleRestore(e)
+                    }}
+                  >
+                    Restore
+                  </Menu.Item>
+                  <Menu.Item
+                    color="red"
+                    leftSection={<IconTrash size={16} />}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleDeleteForever(e)
+                    }}
+                  >
+                    Delete Forever
+                  </Menu.Item>
+                </>
+              ) : (
+                <>
+                  <Menu.Item
+                    leftSection={<IconExternalLink size={16} />}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      openInTab()
+                    }}
+                  >
+                    Open
+                  </Menu.Item>
+                  <Menu.Item
+                    leftSection={<IconCopy size={16} />}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleCopy(e)
+                    }}
+                  >
+                    Copy
+                  </Menu.Item>
+                  <Menu.Item
+                    leftSection={<IconBook size={16} />}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      openReader(link)
+                    }}
+                  >
+                    Reader view
+                  </Menu.Item>
+                  <Menu.Item
+                    leftSection={<IconPencil size={16} />}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      openEditor(link)
+                    }}
+                  >
+                    Edit
+                  </Menu.Item>
+                  <Menu.Item
+                    component="a"
+                    href={`https://web.archive.org/web/*/${encodeURIComponent(link.url)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    leftSection={<IconHistory size={16} />}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    Archive Snapshot
+                  </Menu.Item>
+                  <Menu.Item
+                    leftSection={isArchived ? <IconArchiveOff size={16} /> : <IconArchive size={16} />}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      if (isArchived) handleUnarchive(e)
+                      else handleArchive(e)
+                    }}
+                  >
+                    {isArchived ? 'Unarchive' : 'Archive'}
+                  </Menu.Item>
+                  <Menu.Item
+                    leftSection={<IconSparkles size={16} />}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleEnrich(e)
+                    }}
+                  >
+                    Fetch details
+                  </Menu.Item>
+                  <Menu.Item
+                    leftSection={<IconGitMerge size={16} />}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setMergeOpen(true)
+                    }}
+                  >
+                    Merge into…
+                  </Menu.Item>
+                  <Menu.Item
+                    leftSection={<IconWand size={16} />}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleApplyRules(e)
+                    }}
+                  >
+                    Run rules
+                  </Menu.Item>
+                  <Menu.Divider />
+                  <Menu.Item
+                    color="red"
+                    leftSection={<IconTrash size={16} />}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleDelete(e)
+                    }}
+                  >
+                    Delete
+                  </Menu.Item>
+                </>
+              )}
+            </Menu.Dropdown>
+          </Menu>
         )}
       </div>
 
@@ -561,209 +687,17 @@ export default function LinkCard({ link, trashMode = false }) {
         </div>
       )}
 
-      {!selectionMode && menuOpen && menuPos && createPortal(
-        <div
-          ref={menuRef}
-          className="link-card-menu"
-          role="menu"
-          aria-label="Link actions"
-          style={{ position: 'fixed', top: menuPos.top, left: menuPos.left }}
-        >
-          {trashMode ? (
-            <>
-              <button
-                type="button"
-                ref={firstMenuItemRef}
-                className="link-card-menu-item"
-                role="menuitem"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setMenuOpen(false)
-                  openInTab()
-                }}
-              >
-                <IconExternalLink size={16} /> Open
-              </button>
-              <button
-                type="button"
-                className="link-card-menu-item"
-                role="menuitem"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setMenuOpen(false)
-                  handleCopy(e)
-                }}
-              >
-                <IconCopy size={16} /> Copy
-              </button>
-              <button
-                type="button"
-                className="link-card-menu-item"
-                role="menuitem"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setMenuOpen(false)
-                  handleRestore(e)
-                }}
-              >
-                <IconArrowBackUp size={16} /> Restore
-              </button>
-              <button
-                type="button"
-                className="link-card-menu-item danger"
-                role="menuitem"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setMenuOpen(false)
-                  handleDeleteForever(e)
-                }}
-              >
-                <IconTrash size={16} /> Delete Forever
-              </button>
-            </>
-          ) : (
-            <>
-              <button
-                type="button"
-                ref={firstMenuItemRef}
-                className="link-card-menu-item"
-                role="menuitem"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setMenuOpen(false)
-                  openInTab()
-                }}
-              >
-                <IconExternalLink size={16} /> Open
-              </button>
-              <button
-                type="button"
-                className="link-card-menu-item"
-                role="menuitem"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setMenuOpen(false)
-                  handleCopy(e)
-                }}
-              >
-                <IconCopy size={16} /> Copy
-              </button>
-              <button
-                type="button"
-                className="link-card-menu-item"
-                role="menuitem"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setMenuOpen(false)
-                  openReader(link)
-                }}
-                title="Read article text cleanly"
-              >
-                <IconBook size={16} /> Reader view
-              </button>
-              <button
-                type="button"
-                className="link-card-menu-item"
-                role="menuitem"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setMenuOpen(false)
-                  openEditor(link)
-                }}
-              >
-                <IconPencil size={16} /> Edit
-              </button>
-              <a
-                href={`https://web.archive.org/web/*/${encodeURIComponent(link.url)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="link-card-menu-item"
-                role="menuitem"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setMenuOpen(false)
-                }}
-                title="View snapshots on the Wayback Machine"
-              >
-                <IconHistory size={16} /> Archive Snapshot
-              </a>
-              <button
-                type="button"
-                className="link-card-menu-item"
-                role="menuitem"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setMenuOpen(false)
-                  if (isArchived) handleUnarchive(e)
-                  else handleArchive(e)
-                }}
-              >
-                {isArchived ? <IconArchiveOff size={16} /> : <IconArchive size={16} />}
-                {isArchived ? 'Unarchive' : 'Archive'}
-              </button>
-              <button
-                type="button"
-                className="link-card-menu-item"
-                role="menuitem"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setMenuOpen(false)
-                  handleEnrich(e)
-                }}
-                title="Fetch the page's title, image and readable text"
-              >
-                <IconSparkles size={16} /> Fetch details
-              </button>
-              <button
-                type="button"
-                className="link-card-menu-item"
-                role="menuitem"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setMenuOpen(false)
-                  setMergeOpen(true)
-                }}
-                title="Fold this link into another one"
-              >
-                <IconGitMerge size={16} /> Merge into…
-              </button>
-              <button
-                type="button"
-                className="link-card-menu-item"
-                role="menuitem"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setMenuOpen(false)
-                  handleApplyRules(e)
-                }}
-                title="Run your automation rules on this link"
-              >
-                <IconWand size={16} /> Run rules
-              </button>
-              <button
-                type="button"
-                className="link-card-menu-item danger"
-                role="menuitem"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setMenuOpen(false)
-                  handleDelete(e)
-                }}
-              >
-                <IconTrash size={16} /> Delete
-              </button>
-            </>
-          )}
-        </div>,
-        document.body
-      )}
 
-      <MergeLinkModal
-        opened={mergeOpen}
-        onClose={() => setMergeOpen(false)}
-        sourceId={link._id}
-        sourceTitle={link.title}
-      />
+      {mergeOpen && (
+        <MergeLinkModal
+          opened={mergeOpen}
+          onClose={() => setMergeOpen(false)}
+          sourceId={link._id}
+          sourceTitle={link.title}
+        />
+      )}
     </div>
   )
 }
+
+export default memo(LinkCard)

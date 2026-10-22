@@ -41,6 +41,7 @@ export default function Sidebar({ open, collapsed = false, onNavigate, onMouseEn
   const openCollectionEditor = useUiStore((s) => s.openCollectionEditor)
   const openSavedViewEditor = useUiStore((s) => s.openSavedViewEditor)
   const openRuleEditor = useUiStore((s) => s.openRuleEditor)
+  const openTagWebsitesModal = useUiStore((s) => s.openTagWebsitesModal)
   const toggleSidebar = useUiStore((s) => s.toggleSidebar)
 
   const savedViews = useSavedViewStore((s) => s.views)
@@ -463,6 +464,17 @@ export default function Sidebar({ open, collapsed = false, onNavigate, onMouseEn
             {tagsOpen ? <IconChevronDown size={14} /> : <IconChevronRight size={14} />}
             Tags
           </div>
+          <button
+            className="action-btn nav-action-btn"
+            onClick={(e) => {
+              e.stopPropagation()
+              openTagWebsitesModal()
+            }}
+            aria-label="Add websites to tag"
+            title="Add websites to tag"
+          >
+            <IconPlus size={15} />
+          </button>
         </div>
         {tagsOpen && (
           tags.length > 0 ? (
@@ -480,12 +492,30 @@ export default function Sidebar({ open, collapsed = false, onNavigate, onMouseEn
                     <IconFolder size={15} className="sidebar-tag-icon" />
                     <span className="nav-label">#{t.tag}</span>
                     <span className="nav-count">{t.count}</span>
+                    <button
+                      type="button"
+                      className="action-btn collection-edit"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        openTagWebsitesModal(t.tag)
+                      }}
+                      title={`Add websites to #${t.tag}`}
+                      aria-label={`Add websites to #${t.tag}`}
+                    >
+                      <IconPlus size={12} />
+                    </button>
                   </div>
                 )
               })}
             </div>
           ) : (
-            <div className="sidebar-collections-empty">Tags appear when you tag a link.</div>
+            <div
+              className="sidebar-collections-empty"
+              style={{ cursor: 'pointer' }}
+              onClick={() => openTagWebsitesModal()}
+            >
+              Nothing yet — click + to add websites to a tag.
+            </div>
           )
         )}
       </div>

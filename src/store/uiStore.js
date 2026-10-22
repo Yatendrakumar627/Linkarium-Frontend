@@ -16,6 +16,7 @@ export const useUiStore = create((set) => ({
   shortcutsOpen: false,
   savedViewEditor: null,
   ruleEditor: null,
+  tagWebsitesModal: null, // { tag: '' }
   sessionsOpen: false,
   apiKeysOpen: false,
   readerLink: null,
@@ -41,6 +42,7 @@ export const useUiStore = create((set) => ({
       shortcutsOpen: false,
       savedViewEditor: null,
       ruleEditor: null,
+      tagWebsitesModal: null,
       sessionsOpen: false,
       apiKeysOpen: false,
       readerLink: null,
@@ -80,6 +82,9 @@ export const useUiStore = create((set) => ({
 
   openRuleEditor: (rule = null) => set({ ruleEditor: rule || { mode: 'create' } }),
   closeRuleEditor: () => set({ ruleEditor: null }),
+
+  openTagWebsitesModal: (tag = '') => set({ tagWebsitesModal: { tag: tag || '' } }),
+  closeTagWebsitesModal: () => set({ tagWebsitesModal: null }),
 
   openSessions: () => set({ sessionsOpen: true }),
   closeSessions: () => set({ sessionsOpen: false }),

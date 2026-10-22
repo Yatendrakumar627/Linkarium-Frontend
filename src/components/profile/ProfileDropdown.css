@@ -18,13 +18,13 @@
     transform var(--dur-fast) var(--ease);
 }
 .pd-trigger:hover {
-  border-color: rgba(139, 92, 246, 0.55);
-  box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.16);
+  border-color: rgba(0, 229, 255, 0.6);
+  box-shadow: 0 0 0 4px rgba(0, 229, 255, 0.18);
   transform: translateY(-1px);
 }
 .pd-trigger[aria-expanded='true'] {
-  border-color: rgba(139, 92, 246, 0.55);
-  box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.16);
+  border-color: rgba(0, 229, 255, 0.7);
+  box-shadow: 0 0 0 4px rgba(0, 229, 255, 0.22);
 }
 
 .pd-avatar {
@@ -47,12 +47,12 @@
   min-width: 224px;
   max-width: min(300px, calc(100vw - 24px));
   padding: 8px;
-  background: rgba(18, 18, 42, 0.92);
+  background: rgba(10, 5, 20, 0.94);
   backdrop-filter: blur(28px) saturate(160%);
   -webkit-backdrop-filter: blur(28px) saturate(160%);
   border: 1px solid var(--border-glass-strong);
   border-radius: 16px;
-  box-shadow: var(--shadow-card), 0 0 0 1px rgba(139, 92, 246, 0.08);
+  box-shadow: var(--shadow-card), 0 0 20px rgba(59, 10, 107, 0.3);
   z-index: 70;
   animation: pdFadeUp var(--dur-fast) var(--ease) both;
 }

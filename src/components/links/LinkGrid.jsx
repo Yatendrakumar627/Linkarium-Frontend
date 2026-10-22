@@ -22,7 +22,7 @@ export default function LinkGrid({ links, trashMode = false, emptyTitle = 'No li
   return (
     <motion.div className="link-grid" variants={container} initial="hidden" animate="show">
       {links.map((link) => (
-        <motion.div key={link._id} variants={item} layout className="link-grid-item">
+        <motion.div key={link._id} variants={item} className="link-grid-item">
           <LinkCard link={link} trashMode={trashMode} />
         </motion.div>
       ))}

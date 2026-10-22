@@ -60,9 +60,9 @@ function Rig({ enabled = true }) {
   return null
 }
 
-// ---- Starfield particles ----
+// ---- Starfield particles (optimized count for 60fps across all GPUs) ----
 const STAR_POSITIONS = (() => {
-  const n = 450
+  const n = 250
   const arr = new Float32Array(n * 3)
   for (let i = 0; i < n; i++) {
     const r = 14 + Math.random() * 14
@@ -114,10 +114,10 @@ function AmbientScene({ reducedMotion = false }) {
   const panels = useMemo(
     () =>
       [
-        { position: [-9, 3.4, -6], rotation: [0.2, 0.5, 0], color: '#6d5bd0', seed: 0 },
-        { position: [7.5, 2.6, -8], rotation: [-0.25, -0.4, 0.1], color: '#5b6bcd', seed: 2 },
-        { position: [-8, -3.2, -7], rotation: [-0.1, -0.6, 0.1], color: '#6455c8', seed: 6 },
-        { position: [3.5, -4.4, -8], rotation: [-0.15, 0.35, 0], color: '#4f729f', seed: 10 },
+        { position: [-9, 3.4, -6], rotation: [0.2, 0.5, 0], color: '#6a18b8', seed: 0 },
+        { position: [7.5, 2.6, -8], rotation: [-0.25, -0.4, 0.1], color: '#00e5ff', seed: 2 },
+        { position: [-8, -3.2, -7], rotation: [-0.1, -0.6, 0.1], color: '#3b0a6b', seed: 6 },
+        { position: [3.5, -4.4, -8], rotation: [-0.15, 0.35, 0], color: '#00b4d8', seed: 10 },
       ].map((p, i) => ({ ...p, key: i })),
     []
   )
@@ -127,9 +127,9 @@ function AmbientScene({ reducedMotion = false }) {
       {panels.map((p) => (
         <GlassPanel key={p.key} position={p.position} rotation={p.rotation} color={p.color} seed={p.seed} />
       ))}
-      <ambientLight intensity={0.5} />
-      <pointLight position={[8, 8, 6]} intensity={0.8} color="#8b5cf6" />
-      <pointLight position={[-10, -6, 4]} intensity={0.55} color="#38bdf8" />
+      <ambientLight intensity={0.4} />
+      <pointLight position={[8, 8, 6]} intensity={0.85} color="#6a18b8" />
+      <pointLight position={[-10, -6, 4]} intensity={0.65} color="#00e5ff" />
       <Rig enabled={!reducedMotion} />
     </>
   )
@@ -140,6 +140,8 @@ function Background3DInner() {
     if (typeof window === 'undefined') return false
     return Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches)
   })
+  const [isVisible, setIsVisible] = useState(() => (typeof document !== 'undefined' ? !document.hidden : true))
+  const [isScrolling, setIsScrolling] = useState(false)
   const glRef = useRef(null)
 
   useEffect(() => {
@@ -148,6 +150,30 @@ function Background3DInner() {
     const onChange = () => setReducedMotion(Boolean(mq.matches))
     mq.addEventListener?.('change', onChange)
     return () => mq.removeEventListener?.('change', onChange)
+  }, [])
+
+  // Suspend rendering completely when browser tab is inactive or hidden
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+    const onVisibility = () => setIsVisible(!document.hidden)
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => document.removeEventListener('visibilitychange', onVisibility)
+  }, [])
+
+  // Temporarily pause Three.js rendering during active scroll bursts to dedicate 100% GPU to 60fps DOM scrolling
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    let timeoutId = null
+    const handleScroll = () => {
+      setIsScrolling(true)
+      if (timeoutId) clearTimeout(timeoutId)
+      timeoutId = setTimeout(() => setIsScrolling(false), 150)
+    }
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      if (timeoutId) clearTimeout(timeoutId)
+    }
   }, [])
 
   // Explicitly dispose WebGL context on unmount so HMR and page transitions don't exceed the browser's context limit
@@ -164,10 +190,13 @@ function Background3DInner() {
     }
   }, [])
 
+  // Skip heavy 3D canvas on small mobile devices (screen width < 768px) where it's obscured and wastes battery
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
+
   // Allow disabling 3D Canvas via environment variable (e.g. VITE_ENABLE_3D_BACKGROUND=false)
   const is3DEnabledByEnv = import.meta.env.VITE_ENABLE_3D_BACKGROUND !== 'false'
 
-  if (!is3DEnabledByEnv || !isWebGLAvailable()) {
+  if (!is3DEnabledByEnv || isMobile || !isWebGLAvailable()) {
     return null
   }
 
@@ -175,6 +204,7 @@ function Background3DInner() {
     <div className="scene-canvas">
       <Canvas
         dpr={[1, 1.5]}
+        frameloop={isVisible && !isScrolling ? 'always' : 'never'}
         gl={{ antialias: true, alpha: true, powerPreference: 'low-power' }}
         camera={{ position: [0, 0.5, 10], fov: 50 }}
         onCreated={({ gl }) => {
