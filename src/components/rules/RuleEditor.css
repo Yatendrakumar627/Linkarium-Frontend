@@ -1,17 +1,75 @@
+/* ==========================================================================
+   Rule Editor — Minimalist Luxury Obsidian & Cyan
+   --------------------------------------------------------------------------
+   The shell comes from the shared design system (`styles/modal.css`).
+   ========================================================================== */
+
+.rule-editor-body {
+  display: flex;
+  flex-direction: column;
+  padding: 0 !important;
+}
+
 .re-actions {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 14px;
+  gap: 10px;
+  padding: 13px;
   border: 1px solid var(--border-glass);
-  border-radius: var(--radius-card);
+  border-radius: 14px;
   background: rgba(255, 255, 255, 0.02);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
-.re-label {
+.re-action {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+}
+
+.re-action-icon {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  margin-top: 22px;
+  background: rgba(59, 10, 107, 0.4);
+  border: 1px solid rgba(0, 229, 255, 0.24);
+  color: #00e5ff;
+}
+
+.re-action-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.re-action-body-tight {
+  padding-top: 23px;
+}
+
+.re-action-count {
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: normal;
+  color: #00e5ff;
+  background: rgba(0, 229, 255, 0.12);
+  border: 1px solid rgba(0, 229, 255, 0.3);
+  padding: 1px 8px;
+  border-radius: 999px;
+}
+
+.rule-editor-root .mantine-TagsInput-pill {
+  background: rgba(0, 229, 255, 0.12);
+  border: 1px solid rgba(0, 229, 255, 0.3);
+  color: #00e5ff;
+  border-radius: 7px;
   font-size: 11.5px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: #a78bfa;
+  font-weight: 600;
+}
+
+.rule-editor-root .mantine-TagsInput-pillRemove {
+  color: #00e5ff;
 }

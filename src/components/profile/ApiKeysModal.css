@@ -1,0 +1,266 @@
+/* ==========================================================================
+   API Keys Modal — Minimalist Luxury Obsidian & Cyan
+   --------------------------------------------------------------------------
+   The shell comes from the shared design system (`styles/modal.css`).
+   ========================================================================== */
+
+.api-keys-body {
+  padding: 0 !important;
+}
+
+.api-keys-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.api-keys-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 11px;
+  min-height: 160px;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.api-keys-spinner {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 229, 255, 0.25);
+  border-top-color: #00e5ff;
+  animation: api-keys-spin 0.7s linear infinite;
+}
+
+@keyframes api-keys-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.api-keys-error {
+  margin: 14px 22px 0;
+  font-size: 12.5px;
+  color: #ff8787;
+  background: rgba(224, 49, 49, 0.1);
+  border: 1px solid rgba(255, 107, 107, 0.32);
+  border-radius: 11px;
+  padding: 9px 12px;
+}
+
+/* The one-time secret reveal */
+.api-keys-reveal {
+  margin: 14px 22px 0;
+  padding: 13px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(74, 222, 128, 0.32);
+  background: rgba(74, 222, 128, 0.07);
+}
+
+.api-keys-reveal-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #4ade80;
+}
+
+.api-keys-reveal-copy {
+  margin: 7px 0 10px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+.api-keys-reveal-copy strong {
+  color: #fff;
+}
+
+.api-keys-reveal-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.api-keys-secret {
+  flex: 1;
+  min-width: 0;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 11.5px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 8px 10px;
+  overflow-x: auto;
+  white-space: nowrap;
+  user-select: all;
+}
+
+.api-keys-copy-btn {
+  font-size: 11.5px;
+  padding: 6px 10px;
+  border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  flex-shrink: 0;
+}
+
+.api-keys-reveal-foot {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+.api-keys-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 13px 22px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.api-keys-toolbar-hint {
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.api-keys-create-btn {
+  font-size: 11.5px;
+  padding: 6px 11px;
+  border-radius: 9px;
+  border: 1px solid rgba(0, 229, 255, 0.3);
+  background: rgba(0, 229, 255, 0.08);
+  color: #00e5ff;
+}
+.api-keys-create-btn:hover {
+  color: #00e5ff;
+  background: rgba(0, 229, 255, 0.14);
+  border-color: rgba(0, 229, 255, 0.45);
+}
+
+.api-keys-create {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  padding: 15px 22px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.api-keys-scopes {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.api-keys-create-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.api-keys-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 22px 18px;
+  max-height: 340px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.api-key-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 13px;
+  border-radius: 13px;
+  border: 1px solid var(--border-glass);
+  background: rgba(255, 255, 255, 0.025);
+  transition: all var(--dur-fast) var(--ease);
+}
+.api-key-row:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.api-key-row-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  background: rgba(59, 10, 107, 0.4);
+  border: 1px solid rgba(0, 229, 255, 0.24);
+  color: #00e5ff;
+}
+
+.api-key-row-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.api-key-row-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.api-key-row-name {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.api-key-prefix {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 10.5px;
+  color: var(--text-faint);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-glass);
+  border-radius: 6px;
+  padding: 1px 6px;
+  flex-shrink: 0;
+}
+
+.api-key-row-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.api-key-scope {
+  font-size: 10px;
+  font-weight: 600;
+  color: #b675fd;
+  background: rgba(182, 117, 253, 0.1);
+  border: 1px solid rgba(182, 117, 253, 0.26);
+  border-radius: 5px;
+  padding: 1px 6px;
+}
+
+.api-key-used {
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+.api-key-row-revoke {
+  font-size: 11.5px;
+  padding: 6px 10px;
+  border-radius: 9px;
+  flex-shrink: 0;
+}
+.api-key-row-revoke:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

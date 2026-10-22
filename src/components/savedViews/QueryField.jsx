@@ -66,7 +66,7 @@ export default function QueryField({ value, onChange, label = 'Query', placehold
   return (
     <Stack gap={6}>
       <Textarea
-        label={label}
+        label={label || undefined}
         placeholder={placeholder || 'tag:ai is:favorite visits:>10'}
         value={value}
         onChange={(e) => onChange(e.currentTarget.value)}

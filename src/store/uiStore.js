@@ -17,6 +17,7 @@ export const useUiStore = create((set) => ({
   savedViewEditor: null,
   ruleEditor: null,
   tagWebsitesModal: null, // { tag: '' }
+  confirmDialog: null, // { id, title, subtitle, icon, tone, body, confirmLabel, onConfirm }
   sessionsOpen: false,
   apiKeysOpen: false,
   readerLink: null,
@@ -43,6 +44,7 @@ export const useUiStore = create((set) => ({
       savedViewEditor: null,
       ruleEditor: null,
       tagWebsitesModal: null,
+      confirmDialog: null,
       sessionsOpen: false,
       apiKeysOpen: false,
       readerLink: null,
@@ -85,6 +87,12 @@ export const useUiStore = create((set) => ({
 
   openTagWebsitesModal: (tag = '') => set({ tagWebsitesModal: { tag: tag || '' } }),
   closeTagWebsitesModal: () => set({ tagWebsitesModal: null }),
+
+  // Opens the themed confirm dialog. `onConfirm` may be async; if it rejects
+  // the dialog stays open and the error is surfaced as a notification.
+  openConfirmDialog: (config) =>
+    set({ confirmDialog: { id: `${Date.now()}-${Math.random().toString(36).slice(2)}`, ...config } }),
+  closeConfirmDialog: () => set({ confirmDialog: null }),
 
   openSessions: () => set({ sessionsOpen: true }),
   closeSessions: () => set({ sessionsOpen: false }),

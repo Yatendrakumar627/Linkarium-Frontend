@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { Text } from '@mantine/core'
-import { modals } from '@mantine/modals'
 import { notifications } from '@mantine/notifications'
 import {
   IconX,
   IconTrash,
+  IconArrowBackUp,
   IconFolderShare,
   IconDownload,
   IconCheck,
@@ -28,6 +28,7 @@ export default function SelectionToolbar() {
   const exitSelectionMode = useUiStore((s) => s.exitSelectionMode)
   const selectAll = useUiStore((s) => s.selectAll)
   const deselectAll = useUiStore((s) => s.deselectAll)
+  const openConfirmDialog = useUiStore((s) => s.openConfirmDialog)
 
   const links = useLinkStore((s) => s.links)
   const bulkDelete = useLinkStore((s) => s.bulkDelete)
@@ -97,19 +98,33 @@ export default function SelectionToolbar() {
   }
 
   const handleDelete = () => {
-    modals.openConfirmModal({
-      title: `Move ${count} link(s) to trash?`,
-      children: `These link(s) will be permanently deleted after 7 days in trash.`,
-      labels: { confirm: 'Move to Trash', cancel: 'Cancel' },
-      confirmProps: { color: 'red' },
+    openConfirmDialog({
+      title: `Move ${count} link${count === 1 ? '' : 's'} to trash?`,
+      subtitle: 'Deleted for good after 7 days',
+      tone: 'danger',
+      icon: <IconTrash size={20} />,
+      confirmLabel: 'Move to trash',
+      body: (
+        <ul className="app-modal-consequences">
+          <li className="is-destructive">
+            <IconTrash size={14} />
+            <span>
+              <strong>
+                {count} link{count === 1 ? '' : 's'}
+              </strong>{' '}
+              are moved to trash and deleted for good after 7 days.
+            </span>
+          </li>
+          <li className="is-safe">
+            <IconArrowBackUp size={14} />
+            <span>You can restore them from the trash until then.</span>
+          </li>
+        </ul>
+      ),
       onConfirm: async () => {
-        try {
-          await bulkDelete([...selectedIds])
-          exitSelectionMode()
-          notifications.show({ message: `${count} link(s) moved to trash`, color: 'green' })
-        } catch (err) {
-          notifications.show({ message: err.message, color: 'red' })
-        }
+        await bulkDelete([...selectedIds])
+        exitSelectionMode()
+        notifications.show({ message: `${count} link(s) moved to trash`, color: 'cyan' })
       },
     })
   }

@@ -1,11 +1,18 @@
 import { useEffect, useState } from 'react'
-import { Modal, TextInput, Button, Group, Stack, Popover, ActionIcon } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
-import { IconCheck, IconPalette } from '@tabler/icons-react'
+import { IconBookmark, IconCheck, IconPalette } from '@tabler/icons-react'
 import { useUiStore } from '../../store/uiStore'
 import { useSavedViewStore } from '../../store/savedViewStore'
 import { ICON_NAMES, iconFor } from '../../utils/icons'
 import QueryField from './QueryField'
+import {
+  AppButton,
+  AppModal,
+  AppModalBody,
+  AppModalFooter,
+  AppModalHeader,
+  AppModalSection,
+} from '../common/ModalShell'
 import './SavedViewEditor.css'
 
 // The palette offered for a saved view's colour.
@@ -66,10 +73,10 @@ export default function SavedViewEditor() {
     try {
       if (isEdit) {
         await updateView(existing._id, { name: name.trim(), query, icon, color })
-        notifications.show({ message: 'Saved view updated', color: 'green' })
+        notifications.show({ message: 'Saved view updated', color: 'cyan' })
       } else {
         await createView({ name: name.trim(), query, icon, color, kind: 'view' })
-        notifications.show({ message: 'Saved view created', color: 'green' })
+        notifications.show({ message: 'Saved view created', color: 'cyan' })
       }
       close()
     } catch (err) {
@@ -80,91 +87,116 @@ export default function SavedViewEditor() {
   }
 
   return (
-    <Modal
-      opened
-      onClose={close}
-      title={isEdit ? 'Edit saved view' : 'New saved view'}
-      centered
-      size="lg"
-    >
-      <Stack gap="md">
-        <Group align="flex-end" gap="sm" wrap="nowrap">
-          <TextInput
-            label="Name"
-            placeholder="AI reading list"
-            value={name}
-            onChange={(e) => setName(e.currentTarget.value)}
-            style={{ flex: 1 }}
-            data-autofocus
-          />
+    <AppModal opened onClose={close} size="lg" className="saved-view-root">
+      <AppModalHeader
+        icon={<IconBookmark size={20} />}
+        title={isEdit ? 'Edit saved view' : 'New saved view'}
+        subtitle="A saved filter that lives in your sidebar"
+        onClose={saving ? undefined : close}
+      />
 
-          <Popover width={260} position="bottom-end" shadow="md">
-            <Popover.Target>
-              <ActionIcon
-                variant="default"
-                size={36}
-                title="Pick a colour"
-                style={{ color }}
+      <AppModalBody className="saved-view-body">
+        <AppModalSection label="Identity" className="saved-view-identity">
+          <div className="saved-view-identity-row">
+            <div className="saved-view-identity-preview">
+              <div
+                className="saved-view-preview-mark"
+                style={{ color, background: `${color}22`, borderColor: `${color}55` }}
               >
-                <IconPalette size={18} />
-              </ActionIcon>
-            </Popover.Target>
-            <Popover.Dropdown>
-              <Group gap={8}>
-                {COLORS.map((c) => (
-                  <button
-                    key={c}
-                    type="button"
-                    className={`sv-color-dot ${c === color ? 'is-active' : ''}`}
-                    style={{ background: c }}
-                    onClick={() => setColor(c)}
-                    aria-label={`Colour ${c}`}
-                  >
-                    {c === color && <IconCheck size={13} color="#fff" />}
-                  </button>
-                ))}
-              </Group>
-            </Popover.Dropdown>
-          </Popover>
-        </Group>
+                <ViewIcon name={icon} size={18} />
+              </div>
+              <div className="saved-view-preview-text">
+                <div className="saved-view-preview-name">{name.trim() || 'Untitled view'}</div>
+                <div className="saved-view-preview-query">
+                  {query.trim() || 'matches everything'}
+                </div>
+              </div>
+            </div>
 
-        <QueryField
-          value={query}
-          onChange={setQuery}
-          label="Query"
-          placeholder="tag:ai is:favorite"
-        />
+            <div className="saved-view-fields">
+              <div className="app-modal-field">
+                <label className="app-modal-label" htmlFor="saved-view-name">
+                  Name
+                </label>
+                <input
+                  id="saved-view-name"
+                  className="app-modal-input"
+                  placeholder="AI reading list"
+                  value={name}
+                  onChange={(e) => setName(e.currentTarget.value)}
+                  data-autofocus
+                  maxLength={60}
+                />
+              </div>
 
-        <div>
-          <div className="sv-label">Icon</div>
-          <Group gap={6} wrap="wrap">
-            {ICON_NAMES.map((name) => {
-              const Ico = iconFor(name)
+              <div className="app-modal-field">
+                <span className="app-modal-label">
+                  <IconPalette size={12} style={{ verticalAlign: '-2px', marginRight: 5 }} />
+                  Colour
+                </span>
+                <div className="sv-color-row">
+                  {COLORS.map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      className={`sv-color-dot ${c === color ? 'is-active' : ''}`}
+                      style={{ background: c }}
+                      onClick={() => setColor(c)}
+                      aria-label={`Colour ${c}`}
+                      aria-pressed={c === color}
+                    >
+                      {c === color ? <IconCheck size={13} color="#fff" /> : null}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </AppModalSection>
+
+        <AppModalSection label="Query">
+          <QueryField
+            value={query}
+            onChange={setQuery}
+            label=""
+            placeholder="tag:ai is:favorite"
+          />
+        </AppModalSection>
+
+        <AppModalSection label="Icon">
+          <div className="sv-icon-grid">
+            {ICON_NAMES.map((n) => {
+              const Ico = iconFor(n)
               return (
                 <button
-                  key={name}
+                  key={n}
                   type="button"
-                  className={`sv-icon-btn ${name === icon ? 'is-active' : ''}`}
-                  onClick={() => setIcon(name)}
-                  title={name}
-                  aria-label={name}
+                  className={`sv-icon-btn ${n === icon ? 'is-active' : ''}`}
+                  onClick={() => setIcon(n)}
+                  title={n}
+                  aria-label={n}
+                  aria-pressed={n === icon}
                 >
                   <Ico size={16} />
                 </button>
               )
             })}
-          </Group>
-        </div>
+          </div>
+        </AppModalSection>
+      </AppModalBody>
 
-        <Group gap={8} justify="flex-end">
-          <Button variant="subtle" color="gray" onClick={close} disabled={saving}>
-            Cancel
-          </Button>
-          <Button onClick={handleSave} loading={saving} leftSection={<ViewIcon name={icon} size={16} />}>
-            {isEdit ? 'Save changes' : 'Create view'}
-          </Button>
-        </Group>
-      </Stack>
-    </Modal>
+      <AppModalFooter>
+        <AppButton variant="subtle" onClick={close} disabled={saving}>
+          Cancel
+        </AppButton>
+        <AppButton
+          onClick={handleSave}
+          loading={saving}
+          leftSection={<ViewIcon name={icon} size={15} />}
+        >
+          {isEdit ? 'Save changes' : 'Create view'}
+        </AppButton>
+      </AppModalFooter>
+    </AppModal>
   )
 }

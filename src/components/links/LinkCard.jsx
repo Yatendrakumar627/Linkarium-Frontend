@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState, useCallback, useMemo, memo } from 'react'
+import { useEffect, useRef, useState, useCallback, memo } from 'react'
 import { Menu } from '@mantine/core'
 import {
   IconExternalLink,
   IconCopy,
   IconPencil,
   IconTrash,
+  IconTrashX,
   IconStar,
   IconEye,
   IconCheck,
@@ -20,7 +21,6 @@ import {
   IconGitMerge,
   IconBook,
 } from '@tabler/icons-react'
-import { modals } from '@mantine/modals'
 import { notifications } from '@mantine/notifications'
 import { useLinkStore } from '../../store/linkStore'
 import { useUiStore } from '../../store/uiStore'
@@ -47,6 +47,7 @@ function LinkCard({ link, trashMode = false }) {
   const applyRulesToLink = useLinkStore((s) => s.applyRulesToLink)
   const openEditor = useUiStore((s) => s.openEditor)
   const openReader = useUiStore((s) => s.openReader)
+  const openConfirmDialog = useUiStore((s) => s.openConfirmDialog)
 
   const selectionMode = useUiStore((s) => s.selectionMode)
   const isSelected = useUiStore((s) => s.selectedIds.has(link._id))
@@ -195,18 +196,35 @@ function LinkCard({ link, trashMode = false }) {
 
   const handleDelete = (e) => {
     e.stopPropagation()
-    modals.openConfirmModal({
+    openConfirmDialog({
       title: 'Move to trash?',
-      children: `"${link.title}" will be moved to trash and permanently deleted after ${TRASH_RETENTION_DAYS} days.`,
-      labels: { confirm: 'Delete', cancel: 'Cancel' },
-      confirmProps: { color: 'red' },
+      subtitle: `Permanently deleted after ${TRASH_RETENTION_DAYS} days`,
+      tone: 'danger',
+      icon: <IconTrash size={20} />,
+      confirmLabel: 'Move to trash',
+      body: (
+        <div>
+          <div className="app-modal-entity">
+            <span className="app-modal-entity-name">{link.title || link.url}</span>
+          </div>
+          <ul className="app-modal-consequences">
+            <li className="is-destructive">
+              <IconTrash size={14} />
+              <span>
+                The link is moved to trash and deleted for good after{' '}
+                {TRASH_RETENTION_DAYS} days.
+              </span>
+            </li>
+            <li className="is-safe">
+              <IconArrowBackUp size={14} />
+              <span>You can restore it from the trash until then.</span>
+            </li>
+          </ul>
+        </div>
+      ),
       onConfirm: async () => {
-        try {
-          await removeLink(link._id)
-          notifications.show({ message: 'Link moved to trash', color: 'green' })
-        } catch (err) {
-          notifications.show({ message: err.message, color: 'red' })
-        }
+        await removeLink(link._id)
+        notifications.show({ message: 'Link moved to trash', color: 'cyan' })
       },
     })
   }
@@ -223,18 +241,30 @@ function LinkCard({ link, trashMode = false }) {
 
   const handleDeleteForever = (e) => {
     e.stopPropagation()
-    modals.openConfirmModal({
+    openConfirmDialog({
       title: 'Delete permanently?',
-      children: `"${link.title}" will be permanently deleted. This cannot be undone.`,
-      labels: { confirm: 'Delete Forever', cancel: 'Cancel' },
-      confirmProps: { color: 'red' },
+      subtitle: 'This one skips the trash',
+      tone: 'danger',
+      icon: <IconTrashX size={20} />,
+      confirmLabel: 'Delete forever',
+      body: (
+        <div>
+          <div className="app-modal-entity">
+            <span className="app-modal-entity-name">{link.title || link.url}</span>
+          </div>
+          <ul className="app-modal-consequences">
+            <li className="is-destructive">
+              <IconTrashX size={14} />
+              <span>
+                The link is permanently deleted. This cannot be undone.
+              </span>
+            </li>
+          </ul>
+        </div>
+      ),
       onConfirm: async () => {
-        try {
-          await deleteForever(link._id)
-          notifications.show({ message: 'Link permanently deleted', color: 'green' })
-        } catch (err) {
-          notifications.show({ message: err.message, color: 'red' })
-        }
+        await deleteForever(link._id)
+        notifications.show({ message: 'Link permanently deleted', color: 'cyan' })
       },
     })
   }

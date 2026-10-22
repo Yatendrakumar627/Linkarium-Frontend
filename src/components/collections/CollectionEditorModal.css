@@ -1,48 +1,266 @@
-.collection-form {
+/* ==========================================================================
+   Collection Editor Modal — Minimalist Luxury Obsidian & Cyan
+   --------------------------------------------------------------------------
+   The shell (panel, header, footer, buttons) comes from the shared design
+   system (`styles/modal.css`). Only the collection-specific pieces live here.
+   ========================================================================== */
+
+.collection-modal-root .app-modal-container {
+  max-height: min(88vh, 680px);
+}
+
+/* The form owns the scrolling region and the footer. */
+.collection-modal-container {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  flex: 1 1 auto;
+  min-height: 0;
 }
-.collection-color-label {
-  font-size: 13px;
-  margin-bottom: 8px;
-  color: var(--text-primary);
+
+/* Scrollable body */
+.collection-modal-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
+
+/* Name field */
+.collection-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  transition: border-color var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease);
+}
+.collection-input-wrap:focus-within {
+  border-color: rgba(0, 229, 255, 0.65);
+  box-shadow: 0 0 0 3px rgba(0, 229, 255, 0.15);
+}
+.collection-input-wrap.has-error {
+  border-color: rgba(255, 107, 107, 0.55);
+}
+.collection-input-wrap.has-error:focus-within {
+  border-color: rgba(255, 107, 107, 0.8);
+  box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.15);
+}
+
+.collection-text-input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 11px 12px;
+  font-size: 13.5px;
+  font-family: inherit;
+  font-weight: 500;
+  color: #fff;
+}
+.collection-text-input::placeholder {
+  color: var(--text-faint);
+  font-weight: 400;
+}
+
+.collection-input-clear {
+  padding: 6px;
+  margin-right: 8px;
+  border: none;
+  background: transparent;
+  color: var(--text-faint);
+  border-radius: 6px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  transition: all var(--dur-fast) var(--ease);
+}
+.collection-input-clear:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.collection-field-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 7px;
+  min-height: 16px;
+}
+
+.collection-field-hint {
+  font-size: 11.5px;
+  color: var(--text-faint);
+}
+
+.collection-field-error {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: #ff8080;
+}
+
+.collection-char-count {
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-faint);
+  flex-shrink: 0;
+}
+
+/* Colour picker */
+.collection-color-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 .collection-colors {
   display: flex;
+  align-items: center;
   gap: 9px;
   flex-wrap: wrap;
 }
+
 .collection-swatch {
   position: relative;
-  width: 30px;
-  height: 30px;
-  border-radius: 9px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  /* Hairline inner ring keeps the deep amethyst swatch legible on obsidian. */
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22);
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  transition: transform var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease);
 }
 .collection-swatch:hover {
-  transform: translateY(-1px);
+  transform: translateY(-1px) scale(1.04);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.35),
+    0 0 14px color-mix(in srgb, var(--swatch) 45%, transparent);
 }
 .collection-swatch.selected {
+  transform: scale(1.04);
   border-color: transparent;
-  box-shadow: 0 0 0 2px var(--bg-deep), 0 0 0 4px #fff;
-  transform: scale(1.06);
+  box-shadow:
+    0 0 0 2px rgba(5, 5, 5, 0.95),
+    0 0 0 4px var(--swatch),
+    0 0 20px color-mix(in srgb, var(--swatch) 55%, transparent);
 }
-.collection-swatch.selected::after {
-  content: '';
+
+.collection-custom-swatch {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  color: var(--text-secondary);
+  background:
+    conic-gradient(from 210deg, #00e5ff, #6a18b8, #a855f7, #ec4899, #f59e0b, #10b981, #00e5ff);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+  transition: all var(--dur-fast) var(--ease);
+}
+.collection-custom-swatch:hover {
+  color: #fff;
+  transform: translateY(-1px) scale(1.04);
+}
+.collection-custom-swatch.selected {
+  box-shadow:
+    0 0 0 2px rgba(5, 5, 5, 0.95),
+    0 0 0 4px var(--swatch),
+    0 0 20px color-mix(in srgb, var(--swatch) 55%, transparent);
+  color: #fff;
+}
+/* Hide the native swatch but keep the control keyboard reachable. */
+.collection-custom-swatch input[type='color'] {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #fff;
-  transform: translate(-50%, -50%);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
-}
-.collection-form .collection-submit {
-  background: var(--accent-gradient);
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
   border: none;
+  padding: 0;
+  background: none;
+}
+.collection-custom-swatch > svg {
+  position: relative;
+  z-index: 1;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
+}
+
+/* Preview */
+.collection-preview {
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--border-glass);
+  background: rgba(255, 255, 255, 0.02);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.collection-preview-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.collection-preview-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.collection-preview-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: -0.01em;
+}
+
+.collection-preview-count {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  padding: 1px 6px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.collection-preview-caption {
+  display: block;
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+/* Share settings (edit mode) */
+.collection-share-section {
+  background: rgba(0, 0, 0, 0.18);
+}
+.collection-share-section .share-settings {
+  border-radius: 14px;
+}
+
+@media (max-width: 36em) {
+  .collection-preview-caption {
+    display: none;
+  }
 }

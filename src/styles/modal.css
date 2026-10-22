@@ -1,0 +1,803 @@
+/* ==========================================================================
+   App Modal Design System — Minimalist Luxury Obsidian & Cyan
+   --------------------------------------------------------------------------
+   A single source of truth for every dialog in the app.
+
+   The shell (`.app-modal-*`) is intentionally opinionated: one obsidian glass
+   panel, one header pattern, one footer pattern, one button vocabulary. Dialog
+   specific styling lives in the dialog's own stylesheet and only ever uses the
+   primitives defined here.
+
+   Tone system: every shell sets `--tone` / `--tone-rgb` so a single component
+   can be re-skinned for destructive, positive or informational states.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Shell
+   -------------------------------------------------------------------------- */
+
+.app-modal-root .mantine-Modal-overlay {
+  background: rgba(5, 5, 5, 0.78) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+}
+
+.app-modal-content {
+  background: radial-gradient(120% 120% at 50% 0%, rgba(20, 10, 40, 0.98) 0%, rgba(5, 5, 5, 0.99) 100%) !important;
+  backdrop-filter: blur(36px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(36px) saturate(180%) !important;
+  border: 1px solid rgba(0, 229, 255, 0.22) !important;
+  border-radius: 20px !important;
+  box-shadow:
+    0 0 0 1px rgba(0, 229, 255, 0.1),
+    0 24px 64px -12px rgba(0, 0, 0, 0.9),
+    0 0 70px -20px rgba(59, 10, 107, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+  max-height: min(90vh, 780px);
+}
+
+.app-modal-body {
+  padding: 0 !important;
+}
+
+/* The container is the flex column every shell lays out against. */
+.app-modal-container {
+  display: flex;
+  flex-direction: column;
+  max-height: min(90vh, 780px);
+  min-height: 0;
+  --tone: #00e5ff;
+  --tone-rgb: 0, 229, 255;
+
+  /* Dialogs get their own "faint" tone. The app-wide token sits at 3.5:1 on
+     the modal surface, which is below WCAG AA for body text; this variant
+     clears 4.5:1 while keeping the same slate hue, so de-emphasised labels
+     stay de-emphasised but remain legible. */
+  --text-faint: #7a89a0;
+}
+
+.app-modal-container.tone-default {
+  --tone: #00e5ff;
+  --tone-rgb: 0, 229, 255;
+}
+.app-modal-container.tone-accent {
+  --tone: #b675fd;
+  --tone-rgb: 182, 117, 253;
+}
+.app-modal-container.tone-danger {
+  --tone: #ff8787;
+  --tone-rgb: 255, 135, 135;
+}
+.app-modal-container.tone-success {
+  --tone: #4ade80;
+  --tone-rgb: 74, 222, 128;
+}
+.app-modal-container.tone-warning {
+  --tone: #fbbf24;
+  --tone-rgb: 251, 191, 36;
+}
+
+/* --------------------------------------------------------------------------
+   2. Header
+   -------------------------------------------------------------------------- */
+
+.app-modal-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  padding: 18px 22px 15px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.015);
+  flex-shrink: 0;
+}
+
+.app-modal-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.app-modal-badge {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, rgba(var(--tone-rgb), 0.38) 0%, rgba(var(--tone-rgb), 0.12) 100%);
+  border: 1px solid rgba(var(--tone-rgb), 0.42);
+  color: var(--tone);
+  box-shadow: 0 0 18px rgba(var(--tone-rgb), 0.26);
+  transition: box-shadow var(--dur-fast) var(--ease);
+}
+
+/* The house style pairs amethyst with cyan for neutral dialogs. */
+.app-modal-container.tone-default .app-modal-badge {
+  background: linear-gradient(135deg, rgba(59, 10, 107, 0.5) 0%, rgba(0, 229, 255, 0.15) 100%);
+  border-color: rgba(0, 229, 255, 0.35);
+  box-shadow: 0 0 16px rgba(0, 229, 255, 0.22);
+}
+
+.app-modal-heading {
+  flex: 1;
+  min-width: 0;
+  padding-top: 1px;
+}
+
+.app-modal-title {
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-size: 16.5px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: #fff;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.app-modal-subtitle {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 3px;
+  line-height: 1.45;
+}
+
+.app-modal-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  color: var(--text-faint);
+  flex-shrink: 0;
+  transition: all var(--dur-fast) var(--ease);
+}
+.app-modal-close:hover:not(:disabled) {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+.app-modal-close:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* --------------------------------------------------------------------------
+   3. Body / sections
+   -------------------------------------------------------------------------- */
+
+.app-modal-body-area {
+  padding: 18px 22px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  min-height: 0;
+}
+
+.app-modal-body-area.is-flush {
+  padding: 0;
+}
+
+.app-modal-section {
+  padding: 15px 22px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
+}
+
+.app-modal-section:last-child {
+  border-bottom: none;
+}
+
+.app-modal-section-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-faint);
+  margin-bottom: 9px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* --------------------------------------------------------------------------
+   4. Footer
+   -------------------------------------------------------------------------- */
+
+.app-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 22px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(10, 5, 20, 0.7);
+  flex-shrink: 0;
+}
+
+.app-modal-footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.app-modal-footer-lead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.app-modal-footer-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  min-width: 0;
+}
+
+/* --------------------------------------------------------------------------
+   5. Buttons
+   -------------------------------------------------------------------------- */
+
+/* `!important` is deliberate: Mantine resolves button surfaces through inline
+   custom properties, so only an important declaration reliably wins. */
+.app-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 38px !important;
+  padding: 0 17px !important;
+  border-radius: 10px !important;
+  border: 1px solid transparent !important;
+  font-family: inherit !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    transform var(--dur-fast) var(--ease),
+    box-shadow var(--dur-fast) var(--ease),
+    background var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease),
+    filter var(--dur-fast) var(--ease);
+}
+.app-btn:focus-visible {
+  outline: 2px solid rgba(0, 229, 255, 0.7);
+  outline-offset: 2px;
+}
+.app-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.app-btn-primary {
+  background: var(--accent-gradient) !important;
+  color: #fff !important;
+  border: none !important;
+  box-shadow: 0 8px 24px rgba(0, 229, 255, 0.28), 0 0 20px rgba(59, 10, 107, 0.35) !important;
+}
+.app-btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.08);
+  box-shadow: 0 12px 32px rgba(0, 229, 255, 0.4), 0 0 28px rgba(106, 24, 184, 0.45) !important;
+}
+.app-btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.app-btn-subtle {
+  background: transparent !important;
+  color: var(--text-secondary) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+.app-btn-subtle:hover:not(:disabled) {
+  color: #fff !important;
+  background: rgba(255, 255, 255, 0.07) !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+}
+
+.app-btn-outline {
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: #fff !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+.app-btn-outline:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.app-btn-danger {
+  background: linear-gradient(135deg, #e03131 0%, #a61e1e 100%) !important;
+  color: #fff !important;
+  border: none !important;
+  box-shadow: 0 8px 24px rgba(224, 49, 49, 0.32), 0 0 20px rgba(224, 49, 49, 0.2) !important;
+}
+.app-btn-danger:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.08);
+  box-shadow: 0 12px 32px rgba(224, 49, 49, 0.42), 0 0 28px rgba(224, 49, 49, 0.28) !important;
+}
+.app-btn-danger:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.app-btn-sm {
+  height: 32px !important;
+  padding: 0 12px !important;
+  font-size: 12px !important;
+  border-radius: 9px !important;
+}
+
+/* --------------------------------------------------------------------------
+   6. Fields
+   -------------------------------------------------------------------------- */
+
+.app-modal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.app-modal-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-faint);
+}
+
+.app-modal-hint {
+  font-size: 11.5px;
+  color: var(--text-faint);
+  line-height: 1.5;
+}
+
+.app-modal-input {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  outline: none;
+  padding: 10px 12px;
+  font-size: 13.5px;
+  font-family: inherit;
+  font-weight: 500;
+  color: #fff;
+  transition: border-color var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease);
+}
+.app-modal-input::placeholder {
+  color: var(--text-faint);
+  font-weight: 400;
+}
+.app-modal-input:focus {
+  border-color: rgba(0, 229, 255, 0.65);
+  box-shadow: 0 0 0 3px rgba(0, 229, 255, 0.15);
+}
+.app-modal-input.is-error {
+  border-color: rgba(255, 107, 107, 0.8);
+  box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.14);
+}
+
+.app-modal-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid var(--border-glass);
+  border-radius: 11px;
+  padding: 0 11px;
+  height: 38px;
+  transition: border-color var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease);
+}
+.app-modal-search:focus-within {
+  border-color: rgba(0, 229, 255, 0.5);
+  box-shadow: 0 0 0 3px rgba(0, 229, 255, 0.1);
+}
+.app-modal-search-icon {
+  color: var(--text-faint);
+  margin-right: 9px;
+  flex-shrink: 0;
+}
+.app-modal-search input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 13px;
+  font-family: inherit;
+  color: #fff;
+}
+.app-modal-search input::placeholder {
+  color: var(--text-faint);
+}
+.app-modal-search-clear {
+  border: none;
+  background: transparent;
+  color: var(--text-faint);
+  cursor: pointer;
+  padding: 4px;
+  display: grid;
+  place-items: center;
+  border-radius: 5px;
+  flex-shrink: 0;
+  transition: color var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
+}
+.app-modal-search-clear:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* --------------------------------------------------------------------------
+   7. Selectable lists & rows
+   -------------------------------------------------------------------------- */
+
+.app-modal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.app-modal-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.02);
+  color: inherit;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: all var(--dur-fast) var(--ease);
+}
+.app-modal-row:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.055);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+.app-modal-row.is-selected {
+  background: linear-gradient(90deg, rgba(59, 10, 107, 0.32) 0%, rgba(0, 229, 255, 0.08) 100%);
+  border-color: rgba(0, 229, 255, 0.35);
+  box-shadow: 0 0 16px rgba(0, 229, 255, 0.08);
+}
+.app-modal-row:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.app-modal-row-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.app-modal-row-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #f8fafc;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: -0.01em;
+}
+
+.app-modal-row-meta {
+  font-size: 11px;
+  color: var(--text-faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.app-modal-row-tail {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-faint);
+}
+
+.app-modal-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.app-modal-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 28px 16px;
+  color: var(--text-faint);
+  font-size: 13px;
+  text-align: center;
+}
+
+/* A one-line preview of the thing an action will affect. */
+.app-modal-entity {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 11px 13px;
+  border-radius: 13px;
+  border: 1px solid var(--border-glass);
+  background: rgba(255, 255, 255, 0.025);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  margin-bottom: 14px;
+}
+
+.app-modal-entity-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: -0.01em;
+}
+
+.app-modal-entity-count {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 1px 8px;
+  border-radius: 999px;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   8. Notes, callouts, consequences
+   -------------------------------------------------------------------------- */
+
+.app-modal-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border-glass);
+  background: rgba(255, 255, 255, 0.025);
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+.app-modal-note > svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.app-modal-note strong {
+  color: #fff;
+  font-weight: 600;
+}
+.app-modal-note.is-danger {
+  border-color: rgba(255, 107, 107, 0.3);
+  background: rgba(224, 49, 49, 0.08);
+}
+.app-modal-note.is-danger > svg {
+  color: #ff8787;
+}
+.app-modal-note.is-info {
+  border-color: rgba(0, 229, 255, 0.24);
+  background: rgba(0, 229, 255, 0.06);
+}
+.app-modal-note.is-info > svg {
+  color: #00e5ff;
+}
+.app-modal-note.is-success {
+  border-color: rgba(74, 222, 128, 0.28);
+  background: rgba(74, 222, 128, 0.07);
+}
+.app-modal-note.is-success > svg {
+  color: #4ade80;
+}
+.app-modal-note.is-warning {
+  border-color: rgba(251, 191, 36, 0.28);
+  background: rgba(251, 191, 36, 0.07);
+}
+.app-modal-note.is-warning > svg {
+  color: #fbbf24;
+}
+
+.app-modal-consequences {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.app-modal-consequences li {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+.app-modal-consequences li > svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.app-modal-consequences li strong {
+  color: #fff;
+  font-weight: 600;
+}
+.app-modal-consequences li.is-destructive > svg {
+  color: #ff8787;
+}
+.app-modal-consequences li.is-safe > svg {
+  color: #00e5ff;
+}
+
+/* --------------------------------------------------------------------------
+   9. Mantine primitives inside the shell
+   --------------------------------------------------------------------------
+   Mantine sets its surface variables inline, so these need `!important` to
+   win. They are scoped to `.app-modal-content` so nothing outside the design
+   system is affected.
+   -------------------------------------------------------------------------- */
+
+.app-modal-content .mantine-Input-input,
+.app-modal-content .mantine-InputBase-input,
+.app-modal-content .mantine-TagsInput-input,
+.app-modal-content .mantine-PillsInput-input {
+  background: rgba(0, 0, 0, 0.32) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 11px !important;
+  color: #fff !important;
+  font-size: 13.5px !important;
+  font-family: inherit !important;
+  transition: border-color var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease) !important;
+}
+.app-modal-content .mantine-Input-input:focus,
+.app-modal-content .mantine-InputBase-input:focus,
+.app-modal-content .mantine-TagsInput-input:focus,
+.app-modal-content .mantine-PillsInput-input:focus,
+.app-modal-content .mantine-Input-input:focus-within,
+.app-modal-content .mantine-InputBase-input:focus-within {
+  border-color: rgba(0, 229, 255, 0.65) !important;
+  box-shadow: 0 0 0 3px rgba(0, 229, 255, 0.15) !important;
+}
+.app-modal-content .mantine-Input-input::placeholder,
+.app-modal-content .mantine-InputBase-input::placeholder {
+  color: var(--text-faint) !important;
+}
+.app-modal-content .mantine-Input-label,
+.app-modal-content .mantine-InputBase-label,
+.app-modal-content .mantine-TagsInput-label {
+  color: var(--text-faint) !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  margin-bottom: 6px !important;
+}
+.app-modal-content .mantine-InputWrapper-error {
+  color: #ff8787 !important;
+  font-size: 11.5px !important;
+}
+.app-modal-content .mantine-InputWrapper-description {
+  color: var(--text-faint) !important;
+  font-size: 11.5px !important;
+}
+.app-modal-content .mantine-Input-section {
+  color: var(--text-faint) !important;
+}
+/* The required marker ships in a red that lands at 4.4:1 on the panel. */
+.app-modal-content .mantine-InputWrapper-required {
+  color: #ff8787 !important;
+}
+
+/* Tags / pills */
+.app-modal-content .mantine-TagsInput-pill,
+.app-modal-content .mantine-Pill-root {
+  background: rgba(0, 229, 255, 0.12) !important;
+  border: 1px solid rgba(0, 229, 255, 0.3) !important;
+  color: #b8f4ff !important;
+}
+.app-modal-content .mantine-Pill-label {
+  color: #b8f4ff !important;
+  font-size: 12px !important;
+}
+.app-modal-content .mantine-Pill-remove,
+.app-modal-content .mantine-InputClearButton-root {
+  color: rgba(184, 244, 255, 0.75) !important;
+  transition: color var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease) !important;
+}
+.app-modal-content .mantine-Pill-remove:hover,
+.app-modal-content .mantine-InputClearButton-root:hover {
+  color: #fff !important;
+  background: rgba(0, 229, 255, 0.18) !important;
+}
+
+/* Native checkboxes / radios inside the shell */
+.app-modal-content .mantine-Checkbox-input {
+  background: rgba(0, 0, 0, 0.4) !important;
+  border-color: rgba(255, 255, 255, 0.22) !important;
+  border-radius: 6px !important;
+}
+.app-modal-content .mantine-Checkbox-input:checked {
+  background: #00e5ff !important;
+  border-color: #00e5ff !important;
+}
+.app-modal-content .mantine-Checkbox-label,
+.app-modal-content .mantine-Radio-label {
+  color: var(--text-secondary) !important;
+  font-size: 13px !important;
+}
+
+/* Tabs (Profile) */
+.app-modal-content .mantine-Tabs-list {
+  border-bottom-color: var(--border-glass) !important;
+}
+.app-modal-content .mantine-Tabs-tab {
+  color: var(--text-secondary) !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+}
+.app-modal-content .mantine-Tabs-tab:hover {
+  color: #fff !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+}
+.app-modal-content .mantine-Tabs-tab[data-active] {
+  color: #00e5ff !important;
+  border-color: #00e5ff !important;
+}
+
+/* Scroll areas */
+.app-modal-content .mantine-ScrollArea-scrollbar {
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* --------------------------------------------------------------------------
+   10. Responsive
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 36em) {
+  .app-modal-header {
+    padding: 15px 16px 13px;
+    gap: 11px;
+  }
+  .app-modal-badge {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+  }
+  .app-modal-title {
+    font-size: 15.5px;
+  }
+  .app-modal-body-area {
+    padding: 15px 16px;
+  }
+  .app-modal-section {
+    padding: 13px 16px;
+  }
+  .app-modal-footer {
+    padding: 12px 16px;
+    flex-wrap: wrap;
+  }
+  .app-modal-footer-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}

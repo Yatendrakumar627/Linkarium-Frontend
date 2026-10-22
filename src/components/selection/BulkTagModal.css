@@ -1,0 +1,57 @@
+/* ==========================================================================
+   Bulk Tag Modal — Minimalist Luxury Obsidian & Cyan
+   --------------------------------------------------------------------------
+   The shell comes from the shared design system (`styles/modal.css`).
+   ========================================================================== */
+
+.bulk-tag-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Mantine renders TagsInput pills inside the field; align them with the
+   themed input surface. */
+.bulk-tag-root .mantine-TagsInput-pill {
+  background: rgba(0, 229, 255, 0.12);
+  border: 1px solid rgba(0, 229, 255, 0.3);
+  color: #00e5ff;
+  border-radius: 7px;
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.bulk-tag-root .mantine-TagsInput-pillRemove {
+  color: #00e5ff;
+}
+
+.bulk-tag-suggestions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bulk-tag-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.bulk-tag-chip {
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-secondary);
+  font-size: 11.5px;
+  font-family: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--dur-fast) var(--ease);
+}
+.bulk-tag-chip:hover {
+  color: #00e5ff;
+  border-color: rgba(0, 229, 255, 0.4);
+  background: rgba(0, 229, 255, 0.1);
+  box-shadow: 0 0 10px rgba(0, 229, 255, 0.15);
+}

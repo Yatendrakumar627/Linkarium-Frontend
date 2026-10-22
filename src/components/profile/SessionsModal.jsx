@@ -1,15 +1,5 @@
 import { useEffect, useState } from 'react'
-import {
-  Modal,
-  Button,
-  Group,
-  Stack,
-  Text,
-  Badge,
-  Alert,
-  Loader,
-  Paper,
-} from '@mantine/core'
+import { Loader } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
 import {
   IconDeviceDesktop,
@@ -17,10 +7,19 @@ import {
   IconTrash,
   IconLogout,
   IconRefresh,
+  IconDevices,
 } from '@tabler/icons-react'
 import { sessionsApi } from '../../api/endpoints'
 import { timeAgoShort } from '../../utils'
 import { useUiStore } from '../../store/uiStore'
+import {
+  AppButton,
+  AppModal,
+  AppModalBody,
+  AppModalFooter,
+  AppModalHeader,
+} from '../common/ModalShell'
+import './SessionsModal.css'
 
 export function SessionsList() {
   const [sessions, setSessions] = useState([])
@@ -51,7 +50,7 @@ export function SessionsList() {
     try {
       await sessionsApi.revoke(id)
       setSessions((prev) => prev.filter((s) => (s.id || s._id) !== id))
-      notifications.show({ message: 'Session revoked', color: 'green' })
+      notifications.show({ message: 'Session revoked', color: 'cyan' })
     } catch (err) {
       notifications.show({ message: err.message, color: 'red' })
     } finally {
@@ -64,7 +63,7 @@ export function SessionsList() {
     try {
       await sessionsApi.revokeOthers()
       await loadSessions()
-      notifications.show({ message: 'All other sessions revoked', color: 'green' })
+      notifications.show({ message: 'All other sessions revoked', color: 'cyan' })
     } catch (err) {
       notifications.show({ message: err.message, color: 'red' })
     } finally {
@@ -74,106 +73,92 @@ export function SessionsList() {
 
   if (loading) {
     return (
-      <Group justify="center" p="xl">
-        <Loader size="sm" />
-      </Group>
+      <div className="sessions-loading">
+        <Loader size="sm" color="cyan" />
+        <span>Loading active sessions…</span>
+      </div>
     )
   }
 
   const otherSessions = sessions.filter((s) => !s.current)
 
   return (
-    <Stack gap="sm">
-      {error && (
-        <Alert color="red" variant="light">
+    <div className="sessions-list">
+      {error ? (
+        <div className="sessions-error" role="alert">
           {error}
-        </Alert>
-      )}
+        </div>
+      ) : null}
 
-      <Group justify="space-between">
-        <Text size="xs" c="dimmed">
+      <div className="sessions-toolbar">
+        <span className="sessions-toolbar-hint">
           These devices are currently signed into your account.
-        </Text>
-        <Group gap="xs">
-          <Button
-            size="xs"
-            variant="subtle"
-            color="gray"
+        </span>
+        <div className="sessions-toolbar-actions">
+          <button
+            type="button"
+            className="action-btn sessions-tool-btn"
             onClick={loadSessions}
-            leftSection={<IconRefresh size={13} />}
           >
+            <IconRefresh size={13} />
             Refresh
-          </Button>
-          {otherSessions.length > 0 && (
-            <Button
-              size="xs"
-              color="red"
-              variant="light"
-              loading={revokingOthers}
+          </button>
+          {otherSessions.length > 0 ? (
+            <button
+              type="button"
+              className="action-btn sessions-tool-btn is-danger"
               onClick={revokeOthers}
-              leftSection={<IconLogout size={13} />}
+              disabled={revokingOthers}
             >
-              Sign out other devices
-            </Button>
-          )}
-        </Group>
-      </Group>
+              <IconLogout size={13} />
+              {revokingOthers ? 'Signing out…' : 'Sign out other devices'}
+            </button>
+          ) : null}
+        </div>
+      </div>
 
-      <Stack gap="xs">
+      <div className="sessions-rows">
         {sessions.map((s) => {
           const sid = s.id || s._id
           const isMobile = /mobile|iphone|android|ipad/i.test(s.device || s.userAgent || '')
           return (
-            <Paper
-              key={sid}
-              withBorder
-              p="sm"
-              radius="sm"
-              style={{
-                background: s.current ? 'rgba(139, 92, 246, 0.08)' : 'var(--bg-glass)',
-                borderColor: s.current ? 'rgba(139, 92, 246, 0.4)' : undefined,
-              }}
-            >
-              <Group justify="space-between" wrap="nowrap">
-                <Group gap="sm" wrap="nowrap">
-                  <div style={{ color: s.current ? 'var(--color-primary, #8b5cf6)' : 'var(--text-dimmed)' }}>
-                    {isMobile ? <IconDeviceMobile size={22} /> : <IconDeviceDesktop size={22} />}
-                  </div>
-                  <div>
-                    <Group gap="xs">
-                      <Text size="sm" fw={600}>
-                        {s.device || 'Web Browser'}
-                      </Text>
-                      {s.current && (
-                        <Badge size="xs" color="violet" variant="filled">
-                          This device
-                        </Badge>
-                      )}
-                    </Group>
-                    <Text size="xs" c="dimmed">
-                      {s.ip ? `${s.ip} · ` : ''}
-                      Active {timeAgoShort(s.lastUsedAt || s.createdAt)}
-                    </Text>
-                  </div>
-                </Group>
-                {!s.current && (
-                  <Button
-                    size="xs"
-                    color="red"
-                    variant="subtle"
-                    loading={busyId === sid}
-                    onClick={() => revokeSession(sid)}
-                    leftSection={<IconTrash size={13} />}
-                  >
-                    Revoke
-                  </Button>
-                )}
-              </Group>
-            </Paper>
+            <div key={sid} className={`session-row ${s.current ? 'is-current' : ''}`}>
+              <span className="session-row-icon">
+                {isMobile ? <IconDeviceMobile size={20} /> : <IconDeviceDesktop size={20} />}
+              </span>
+              <div className="session-row-main">
+                <div className="session-row-title">
+                  <span className="session-row-name">{s.device || 'Web Browser'}</span>
+                  {s.current ? <span className="session-row-badge">This device</span> : null}
+                </div>
+                <div className="session-row-meta">
+                  {s.ip ? `${s.ip} · ` : ''}
+                  Active {timeAgoShort(s.lastUsedAt || s.createdAt)}
+                </div>
+              </div>
+              {!s.current ? (
+                <button
+                  type="button"
+                  className="action-btn danger session-row-revoke"
+                  onClick={() => revokeSession(sid)}
+                  disabled={busyId === sid}
+                >
+                  <IconTrash size={13} />
+                  {busyId === sid ? 'Revoking…' : 'Revoke'}
+                </button>
+              ) : null}
+            </div>
           )
         })}
-      </Stack>
-    </Stack>
+
+        {sessions.length === 0 ? (
+          <div className="app-modal-empty">
+            <IconDevices size={26} opacity={0.4} />
+            <div>No active sessions found.</div>
+          </div>
+        ) : null}
+      </div>
+    </div>
   )
 }
 
@@ -182,8 +167,21 @@ export default function SessionsModal() {
   const close = useUiStore((s) => s.closeSessions)
 
   return (
-    <Modal opened={opened} onClose={close} title="Active Sessions" size="md">
-      <SessionsList />
-    </Modal>
+    <AppModal opened={opened} onClose={close} size="md" className="sessions-modal-root">
+      <AppModalHeader
+        icon={<IconDevices size={20} />}
+        title="Active Sessions"
+        subtitle="Devices currently signed into your account"
+        onClose={close}
+      />
+      <AppModalBody className="sessions-body">
+        <SessionsList />
+      </AppModalBody>
+      <AppModalFooter>
+        <AppButton variant="subtle" onClick={close}>
+          Done
+        </AppButton>
+      </AppModalFooter>
+    </AppModal>
   )
 }

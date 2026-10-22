@@ -1,5 +1,4 @@
 import { Text } from '@mantine/core'
-import { modals } from '@mantine/modals'
 import { notifications } from '@mantine/notifications'
 import {
   IconX,
@@ -7,6 +6,7 @@ import {
   IconSquare,
   IconArrowBackUp,
   IconTrash,
+  IconTrashX,
   IconArchiveOff,
   IconDownload,
 } from '@tabler/icons-react'
@@ -22,6 +22,7 @@ export default function TrashToolbar() {
   const exitSelectionMode = useUiStore((s) => s.exitSelectionMode)
   const selectAll = useUiStore((s) => s.selectAll)
   const deselectAll = useUiStore((s) => s.deselectAll)
+  const openConfirmDialog = useUiStore((s) => s.openConfirmDialog)
 
   const trashLinks = useLinkStore((s) => s.trashLinks)
   const bulkRestore = useLinkStore((s) => s.bulkRestore)
@@ -72,19 +73,33 @@ export default function TrashToolbar() {
   }
 
   const handleDeleteForever = () => {
-    modals.openConfirmModal({
-      title: `Permanently delete ${count} link(s)?`,
-      children: 'These link(s) will be permanently deleted. This cannot be undone.',
-      labels: { confirm: 'Delete Forever', cancel: 'Cancel' },
-      confirmProps: { color: 'red' },
+    openConfirmDialog({
+      title: `Permanently delete ${count} link${count === 1 ? '' : 's'}?`,
+      subtitle: 'This skips the trash entirely',
+      tone: 'danger',
+      icon: <IconTrashX size={20} />,
+      confirmLabel: 'Delete forever',
+      body: (
+        <ul className="app-modal-consequences">
+          <li className="is-destructive">
+            <IconTrashX size={14} />
+            <span>
+              <strong>
+                {count} link{count === 1 ? '' : 's'}
+              </strong>{' '}
+              are permanently deleted. This cannot be undone.
+            </span>
+          </li>
+          <li className="is-safe">
+            <IconArrowBackUp size={14} />
+            <span>Restoring them afterwards will not be possible.</span>
+          </li>
+        </ul>
+      ),
       onConfirm: async () => {
-        try {
-          await bulkPermanentDelete([...selectedIds])
-          exitSelectionMode()
-          notifications.show({ message: `${count} link(s) permanently deleted`, color: 'green' })
-        } catch (err) {
-          notifications.show({ message: err.message, color: 'red' })
-        }
+        await bulkPermanentDelete([...selectedIds])
+        exitSelectionMode()
+        notifications.show({ message: `${count} link(s) permanently deleted`, color: 'cyan' })
       },
     })
   }

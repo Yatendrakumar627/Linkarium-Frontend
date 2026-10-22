@@ -1,8 +1,7 @@
 import { useEffect } from 'react'
 import { Button } from '@mantine/core'
-import { modals } from '@mantine/modals'
 import { notifications } from '@mantine/notifications'
-import { IconTrash } from '@tabler/icons-react'
+import { IconTrash, IconInfoCircle } from '@tabler/icons-react'
 import { useUiStore } from '../../store/uiStore'
 import { useLinkStore } from '../../store/linkStore'
 import LinkGrid from '../links/LinkGrid'
@@ -22,24 +21,39 @@ export default function TrashView() {
   const emptyTrash = useLinkStore((s) => s.emptyTrash)
 
   const selectionMode = useUiStore((s) => s.selectionMode)
+  const openConfirmDialog = useUiStore((s) => s.openConfirmDialog)
 
   useEffect(() => {
     fetchTrash()
   }, [fetchTrash])
 
   const handleEmptyTrash = () => {
-    modals.openConfirmModal({
+    openConfirmDialog({
       title: 'Empty trash?',
-      children: `This will permanently delete all ${trashTotal} trashed link(s). This cannot be undone.`,
-      labels: { confirm: 'Empty Trash', cancel: 'Cancel' },
-      confirmProps: { color: 'red' },
+      subtitle: 'Everything in the bin is removed for good',
+      tone: 'danger',
+      icon: <IconTrash size={20} />,
+      confirmLabel: 'Empty trash',
+      body: (
+        <ul className="app-modal-consequences">
+          <li className="is-destructive">
+            <IconTrash size={14} />
+            <span>
+              <strong>
+                {trashTotal} link{trashTotal === 1 ? '' : 's'}
+              </strong>{' '}
+              are permanently deleted. This cannot be undone.
+            </span>
+          </li>
+          <li className="is-safe">
+            <IconInfoCircle size={14} />
+            <span>Links still in your library are not affected.</span>
+          </li>
+        </ul>
+      ),
       onConfirm: async () => {
-        try {
-          await emptyTrash()
-          notifications.show({ message: 'Trash emptied', color: 'green' })
-        } catch (err) {
-          notifications.show({ message: err.message, color: 'red' })
-        }
+        await emptyTrash()
+        notifications.show({ message: 'Trash emptied', color: 'cyan' })
       },
     })
   }

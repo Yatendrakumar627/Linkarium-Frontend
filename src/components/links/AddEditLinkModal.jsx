@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Button, Combobox, InputBase, Loader, Modal, TagsInput, TextInput, Textarea, useCombobox } from '@mantine/core'
+import { Combobox, InputBase, Loader, TagsInput, TextInput, Textarea, useCombobox } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
 import {
   IconAlertTriangle,
@@ -18,6 +18,8 @@ import { useUiStore } from '../../store/uiStore'
 import { metadataApi } from '../../api/endpoints'
 import { cleanUrl, faviconUrl, hostOf, safeUrl, suggestTagsForUrl } from '../../utils'
 import OgPreview from './OgPreview'
+import { AppButton, AppModal, AppModalFooter, AppModalHeader } from '../common/ModalShell'
+import { accessibleClearButtonProps, renderAccessibleTagPill } from '../common/tagInput'
 import './AddEditLinkModal.css'
 
 const isLikelyUrl = (value) => {
@@ -416,39 +418,20 @@ function LinkEditorForm({ link: editingLink, links, collections, tags, addLink, 
           </div>
         </div>
 
-        <div className="le-modal-footer">
-          <Button
-            type="button"
-            size="md"
-            variant="subtle"
-            className="le-cancel"
-            onClick={() => setDuplicate(null)}
-            disabled={busy}
-          >
-            Edit Fields
-          </Button>
-          <div className="le-footer-actions">
-            <Button
-              type="button"
-              size="md"
-              variant="subtle"
-              className="le-cancel"
-              onClick={onClose}
-              disabled={busy}
-            >
-              Keep Existing
-            </Button>
-            <Button
-              type="button"
-              size="md"
-              loading={busy}
-              className="le-submit gradient-btn"
-              onClick={replaceWithMine}
-            >
-              Replace with Mine
-            </Button>
-          </div>
-        </div>
+        <AppModalFooter
+          lead={
+            <AppButton variant="subtle" onClick={() => setDuplicate(null)} disabled={busy}>
+              Edit Fields
+            </AppButton>
+          }
+        >
+          <AppButton variant="subtle" onClick={onClose} disabled={busy}>
+            Keep Existing
+          </AppButton>
+          <AppButton onClick={replaceWithMine} loading={busy}>
+            Replace with Mine
+          </AppButton>
+        </AppModalFooter>
       </div>
     )
   }
@@ -669,6 +652,8 @@ function LinkEditorForm({ link: editingLink, links, collections, tags, addLink, 
             onSearchChange={setTagSearch}
             dropdownOpened={isDropdownOpened}
             clearable
+            clearButtonProps={accessibleClearButtonProps}
+            renderPill={renderAccessibleTagPill}
             maxDropdownHeight={180}
             comboboxProps={{
               position: 'bottom-start',
@@ -803,40 +788,29 @@ function LinkEditorForm({ link: editingLink, links, collections, tags, addLink, 
         </div>
       </div>
 
-      {/* FIXED DOCKED FOOTER - SEPARATE SIBLING, NEVER OVERLAPS */}
-      <div className="le-modal-footer">
-        <div className="le-footer-hint">
-          <span className="le-kbd-combo">
-            <kbd className="le-kbd">↵</kbd>
-            <span>Enter to save</span>
-          </span>
-          <span className="le-kbd-divider">•</span>
-          <span className="le-kbd-combo">
-            <kbd className="le-kbd">⌘S</kbd>
-            <span>or Ctrl+Enter</span>
-          </span>
-        </div>
-        <div className="le-footer-actions">
-          <Button
-            type="button"
-            size="md"
-            variant="subtle"
-            className="le-cancel"
-            onClick={onClose}
-            disabled={busy}
-          >
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            size="md"
-            loading={busy}
-            className="le-submit gradient-btn"
-          >
-            {editingLink ? 'Save changes' : 'Add to universe'}
-          </Button>
-        </div>
-      </div>
+      {/* Docked footer: hints on the left, actions on the right. */}
+      <AppModalFooter
+        lead={
+          <div className="le-footer-hint">
+            <span className="le-kbd-combo">
+              <kbd className="le-kbd">↵</kbd>
+              <span>Enter to save</span>
+            </span>
+            <span className="le-kbd-divider">•</span>
+            <span className="le-kbd-combo">
+              <kbd className="le-kbd">⌘S</kbd>
+              <span>or Ctrl+Enter</span>
+            </span>
+          </div>
+        }
+      >
+        <AppButton variant="subtle" onClick={onClose} disabled={busy}>
+          Cancel
+        </AppButton>
+        <AppButton type="submit" loading={busy}>
+          {editingLink ? 'Save changes' : 'Add to universe'}
+        </AppButton>
+      </AppModalFooter>
     </form>
   )
 }
@@ -854,42 +828,28 @@ export default function AddEditLinkModal() {
   const addCollection = useLinkStore((s) => s.addCollection)
 
   return (
-    <Modal
+    <AppModal
       opened={open}
       onClose={closeEditor}
-      title={
-        <div className="le-title-wrap">
-          <div className="le-title-icon-badge">
-            {editingLink ? (
-              <IconEdit size={18} className="le-title-icon" />
-            ) : (
-              <IconSparkles size={18} className="le-title-icon" />
-            )}
-          </div>
-          <div>
-            <div className="le-title-main">
-              {editingLink ? 'Edit bookmark' : 'Save a new link'}
-            </div>
-            <div className="le-title-sub">
-              {editingLink
-                ? 'Fine-tune metadata and tags for this link.'
-                : 'Add a new bookmark to your universe.'}
-            </div>
-          </div>
-        </div>
-      }
       size="lg"
-      padding={0}
-      centered
-      classNames={{
-        root: 'le-modal-root',
-        content: 'le-modal-content',
-        header: 'le-modal-header',
-        title: 'le-modal-title',
-        body: 'le-modal-body',
-        close: 'le-modal-close',
-      }}
+      className="le-modal-root"
     >
+      <AppModalHeader
+        icon={
+          editingLink ? (
+            <IconEdit size={18} className="le-title-icon" />
+          ) : (
+            <IconSparkles size={18} className="le-title-icon" />
+          )
+        }
+        title={editingLink ? 'Edit bookmark' : 'Save a new link'}
+        subtitle={
+          editingLink
+            ? 'Fine-tune metadata and tags for this link.'
+            : 'Add a new bookmark to your universe.'
+        }
+        onClose={closeEditor}
+      />
       {open && (
         <LinkEditorForm
           key={editingLink?._id || 'create'}
@@ -903,6 +863,6 @@ export default function AddEditLinkModal() {
           onClose={closeEditor}
         />
       )}
-    </Modal>
+    </AppModal>
   )
 }

@@ -1,6 +1,10 @@
-import { Modal } from '@mantine/core'
 import { IconKeyboard } from '@tabler/icons-react'
 import { useUiStore } from '../../store/uiStore'
+import {
+  AppModal,
+  AppModalBody,
+  AppModalHeader,
+} from './ModalShell'
 import './ShortcutsModal.css'
 
 const SHORTCUT_GROUPS = [
@@ -38,59 +42,52 @@ export default function ShortcutsModal() {
   const closeShortcuts = useUiStore((s) => s.closeShortcuts)
 
   return (
-    <Modal
+    <AppModal
       opened={isOpen}
       onClose={closeShortcuts}
-      title={
-        <div className="shortcuts-title-box">
-          <div className="shortcuts-title-icon">
-            <IconKeyboard size={18} />
-          </div>
-          <div>
-            <span className="shortcuts-main-title">Keyboard Shortcuts</span>
-            <span className="shortcuts-sub-title">Power-user navigation for Linkarium</span>
-          </div>
-        </div>
-      }
       size="md"
-      centered
-      classNames={{
-        header: 'shortcuts-modal-header',
-        body: 'shortcuts-modal-body',
-        content: 'shortcuts-modal-content',
-      }}
+      className="shortcuts-modal-root"
     >
-      <div className="shortcuts-container">
-        {SHORTCUT_GROUPS.map((group) => (
-          <div key={group.title} className="shortcuts-group">
-            <h4 className="shortcuts-group-title">{group.title}</h4>
-            <div className="shortcuts-list">
-              {group.shortcuts.map((sc, i) => (
-                <div key={i} className="shortcuts-row">
-                  <span className="shortcuts-label">{sc.label}</span>
-                  <div className="shortcuts-keys">
-                    {sc.keys.map((k, j) => (
-                      <kbd key={j} className="shortcuts-kbd">
-                        {k}
-                      </kbd>
-                    ))}
-                    {sc.altKeys && (
-                      <>
-                        <span className="shortcuts-or">/</span>
-                        {sc.altKeys.map((k, j) => (
-                          <kbd key={j} className="shortcuts-kbd">
-                            {k}
-                          </kbd>
-                        ))}
-                      </>
-                    )}
+      <AppModalHeader
+        icon={<IconKeyboard size={20} />}
+        title="Keyboard Shortcuts"
+        subtitle="Power-user navigation for Linkarium"
+        onClose={closeShortcuts}
+      />
+
+      <AppModalBody>
+        <div className="shortcuts-container">
+          {SHORTCUT_GROUPS.map((group) => (
+            <div key={group.title} className="shortcuts-group">
+              <h4 className="shortcuts-group-title">{group.title}</h4>
+              <div className="shortcuts-list">
+                {group.shortcuts.map((sc, i) => (
+                  <div key={i} className="shortcuts-row">
+                    <span className="shortcuts-label">{sc.label}</span>
+                    <div className="shortcuts-keys">
+                      {sc.keys.map((k, j) => (
+                        <kbd key={j} className="shortcuts-kbd">
+                          {k}
+                        </kbd>
+                      ))}
+                      {sc.altKeys && (
+                        <>
+                          <span className="shortcuts-or">/</span>
+                          {sc.altKeys.map((k, j) => (
+                            <kbd key={j} className="shortcuts-kbd">
+                              {k}
+                            </kbd>
+                          ))}
+                        </>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
-    </Modal>
+          ))}
+        </div>
+      </AppModalBody>
+    </AppModal>
   )
 }

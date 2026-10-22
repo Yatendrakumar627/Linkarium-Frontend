@@ -12,6 +12,8 @@ import {
   IconStar,
   IconStack2,
   IconTrash,
+  IconLink,
+  IconBookmark,
   IconChevronDown,
   IconChevronRight,
   IconArchive,
@@ -21,7 +23,6 @@ import {
   IconPlayerPlay,
 } from '@tabler/icons-react'
 import { useEffect, useState } from 'react'
-import { modals } from '@mantine/modals'
 import { notifications } from '@mantine/notifications'
 import { useLinkStore } from '../../store/linkStore'
 import { useUiStore } from '../../store/uiStore'
@@ -42,6 +43,7 @@ export default function Sidebar({ open, collapsed = false, onNavigate, onMouseEn
   const openSavedViewEditor = useUiStore((s) => s.openSavedViewEditor)
   const openRuleEditor = useUiStore((s) => s.openRuleEditor)
   const openTagWebsitesModal = useUiStore((s) => s.openTagWebsitesModal)
+  const openConfirmDialog = useUiStore((s) => s.openConfirmDialog)
   const toggleSidebar = useUiStore((s) => s.toggleSidebar)
 
   const savedViews = useSavedViewStore((s) => s.views)
@@ -86,21 +88,36 @@ export default function Sidebar({ open, collapsed = false, onNavigate, onMouseEn
 
   const handleDeleteSavedView = (v) => {
     const isRule = v.kind === 'rule'
-    modals.openConfirmModal({
+    openConfirmDialog({
       title: isRule ? 'Delete rule?' : 'Delete saved view?',
-      children: isRule
-        ? `"${v.name}" will be removed. The links it already changed are not affected.`
-        : `"${v.name}" will be removed. The links it matched are not affected.`,
-      labels: { confirm: 'Delete', cancel: 'Cancel' },
-      confirmProps: { color: 'red' },
+      subtitle: isRule
+        ? 'The rule stops running. Links it already changed are untouched.'
+        : 'The view is removed from your sidebar. Links it matched are untouched.',
+      tone: 'danger',
+      icon: isRule ? <IconPlayerPlay size={20} /> : <IconBookmark size={20} />,
+      confirmLabel: isRule ? 'Delete rule' : 'Delete view',
+      body: (
+        <ul className="app-modal-consequences">
+          <li className="is-destructive">
+            <IconTrash size={14} />
+            <span>
+              <strong>{v.name}</strong> is deleted. This cannot be undone.
+            </span>
+          </li>
+          <li className="is-safe">
+            <IconLink size={14} />
+            <span>
+              {isRule
+                ? 'The links the rule already changed are not affected.'
+                : 'The links it matched are not affected.'}
+            </span>
+          </li>
+        </ul>
+      ),
       onConfirm: async () => {
-        try {
-          await removeSavedView(v._id)
-          if (view.type === 'savedview' && view.id === v._id) go({ type: 'all' })
-          notifications.show({ message: isRule ? 'Rule deleted' : 'Saved view deleted', color: 'green' })
-        } catch (err) {
-          notifications.show({ message: err.message, color: 'red' })
-        }
+        await removeSavedView(v._id)
+        if (view.type === 'savedview' && view.id === v._id) go({ type: 'all' })
+        notifications.show({ message: isRule ? 'Rule deleted' : 'Saved view deleted', color: 'cyan' })
       },
     })
   }
@@ -114,19 +131,49 @@ export default function Sidebar({ open, collapsed = false, onNavigate, onMouseEn
   }
 
   const handleDeleteCollection = (c) => {
-    modals.openConfirmModal({
+    const linkCount = c.count || 0
+    openConfirmDialog({
       title: 'Delete collection?',
-      children: `"${c.name}" will be removed. Its links are kept but moved to "No collection".`,
-      labels: { confirm: 'Delete', cancel: 'Cancel' },
-      confirmProps: { color: 'red' },
+      subtitle: 'The collection itself is removed for good',
+      tone: 'danger',
+      icon: <IconTrash size={20} />,
+      confirmLabel: 'Delete collection',
+      body: (
+        <div>
+          <div className="app-modal-entity">
+            <span
+              className="app-modal-dot"
+              style={{
+                background: c.color || '#6a18b8',
+                boxShadow: `0 0 10px ${c.color || '#6a18b8'}55`,
+              }}
+            />
+            <span className="app-modal-entity-name">{c.name}</span>
+            <span className="app-modal-entity-count">
+              {linkCount} {linkCount === 1 ? 'link' : 'links'}
+            </span>
+          </div>
+          <ul className="app-modal-consequences">
+            <li className="is-destructive">
+              <IconTrash size={14} />
+              <span>
+                <strong>{c.name}</strong> is deleted. This cannot be undone.
+              </span>
+            </li>
+            <li className="is-safe">
+              <IconLink size={14} />
+              <span>
+                Your {linkCount} {linkCount === 1 ? 'link' : 'links'} {linkCount === 1 ? 'is' : 'are'} kept
+                and moved to <strong>No collection</strong>.
+              </span>
+            </li>
+          </ul>
+        </div>
+      ),
       onConfirm: async () => {
-        try {
-          await removeCollection(c.id)
-          if (view.type === 'collection' && view.id === c.id) go({ type: 'all' })
-          notifications.show({ message: 'Collection deleted', color: 'green' })
-        } catch (err) {
-          notifications.show({ message: err.message, color: 'red' })
-        }
+        await removeCollection(c.id)
+        if (view.type === 'collection' && view.id === c.id) go({ type: 'all' })
+        notifications.show({ message: 'Collection deleted', color: 'cyan' })
       },
     })
   }

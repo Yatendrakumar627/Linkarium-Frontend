@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Modal, Button, Loader } from '@mantine/core'
+import { Loader } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
 import {
   IconTag,
@@ -12,6 +12,12 @@ import { linksApi } from '../../api/endpoints'
 import { useLinkStore } from '../../store/linkStore'
 import { useUiStore } from '../../store/uiStore'
 import { hostOf, faviconUrl } from '../../utils'
+import {
+  AppButton,
+  AppModal,
+  AppModalFooter,
+  AppModalHeader,
+} from '../common/ModalShell'
 import './AddWebsitesToTagModal.css'
 
 export default function AddWebsitesToTagModal() {
@@ -184,42 +190,20 @@ export default function AddWebsitesToTagModal() {
   }
 
   return (
-    <Modal
+    <AppModal
       opened={opened}
       onClose={close}
-      title={null}
-      centered
       size="lg"
       className="tag-websites-modal-root"
-      classNames={{
-        content: 'tag-websites-modal-content',
-        body: 'tag-websites-modal-body',
-      }}
-      withCloseButton={false}
     >
       <div className="tag-modal-container">
         {/* Header */}
-        <div className="tag-modal-header">
-          <div className="tag-modal-title-group">
-            <div className="tag-modal-badge">
-              <IconTag size={20} />
-            </div>
-            <div>
-              <div className="tag-modal-title">Add Websites to Tag</div>
-              <div className="tag-modal-subtitle">
-                Select multiple websites to categorize under #{cleanTag || 'tag'}
-              </div>
-            </div>
-          </div>
-          <button
-            type="button"
-            className="action-btn tag-modal-close-btn"
-            onClick={close}
-            aria-label="Close"
-          >
-            <IconX size={18} />
-          </button>
-        </div>
+        <AppModalHeader
+          icon={<IconTag size={20} />}
+          title="Add Websites to Tag"
+          subtitle={`Select multiple websites to categorize under #${cleanTag || 'tag'}`}
+          onClose={close}
+        />
 
         {/* Tag input section */}
         <div className="tag-modal-section">
@@ -474,27 +458,26 @@ export default function AddWebsitesToTagModal() {
         </div>
 
         {/* Footer actions */}
-        <div className="tag-modal-footer">
-          <div className="tag-footer-counter">
-            <span className="tag-count-number">{selectedIds.size}</span>
-            <span>website{selectedIds.size === 1 ? '' : 's'} selected</span>
-          </div>
-
-          <div className="tag-footer-buttons">
-            <Button variant="subtle" color="gray" onClick={close} disabled={submitting}>
-              Cancel
-            </Button>
-            <Button
-              className="gradient-btn tag-submit-btn"
-              onClick={handleSubmit}
-              loading={submitting}
-              disabled={selectedIds.size === 0 || !cleanTag}
-            >
-              Add {selectedIds.size > 0 ? `(${selectedIds.size})` : ''} to #{cleanTag || 'tag'}
-            </Button>
-          </div>
-        </div>
+        <AppModalFooter
+          meta={
+            <>
+              <span className="tag-count-number">{selectedIds.size}</span>
+              <span>website{selectedIds.size === 1 ? '' : 's'} selected</span>
+            </>
+          }
+        >
+          <AppButton variant="subtle" onClick={close} disabled={submitting}>
+            Cancel
+          </AppButton>
+          <AppButton
+            onClick={handleSubmit}
+            loading={submitting}
+            disabled={selectedIds.size === 0 || !cleanTag}
+          >
+            Add {selectedIds.size > 0 ? `(${selectedIds.size})` : ''} to #{cleanTag || 'tag'}
+          </AppButton>
+        </AppModalFooter>
       </div>
-    </Modal>
+    </AppModal>
   )
 }

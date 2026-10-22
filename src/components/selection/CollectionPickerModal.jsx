@@ -1,6 +1,13 @@
-import { useState } from 'react'
-import { Button, Modal, Stack, Text, UnstyledButton } from '@mantine/core'
+import { useEffect, useState } from 'react'
+import { IconFolder, IconCheck, IconFolderOff } from '@tabler/icons-react'
 import { useLinkStore } from '../../store/linkStore'
+import {
+  AppButton,
+  AppModal,
+  AppModalBody,
+  AppModalFooter,
+  AppModalHeader,
+} from '../common/ModalShell'
 import './CollectionPickerModal.css'
 
 export default function CollectionPickerModal({ opened, onClose, onConfirm }) {
@@ -8,50 +15,109 @@ export default function CollectionPickerModal({ opened, onClose, onConfirm }) {
   // undefined = nothing chosen yet (confirm disabled); null = explicit "No collection".
   const [selectedId, setSelectedId] = useState(undefined)
 
+  // Reset the selection every time the dialog opens so it never restores a
+  // stale destination from a previous move.
+  useEffect(() => {
+    if (opened) setSelectedId(undefined)
+  }, [opened])
+
   const handleConfirm = () => {
     if (selectedId === undefined) return
     onConfirm(selectedId)
     setSelectedId(undefined)
   }
 
+  const selectedName =
+    selectedId === undefined
+      ? null
+      : selectedId === null
+        ? 'No collection'
+        : collections.find((c) => c.id === selectedId)?.name
+
   return (
-    <Modal opened={opened} onClose={onClose} title="Move to collection" size="sm">
-      <Stack className="collection-picker-body">
-        <Text size="sm" c="dimmed">
-          Choose a collection to move the selected links to.
-        </Text>
+    <AppModal
+      opened={opened}
+      onClose={onClose}
+      size="sm"
+      className="collection-picker-root"
+    >
+      <AppModalHeader
+        icon={<IconFolder size={20} />}
+        title="Move to collection"
+        subtitle="Pick a destination for the selected links"
+        onClose={onClose}
+      />
 
-        <UnstyledButton
-          className={`collection-picker-item ${selectedId === null ? 'selected' : ''}`}
-          onClick={() => setSelectedId(null)}
-        >
-          <div className="collection-picker-dot" style={{ background: 'var(--text-secondary)' }} />
-          <Text size="sm" fw={500}>No collection</Text>
-        </UnstyledButton>
-
-        {collections.map((c) => (
-          <UnstyledButton
-            key={c.id}
-            className={`collection-picker-item ${selectedId === c.id ? 'selected' : ''}`}
-            onClick={() => setSelectedId(c.id)}
+      <AppModalBody>
+        <div className="collection-picker-list">
+          <button
+            type="button"
+            className={`app-modal-row ${selectedId === null ? 'is-selected' : ''}`}
+            onClick={() => setSelectedId(null)}
+            aria-pressed={selectedId === null}
           >
-            <div className="collection-picker-dot" style={{ background: c.color || '#8b5cf6' }} />
-            <Text size="sm" fw={500}>{c.name}</Text>
-            <Text size="xs" c="dimmed" ml="auto">{c.count ?? 0}</Text>
-          </UnstyledButton>
-        ))}
+            <span
+              className={`collection-picker-radio ${selectedId === null ? 'is-checked' : ''}`}
+              aria-hidden="true"
+            >
+              {selectedId === null ? <IconCheck size={11} stroke={3} /> : null}
+            </span>
+            <span className="app-modal-row-main">
+              <span className="app-modal-row-title">No collection</span>
+            </span>
+            <IconFolderOff size={15} className="collection-picker-tail-icon" />
+          </button>
 
-        {collections.length === 0 && (
-          <Text size="sm" c="dimmed" ta="center" py="md">
-            No collections yet. Create one first.
-          </Text>
-        )}
+          {collections.map((c) => {
+            const selected = selectedId === c.id
+            return (
+              <button
+                key={c.id}
+                type="button"
+                className={`app-modal-row ${selected ? 'is-selected' : ''}`}
+                onClick={() => setSelectedId(c.id)}
+                aria-pressed={selected}
+              >
+                <span
+                  className={`collection-picker-radio ${selected ? 'is-checked' : ''}`}
+                  aria-hidden="true"
+                >
+                  {selected ? <IconCheck size={11} stroke={3} /> : null}
+                </span>
+                <span
+                  className="app-modal-dot"
+                  style={{
+                    background: c.color || '#6a18b8',
+                    boxShadow: `0 0 10px ${c.color || '#6a18b8'}55`,
+                  }}
+                />
+                <span className="app-modal-row-main">
+                  <span className="app-modal-row-title">{c.name}</span>
+                </span>
+                <span className="app-modal-row-tail">{c.count ?? 0}</span>
+              </button>
+            )
+          })}
 
-        <div className="collection-picker-actions">
-          <Button variant="subtle" onClick={onClose}>Cancel</Button>
-          <Button className="gradient-btn" disabled={selectedId === undefined} onClick={handleConfirm}>Move here</Button>
+          {collections.length === 0 ? (
+            <div className="app-modal-empty">
+              <IconFolder size={26} opacity={0.4} />
+              <div>No collections yet. Create one first.</div>
+            </div>
+          ) : null}
         </div>
-      </Stack>
-    </Modal>
+      </AppModalBody>
+
+      <AppModalFooter
+        meta={selectedName ? <span className="collection-picker-meta">→ {selectedName}</span> : null}
+      >
+        <AppButton variant="subtle" onClick={onClose}>
+          Cancel
+        </AppButton>
+        <AppButton disabled={selectedId === undefined} onClick={handleConfirm}>
+          Move here
+        </AppButton>
+      </AppModalFooter>
+    </AppModal>
   )
 }

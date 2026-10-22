@@ -1,97 +1,21 @@
 /* ==========================================================================
    Add Websites To Tag Modal — Minimalist Luxury Obsidian & Cyan
+   --------------------------------------------------------------------------
+   The shell (panel, header, footer, buttons) comes from the shared design
+   system (`styles/modal.css`). Only the tag-specific pieces live here.
    ========================================================================== */
 
-.tag-websites-modal-root .mantine-Modal-overlay {
-  background: rgba(5, 5, 5, 0.78) !important;
-  backdrop-filter: blur(14px) !important;
-  -webkit-backdrop-filter: blur(14px) !important;
-}
-
-.tag-websites-modal-content {
-  background: radial-gradient(120% 120% at 50% 0%, rgba(20, 10, 40, 0.98) 0%, rgba(5, 5, 5, 0.99) 100%) !important;
-  backdrop-filter: blur(36px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(36px) saturate(180%) !important;
-  border: 1px solid rgba(0, 229, 255, 0.22) !important;
-  border-radius: 20px !important;
-  box-shadow:
-    0 0 0 1px rgba(0, 229, 255, 0.1),
-    0 24px 64px -12px rgba(0, 0, 0, 0.9),
-    0 0 70px -20px rgba(59, 10, 107, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
-  overflow: hidden !important;
-  max-height: min(90vh, 740px) !important;
-  padding: 0 !important;
-}
-
-.tag-websites-modal-body {
-  padding: 0 !important;
+.tag-websites-modal-root .app-modal-container {
+  max-height: min(90vh, 740px);
 }
 
 .tag-modal-container {
   display: flex;
   flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
   height: 100%;
   max-height: min(90vh, 740px);
-}
-
-/* Header */
-.tag-modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 18px 22px 14px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
-  background: rgba(255, 255, 255, 0.015);
-  flex-shrink: 0;
-}
-
-.tag-modal-title-group {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.tag-modal-badge {
-  width: 38px;
-  height: 38px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, rgba(59, 10, 107, 0.5) 0%, rgba(0, 229, 255, 0.15) 100%);
-  border: 1px solid rgba(0, 229, 255, 0.35);
-  display: grid;
-  place-items: center;
-  color: #00e5ff;
-  box-shadow: 0 0 16px rgba(0, 229, 255, 0.22);
-  flex-shrink: 0;
-}
-
-.tag-modal-title {
-  font-family: 'Space Grotesk', 'Inter', sans-serif;
-  font-size: 16.5px;
-  font-weight: 700;
-  letter-spacing: -0.015em;
-  color: #fff;
-  line-height: 1.25;
-}
-
-.tag-modal-subtitle {
-  font-size: 12px;
-  color: var(--text-secondary);
-  margin-top: 1px;
-}
-
-.tag-modal-close-btn {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  display: grid;
-  place-items: center;
-  color: var(--text-faint);
-  transition: all var(--dur-fast) var(--ease);
-}
-.tag-modal-close-btn:hover {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.08);
 }
 
 /* Tag input section */
@@ -503,7 +427,7 @@
 .tag-already-pill {
   font-size: 10px;
   font-weight: 600;
-  color: #a855f7;
+  color: #d8b4fe;
   background: rgba(168, 85, 247, 0.12);
   border: 1px solid rgba(168, 85, 247, 0.28);
   border-radius: 999px;
@@ -563,16 +487,6 @@
 }
 
 /* Footer */
-.tag-modal-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 22px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(10, 5, 20, 0.7);
-  flex-shrink: 0;
-}
-
 .tag-footer-counter {
   display: flex;
   align-items: center;
@@ -591,23 +505,7 @@
   font-size: 11.5px;
 }
 
-.tag-footer-buttons {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.tag-submit-btn {
-  height: 38px !important;
-  padding: 0 18px !important;
-  font-size: 13px !important;
-  font-weight: 600 !important;
-}
-
 @media (max-width: 36em) {
-  .tag-modal-header {
-    padding: 14px 16px;
-  }
   .tag-modal-section {
     padding: 12px 16px;
   }
@@ -616,14 +514,5 @@
   }
   .tag-websites-list {
     padding: 8px 12px;
-  }
-  .tag-modal-footer {
-    padding: 12px 16px;
-    flex-direction: column;
-    gap: 10px;
-    align-items: stretch;
-  }
-  .tag-footer-buttons {
-    justify-content: flex-end;
   }
 }

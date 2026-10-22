@@ -1,8 +1,19 @@
-import { useEffect, useState } from 'react'
-import { Modal, TagsInput, Button, Group, Stack } from '@mantine/core'
+import { useEffect, useMemo, useState } from 'react'
+import { TagsInput } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
+import { IconTag, IconCheck } from '@tabler/icons-react'
 import { useLinkStore } from '../../store/linkStore'
 import { useUiStore } from '../../store/uiStore'
+import {
+  AppButton,
+  AppModal,
+  AppModalBody,
+  AppModalFooter,
+  AppModalHeader,
+  AppModalNote,
+} from '../common/ModalShell'
+import { accessibleClearButtonProps, renderAccessibleTagPill } from '../common/tagInput'
+import './BulkTagModal.css'
 
 // Tag several links at once.
 //
@@ -14,6 +25,7 @@ export default function BulkTagModal({ opened, onClose, onConfirm }) {
   const selectedIds = useUiStore((s) => s.selectedIds)
 
   const [value, setValue] = useState([])
+  const [busy, setBusy] = useState(false)
 
   useEffect(() => {
     if (!opened) return
@@ -23,27 +35,58 @@ export default function BulkTagModal({ opened, onClose, onConfirm }) {
       for (const tag of link.tags || []) existing.add(tag)
     }
     setValue([...existing])
+    setBusy(false)
   }, [opened, links, selectedIds])
+
+  const selectedCount = selectedIds.size
+
+  const suggestions = useMemo(
+    () => (tags || []).map((t) => t.tag).filter((t) => !value.includes(t)),
+    [tags, value]
+  )
 
   const handleConfirm = async () => {
     if (!value.length) {
       notifications.show({ message: 'Pick at least one tag.', color: 'gray' })
       return
     }
-    await onConfirm(value)
+    setBusy(true)
+    try {
+      await onConfirm(value)
+    } finally {
+      setBusy(false)
+    }
   }
 
   return (
-    <Modal opened={opened} onClose={onClose} title="Tag selected links" centered>
-      <Stack gap="sm">
+    <AppModal opened={opened} onClose={onClose} size="md" className="bulk-tag-root">
+      <AppModalHeader
+        icon={<IconTag size={20} />}
+        title="Tag selected links"
+        subtitle={
+          selectedCount > 0
+            ? `Apply tags to ${selectedCount} selected link${selectedCount === 1 ? '' : 's'}`
+            : 'Apply tags to the selected links'
+        }
+        onClose={busy ? undefined : onClose}
+      />
+
+      <AppModalBody className="bulk-tag-body">
+        <AppModalNote tone="info" icon={<IconCheck size={14} />}>
+          Tags already on the selected links are pre-filled. Add new ones or remove existing
+          ones to update every selected link at once.
+        </AppModalNote>
+
         <TagsInput
           value={value}
           onChange={setValue}
           placeholder="Type a tag and press Enter"
-          data={(tags || []).map((t) => t.tag)}
+          data={suggestions}
           clearable
+          clearButtonProps={accessibleClearButtonProps}
+          renderPill={renderAccessibleTagPill}
           openOnFocus={false}
-          maxDropdownHeight={160}
+          maxDropdownHeight={180}
           comboboxProps={{
             position: 'bottom-start',
             middlewares: {
@@ -54,13 +97,34 @@ export default function BulkTagModal({ opened, onClose, onConfirm }) {
             withinPortal: true,
           }}
         />
-        <Group justify="flex-end">
-          <Button variant="subtle" color="gray" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button onClick={handleConfirm}>Apply tags</Button>
-        </Group>
-      </Stack>
-    </Modal>
+
+        {suggestions.length > 0 ? (
+          <div className="bulk-tag-suggestions">
+            <div className="app-modal-section-label">Existing tags</div>
+            <div className="bulk-tag-chips">
+              {suggestions.slice(0, 16).map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  className="bulk-tag-chip"
+                  onClick={() => setValue((prev) => [...prev, t])}
+                >
+                  #{t}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : null}
+      </AppModalBody>
+
+      <AppModalFooter meta={`${value.length} tag${value.length === 1 ? '' : 's'} selected`}>
+        <AppButton variant="subtle" onClick={onClose} disabled={busy}>
+          Cancel
+        </AppButton>
+        <AppButton onClick={handleConfirm} loading={busy} disabled={!value.length}>
+          Apply tags
+        </AppButton>
+      </AppModalFooter>
+    </AppModal>
   )
 }

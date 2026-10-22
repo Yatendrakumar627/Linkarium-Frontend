@@ -1,19 +1,5 @@
 import { useEffect, useState } from 'react'
-import {
-  Modal,
-  Button,
-  TextInput,
-  Group,
-  Stack,
-  Text,
-  Badge,
-  Alert,
-  Loader,
-  Paper,
-  Code,
-  Checkbox,
-  Select,
-} from '@mantine/core'
+import { Checkbox, Select } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
 import {
   IconKey,
@@ -25,6 +11,14 @@ import {
 import { apiKeysApi } from '../../api/endpoints'
 import { timeAgoShort } from '../../utils'
 import { useUiStore } from '../../store/uiStore'
+import {
+  AppButton,
+  AppModal,
+  AppModalBody,
+  AppModalFooter,
+  AppModalHeader,
+} from '../common/ModalShell'
+import './ApiKeysModal.css'
 
 export function ApiKeysList() {
   const [keys, setKeys] = useState([])
@@ -90,7 +84,7 @@ export function ApiKeysList() {
       setNewKeyName('')
       setCreating(false)
       await loadKeys()
-      notifications.show({ message: 'API key created', color: 'green' })
+      notifications.show({ message: 'API key created', color: 'cyan' })
     } catch (err) {
       setError(err.message)
     } finally {
@@ -103,7 +97,7 @@ export function ApiKeysList() {
     try {
       await apiKeysApi.remove(id)
       setKeys((prev) => prev.filter((k) => (k.id || k._id) !== id))
-      notifications.show({ message: 'API key revoked', color: 'green' })
+      notifications.show({ message: 'API key revoked', color: 'cyan' })
     } catch (err) {
       notifications.show({ message: err.message, color: 'red' })
     } finally {
@@ -114,180 +108,182 @@ export function ApiKeysList() {
   const copySecret = () => {
     if (!revealedKey?.secret) return
     navigator.clipboard.writeText(revealedKey.secret)
-    notifications.show({ message: 'API key secret copied to clipboard', color: 'green' })
+    notifications.show({ message: 'API key secret copied to clipboard', color: 'cyan' })
   }
 
   if (loading) {
     return (
-      <Group justify="center" p="xl">
-        <Loader size="sm" />
-      </Group>
+      <div className="api-keys-loading">
+        <span className="api-keys-spinner" />
+        <span>Loading API keys…</span>
+      </div>
     )
   }
 
   return (
-    <Stack gap="sm">
-      {error && (
-        <Alert color="red" variant="light" title="Error">
+    <div className="api-keys-list">
+      {error ? (
+        <div className="api-keys-error" role="alert">
           {error}
-        </Alert>
-      )}
+        </div>
+      ) : null}
 
-      {revealedKey && (
-        <Alert
-          color="green"
-          variant="light"
-          title="Save your new API key now"
-          icon={<IconAlertCircle size={18} />}
-        >
-          <Text size="xs" mb="xs">
-            This key grants programmatic access to your links. It will <strong>never</strong> be shown again.
-          </Text>
-          <Group gap="xs">
-            <Code block style={{ flex: 1, fontSize: '0.8rem', userSelect: 'all' }}>
-              {revealedKey.secret}
-            </Code>
-            <Button size="xs" variant="default" onClick={copySecret} leftSection={<IconCopy size={13} />}>
+      {revealedKey ? (
+        <div className="api-keys-reveal">
+          <div className="api-keys-reveal-head">
+            <IconAlertCircle size={16} />
+            <span>Save your new API key now</span>
+          </div>
+          <p className="api-keys-reveal-copy">
+            This key grants programmatic access to your links. It will <strong>never</strong> be
+            shown again.
+          </p>
+          <div className="api-keys-reveal-row">
+            <code className="api-keys-secret">{revealedKey.secret}</code>
+            <button
+              type="button"
+              className="action-btn api-keys-copy-btn"
+              onClick={copySecret}
+            >
+              <IconCopy size={13} />
               Copy
-            </Button>
-          </Group>
-          <Group justify="flex-end" mt="xs">
-            <Button size="xs" variant="subtle" color="gray" onClick={() => setRevealedKey(null)}>
-              Done
-            </Button>
-          </Group>
-        </Alert>
-      )}
+            </button>
+          </div>
+          <div className="api-keys-reveal-foot">
+            <AppButton variant="subtle" size="sm" onClick={() => setRevealedKey(null)}>
+              I have saved it
+            </AppButton>
+          </div>
+        </div>
+      ) : null}
 
-      <Group justify="space-between">
-        <Text size="xs" c="dimmed">
-          API keys allow the browser extension and CLI tools to interact with your library.
-        </Text>
-        {!creating && (
-          <Button
-            size="xs"
-            color="violet"
-            variant="light"
+      <div className="api-keys-toolbar">
+        <span className="api-keys-toolbar-hint">
+          API keys let the browser extension and CLI tools work with your library.
+        </span>
+        {!creating ? (
+          <button
+            type="button"
+            className="action-btn api-keys-create-btn"
             onClick={() => setCreating(true)}
-            leftSection={<IconPlus size={13} />}
           >
-            Create API Key
-          </Button>
-        )}
-      </Group>
+            <IconPlus size={14} />
+            Create API key
+          </button>
+        ) : null}
+      </div>
 
-      {creating && (
-        <Paper withBorder p="sm" radius="sm" style={{ background: 'var(--bg-glass)' }}>
-          <form onSubmit={handleCreate}>
-            <Stack gap="xs">
-              <Text size="xs" fw={600}>New API Key</Text>
-              <TextInput
-                size="xs"
-                label="Key description / device"
-                placeholder="e.g. Chrome Extension on Laptop"
-                required
-                value={newKeyName}
-                onChange={(e) => setNewKeyName(e.currentTarget.value)}
-              />
-              <div>
-                <Text size="xs" fw={500} mb={4}>Permissions</Text>
-                <Group gap="md">
-                  <Checkbox
-                    size="xs"
-                    label="links:read"
-                    checked={readScope}
-                    onChange={(e) => setReadScope(e.currentTarget.checked)}
-                  />
-                  <Checkbox
-                    size="xs"
-                    label="links:write"
-                    checked={writeScope}
-                    onChange={(e) => setWriteScope(e.currentTarget.checked)}
-                  />
-                  <Checkbox
-                    size="xs"
-                    label="links:delete"
-                    checked={deleteScope}
-                    onChange={(e) => setDeleteScope(e.currentTarget.checked)}
-                  />
-                </Group>
-              </div>
-              <Select
-                size="xs"
-                label="Expiration"
-                value={expiresInDays}
-                onChange={setExpiresInDays}
-                data={[
-                  { value: '30', label: '30 days' },
-                  { value: '90', label: '90 days' },
-                  { value: '365', label: '1 year' },
-                  { value: '', label: 'No expiration' },
-                ]}
-              />
-              <Group justify="flex-end" mt="xs">
-                <Button size="xs" variant="default" onClick={() => setCreating(false)}>
-                  Cancel
-                </Button>
-                <Button size="xs" color="violet" type="submit" loading={busy}>
-                  Generate Key
-                </Button>
-              </Group>
-            </Stack>
-          </form>
-        </Paper>
-      )}
+      {creating ? (
+        <form className="api-keys-create" onSubmit={handleCreate}>
+          <div className="app-modal-field">
+            <label className="app-modal-label" htmlFor="api-key-name">
+              Key description / device
+            </label>
+            <input
+              id="api-key-name"
+              className="app-modal-input"
+              placeholder="e.g. Chrome Extension on Laptop"
+              required
+              value={newKeyName}
+              onChange={(e) => setNewKeyName(e.currentTarget.value)}
+            />
+          </div>
 
-      <Stack gap="xs">
+          <div className="app-modal-field">
+            <span className="app-modal-label">Permissions</span>
+            <div className="api-keys-scopes">
+              <Checkbox
+                size="xs"
+                label="links:read"
+                checked={readScope}
+                onChange={(e) => setReadScope(e.currentTarget.checked)}
+              />
+              <Checkbox
+                size="xs"
+                label="links:write"
+                checked={writeScope}
+                onChange={(e) => setWriteScope(e.currentTarget.checked)}
+              />
+              <Checkbox
+                size="xs"
+                label="links:delete"
+                checked={deleteScope}
+                onChange={(e) => setDeleteScope(e.currentTarget.checked)}
+              />
+            </div>
+          </div>
+
+          <div className="app-modal-field">
+            <span className="app-modal-label">Expiration</span>
+            <Select
+              size="xs"
+              value={expiresInDays}
+              onChange={setExpiresInDays}
+              data={[
+                { value: '30', label: '30 days' },
+                { value: '90', label: '90 days' },
+                { value: '365', label: '1 year' },
+                { value: '', label: 'No expiration' },
+              ]}
+            />
+          </div>
+
+          <div className="api-keys-create-actions">
+            <AppButton variant="subtle" size="sm" onClick={() => setCreating(false)}>
+              Cancel
+            </AppButton>
+            <AppButton size="sm" type="submit" loading={busy}>
+              Generate key
+            </AppButton>
+          </div>
+        </form>
+      ) : null}
+
+      <div className="api-keys-rows">
         {keys.length === 0 ? (
-          <Text size="xs" c="dimmed" ta="center" py="md">
-            No active API keys yet.
-          </Text>
+          <div className="app-modal-empty">
+            <IconKey size={26} opacity={0.4} />
+            <div>No active API keys yet.</div>
+          </div>
         ) : (
           keys.map((k) => {
             const kid = k.id || k._id
             return (
-              <Paper key={kid} withBorder p="sm" radius="sm" style={{ background: 'var(--bg-glass)' }}>
-                <Group justify="space-between" wrap="nowrap">
-                  <Group gap="sm" wrap="nowrap">
-                    <div style={{ color: 'var(--text-dimmed)' }}>
-                      <IconKey size={20} />
-                    </div>
-                    <div>
-                      <Group gap="xs">
-                        <Text size="sm" fw={600}>
-                          {k.name}
-                        </Text>
-                        <Code style={{ fontSize: '0.7rem' }}>{k.prefix}…</Code>
-                      </Group>
-                      <Group gap="xs" mt={2}>
-                        {(k.scopes || []).map((scope) => (
-                          <Badge key={scope} size="xs" variant="outline" color="gray">
-                            {scope}
-                          </Badge>
-                        ))}
-                        <Text size="xs" c="dimmed">
-                          {k.lastUsedAt ? `Used ${timeAgoShort(k.lastUsedAt)}` : 'Never used'}
-                        </Text>
-                      </Group>
-                    </div>
-                  </Group>
-                  <Button
-                    size="xs"
-                    color="red"
-                    variant="subtle"
-                    loading={busyRevokeId === kid}
-                    onClick={() => handleRevoke(kid)}
-                    leftSection={<IconTrash size={13} />}
-                  >
-                    Revoke
-                  </Button>
-                </Group>
-              </Paper>
+              <div key={kid} className="api-key-row">
+                <span className="api-key-row-icon">
+                  <IconKey size={18} />
+                </span>
+                <div className="api-key-row-main">
+                  <div className="api-key-row-title">
+                    <span className="api-key-row-name">{k.name}</span>
+                    <code className="api-key-prefix">{k.prefix}…</code>
+                  </div>
+                  <div className="api-key-row-meta">
+                    {(k.scopes || []).map((scope) => (
+                      <span key={scope} className="api-key-scope">
+                        {scope}
+                      </span>
+                    ))}
+                    <span className="api-key-used">
+                      {k.lastUsedAt ? `Used ${timeAgoShort(k.lastUsedAt)}` : 'Never used'}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="action-btn danger api-key-row-revoke"
+                  onClick={() => handleRevoke(kid)}
+                  disabled={busyRevokeId === kid}
+                >
+                  <IconTrash size={13} />
+                  {busyRevokeId === kid ? 'Revoking…' : 'Revoke'}
+                </button>
+              </div>
             )
           })
         )}
-      </Stack>
-    </Stack>
+      </div>
+    </div>
   )
 }
 
@@ -296,8 +292,21 @@ export default function ApiKeysModal() {
   const close = useUiStore((s) => s.closeApiKeys)
 
   return (
-    <Modal opened={opened} onClose={close} title="Personal Access Tokens (API Keys)" size="md">
-      <ApiKeysList />
-    </Modal>
+    <AppModal opened={opened} onClose={close} size="md" className="api-keys-root">
+      <AppModalHeader
+        icon={<IconKey size={20} />}
+        title="Personal Access Tokens"
+        subtitle="API keys for the extension and CLI tools"
+        onClose={close}
+      />
+      <AppModalBody className="api-keys-body">
+        <ApiKeysList />
+      </AppModalBody>
+      <AppModalFooter>
+        <AppButton variant="subtle" onClick={close}>
+          Done
+        </AppButton>
+      </AppModalFooter>
+    </AppModal>
   )
 }

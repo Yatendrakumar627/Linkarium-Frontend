@@ -6,6 +6,7 @@ import Sidebar from './Sidebar'
 import Topbar from './Topbar'
 import Hub from '../views/Hub'
 import ClipboardSniffer from '../common/ClipboardSniffer'
+import ConfirmDialog from '../common/ConfirmDialog'
 import InstallPrompt from './InstallPrompt'
 import './AppShell.css'
 
@@ -194,6 +195,8 @@ export default function AppShell() {
       </Suspense>
 
       <ClipboardSniffer />
+      {/* Destructive confirmations — kept eager so the dialog never lags. */}
+      <ConfirmDialog />
       <InstallPrompt />
     </>
   )

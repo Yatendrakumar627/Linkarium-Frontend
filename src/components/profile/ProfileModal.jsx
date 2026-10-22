@@ -1,7 +1,5 @@
 import { useState } from 'react'
 import {
-  Button,
-  Modal,
   TextInput,
   PasswordInput,
   Divider,
@@ -12,7 +10,6 @@ import {
   NumberInput,
   Stack,
   Group,
-  Paper,
 } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
 import {
@@ -25,11 +22,18 @@ import {
 import { AVATAR_COLORS } from '../../constants'
 import { useAuthStore } from '../../store/authStore'
 import { useUiStore } from '../../store/uiStore'
-import { initialsOf } from '../../utils'
+import { initialsOf, readableTextOn } from '../../utils'
 import { userApi } from '../../api/endpoints'
 import TwoFactorSetup from './TwoFactorSetup'
 import { SessionsList } from './SessionsModal'
 import { ApiKeysList } from './ApiKeysModal'
+import {
+  AppButton,
+  AppModal,
+  AppModalBody,
+  AppModalFooter,
+  AppModalHeader,
+} from '../common/ModalShell'
 import './ProfileModal.css'
 
 function ProfileForm({ user, updateProfile }) {
@@ -52,7 +56,7 @@ function ProfileForm({ user, updateProfile }) {
       await updateProfile(payload)
       setCurrentPassword('')
       setNewPassword('')
-      notifications.show({ message: 'Profile updated', color: 'green' })
+      notifications.show({ message: 'Profile updated', color: 'cyan' })
     } catch (err) {
       notifications.show({ message: err.message, color: 'red' })
     } finally {
@@ -65,7 +69,12 @@ function ProfileForm({ user, updateProfile }) {
       <div className="profile-head">
         <div
           className="profile-avatar"
-          style={{ background: avatarColor || user?.avatarColor }}
+          style={{
+            background: avatarColor || user?.avatarColor,
+            // The avatar colour is user-chosen, so the initials have to pick
+            // an ink that actually contrasts with it.
+            color: readableTextOn(avatarColor || user?.avatarColor || AVATAR_COLORS[0]),
+          }}
         >
           {initialsOf(name || user?.name)}
         </div>
@@ -88,6 +97,7 @@ function ProfileForm({ user, updateProfile }) {
               className={`profile-swatch ${avatarColor === c ? 'selected' : ''}`}
               style={{ background: c }}
               aria-label={`Avatar colour ${c}`}
+              aria-pressed={avatarColor === c}
             />
           ))}
         </div>
@@ -109,9 +119,9 @@ function ProfileForm({ user, updateProfile }) {
         autoComplete="new-password"
       />
 
-      <Button type="submit" loading={busy} className="profile-submit gradient-btn">
+      <AppButton type="submit" loading={busy} className="profile-submit">
         Save changes
-      </Button>
+      </AppButton>
     </form>
   )
 }
@@ -140,7 +150,7 @@ function PreferencesForm({ user }) {
         theme,
         timezone,
       })
-      notifications.show({ message: 'Preferences saved', color: 'green' })
+      notifications.show({ message: 'Preferences saved', color: 'cyan' })
     } catch (err) {
       notifications.show({ message: err.message, color: 'red' })
     } finally {
@@ -151,24 +161,24 @@ function PreferencesForm({ user }) {
   return (
     <form onSubmit={handleSave}>
       <Stack gap="md">
-        <Paper withBorder p="sm" radius="md" style={{ background: 'var(--bg-glass)' }}>
-          <Stack gap="xs">
-            <Group justify="space-between">
-              <Group gap="xs">
-                <IconMail size={18} style={{ color: 'var(--color-primary, #8b5cf6)' }} />
-                <div>
-                  <Text size="sm" fw={600}>Weekly Email Digest</Text>
-                  <Text size="xs" c="dimmed">Receive a weekly summary of resurfaced links and stats.</Text>
-                </div>
-              </Group>
-              <Switch
-                checked={digestEnabled}
-                onChange={(e) => setDigestEnabled(e.currentTarget.checked)}
-              />
-            </Group>
+        <div className="profile-card">
+          <div className="profile-card-head">
+            <span className="profile-card-icon">
+              <IconMail size={17} />
+            </span>
+            <div className="profile-card-copy">
+              <Text size="sm" fw={600}>Weekly Email Digest</Text>
+              <Text size="xs" c="dimmed">Receive a weekly summary of resurfaced links and stats.</Text>
+            </div>
+            <Switch
+              checked={digestEnabled}
+              onChange={(e) => setDigestEnabled(e.currentTarget.checked)}
+            />
+          </div>
 
-            {digestEnabled && (
-              <Group grow mt="xs">
+          {digestEnabled && (
+            <div className="profile-card-body">
+              <Group grow>
                 <Select
                   size="xs"
                   label="Delivery day"
@@ -193,25 +203,25 @@ function PreferencesForm({ user }) {
                   max={23}
                 />
               </Group>
-            )}
-          </Stack>
-        </Paper>
+            </div>
+          )}
+        </div>
 
-        <Paper withBorder p="sm" radius="md" style={{ background: 'var(--bg-glass)' }}>
-          <Group justify="space-between">
-            <Group gap="xs">
-              <IconSparkles size={18} style={{ color: 'var(--color-primary, #8b5cf6)' }} />
-              <div>
-                <Text size="sm" fw={600}>Auto-enrich links</Text>
-                <Text size="xs" c="dimmed">Fetch page title, OpenGraph preview and readable article text on save.</Text>
-              </div>
-            </Group>
+        <div className="profile-card">
+          <div className="profile-card-head">
+            <span className="profile-card-icon">
+              <IconSparkles size={17} />
+            </span>
+            <div className="profile-card-copy">
+              <Text size="sm" fw={600}>Auto-enrich links</Text>
+              <Text size="xs" c="dimmed">Fetch page title, OpenGraph preview and readable article text on save.</Text>
+            </div>
             <Switch
               checked={autoEnrich}
               onChange={(e) => setAutoEnrich(e.currentTarget.checked)}
             />
-          </Group>
-        </Paper>
+          </div>
+        </div>
 
         <Group grow>
           <Select
@@ -248,9 +258,9 @@ function PreferencesForm({ user }) {
           description="Used for weekly digest schedule and activity heatmaps."
         />
 
-        <Button type="submit" loading={busy} className="gradient-btn" mt="xs">
+        <AppButton type="submit" loading={busy}>
           Save preferences
-        </Button>
+        </AppButton>
       </Stack>
     </form>
   )
@@ -288,38 +298,63 @@ export default function ProfileModal() {
   const updateProfile = useAuthStore((s) => s.updateProfile)
 
   return (
-    <Modal opened={open} onClose={close} title="Account & Settings" size="lg">
-      {open && user && (
-        <Tabs defaultValue="profile">
-          <Tabs.List mb="md">
-            <Tabs.Tab value="profile" leftSection={<IconUser size={15} />}>
-              Profile
-            </Tabs.Tab>
-            <Tabs.Tab value="security" leftSection={<IconShieldLock size={15} />}>
-              Security
-            </Tabs.Tab>
-            <Tabs.Tab value="preferences" leftSection={<IconSettings size={15} />}>
-              Preferences
-            </Tabs.Tab>
-          </Tabs.List>
+    <AppModal opened={open} onClose={close} size="lg" className="profile-modal-root">
+      <AppModalHeader
+        icon={
+          <span
+            className="profile-header-avatar"
+            style={{
+              background: user?.avatarColor || AVATAR_COLORS[0],
+              color: readableTextOn(user?.avatarColor || AVATAR_COLORS[0]),
+            }}
+          >
+            {initialsOf(user?.name)}
+          </span>
+        }
+        title="Account & Settings"
+        subtitle={user?.email}
+        onClose={close}
+      />
 
-          <Tabs.Panel value="profile">
-            <ProfileForm
-              key={user.id}
-              user={user}
-              updateProfile={updateProfile}
-            />
-          </Tabs.Panel>
+      <AppModalBody className="profile-modal-body">
+        {open && user && (
+          <Tabs defaultValue="profile" className="profile-tabs">
+            <Tabs.List mb="md">
+              <Tabs.Tab value="profile" leftSection={<IconUser size={15} />}>
+                Profile
+              </Tabs.Tab>
+              <Tabs.Tab value="security" leftSection={<IconShieldLock size={15} />}>
+                Security
+              </Tabs.Tab>
+              <Tabs.Tab value="preferences" leftSection={<IconSettings size={15} />}>
+                Preferences
+              </Tabs.Tab>
+            </Tabs.List>
 
-          <Tabs.Panel value="security">
-            <SecurityTab />
-          </Tabs.Panel>
+            <Tabs.Panel value="profile">
+              <ProfileForm
+                key={user.id}
+                user={user}
+                updateProfile={updateProfile}
+              />
+            </Tabs.Panel>
 
-          <Tabs.Panel value="preferences">
-            <PreferencesForm user={user} />
-          </Tabs.Panel>
-        </Tabs>
-      )}
-    </Modal>
+            <Tabs.Panel value="security">
+              <SecurityTab />
+            </Tabs.Panel>
+
+            <Tabs.Panel value="preferences">
+              <PreferencesForm user={user} />
+            </Tabs.Panel>
+          </Tabs>
+        )}
+      </AppModalBody>
+
+      <AppModalFooter>
+        <AppButton variant="subtle" onClick={close}>
+          Close
+        </AppButton>
+      </AppModalFooter>
+    </AppModal>
   )
 }

@@ -100,6 +100,49 @@ export function initialsOf(name = '') {
     .join('')
 }
 
+/** Normalise any hex to the 6-digit lower-case form. */
+export function normalizeHex(value) {
+  if (typeof value !== 'string') return null
+  const hex = value.trim().replace(/^#/, '')
+  if (!/^(?:[0-9a-f]{3}|[0-9a-f]{6})$/i.test(hex)) return null
+  const full = hex.length === 3 ? hex.replace(/./g, (c) => c + c) : hex
+  return `#${full.toLowerCase()}`
+}
+
+/** Relative luminance of a hex colour, per WCAG 2.1. */
+export function relativeLuminance(hex) {
+  const h = normalizeHex(hex)
+  if (!h) return 0
+  const toLinear = (v) => {
+    v /= 255
+    return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)
+  }
+  const r = toLinear(parseInt(h.slice(1, 3), 16))
+  const g = toLinear(parseInt(h.slice(3, 5), 16))
+  const b = toLinear(parseInt(h.slice(5, 7), 16))
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b
+}
+
+/** Contrast ratio between two hex colours. */
+export function contrastRatio(a, b) {
+  const l1 = relativeLuminance(a)
+  const l2 = relativeLuminance(b)
+  const hi = Math.max(l1, l2)
+  const lo = Math.min(l1, l2)
+  return (hi + 0.05) / (lo + 0.05)
+}
+
+// Vivid cyans, violets and emerald all fall below AA against white, so a
+// glyph sitting on a user-chosen swatch has to pick the ink that actually
+// contrasts rather than guessing from brightness.
+const INK_DARK = '#0b0b14'
+const INK_LIGHT = '#ffffff'
+
+/** The more legible of near-black or white for text drawn on `hex`. */
+export function readableTextOn(hex) {
+  return contrastRatio(hex, INK_DARK) >= contrastRatio(hex, INK_LIGHT) ? INK_DARK : INK_LIGHT
+}
+
 export function safeUrl(url) {
   if (typeof url !== 'string') return null
   return /^https?:\/\//i.test(url.trim()) ? url.trim() : null

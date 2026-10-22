@@ -1,34 +1,51 @@
-.collection-picker-body {
-  gap: 10px;
-}
-.collection-picker-item {
+/* ==========================================================================
+   Collection Picker Modal — Minimalist Luxury Obsidian & Cyan
+   --------------------------------------------------------------------------
+   The shell comes from the shared design system (`styles/modal.css`).
+   ========================================================================== */
+
+.collection-picker-list {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.03);
-  cursor: pointer;
-  transition: all 0.15s ease;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 340px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  margin: 0 -6px;
+  padding: 0 6px;
 }
-.collection-picker-item:hover {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.12);
+
+.collection-picker-radio {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.22);
+  background: rgba(0, 0, 0, 0.3);
+  color: #050505;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  transition: all var(--dur-fast) var(--ease);
 }
-.collection-picker-item.selected {
-  background: rgba(139, 92, 246, 0.12);
-  border-color: rgba(139, 92, 246, 0.35);
+.app-modal-row:hover .collection-picker-radio {
+  border-color: rgba(0, 229, 255, 0.6);
 }
-.collection-picker-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 4px;
+.collection-picker-radio.is-checked {
+  background: #00e5ff;
+  border-color: #00e5ff;
+  box-shadow: 0 0 10px rgba(0, 229, 255, 0.4);
+}
+
+.collection-picker-tail-icon {
+  color: var(--text-faint);
   flex-shrink: 0;
 }
-.collection-picker-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 6px;
+
+.collection-picker-meta {
+  color: #fff;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 200px;
 }

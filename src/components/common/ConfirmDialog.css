@@ -1,0 +1,31 @@
+/* ==========================================================================
+   Confirm Dialog — Minimalist Luxury Obsidian & Cyan
+   --------------------------------------------------------------------------
+   The shell itself comes from the shared design system (`styles/modal.css`).
+   Only the confirmation-specific pieces live here.
+   ========================================================================== */
+
+/* A confirmation should never feel like a full page. */
+.confirm-dialog-root .app-modal-content {
+  max-height: min(88vh, 560px);
+}
+.confirm-dialog-root .app-modal-container {
+  max-height: min(88vh, 560px);
+}
+
+/* The body copy reads better with a slightly longer measure. */
+.confirm-dialog-root .app-modal-body-area {
+  line-height: 1.6;
+}
+
+.confirm-dialog-root .app-modal-body-area p {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.confirm-dialog-root .app-modal-body-area strong {
+  color: #fff;
+  font-weight: 600;
+}

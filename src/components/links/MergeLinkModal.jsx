@@ -1,8 +1,16 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Modal, TextInput, Button, Group, Stack, Text, Loader, ScrollArea } from '@mantine/core'
-import { IconSearch, IconGitMerge } from '@tabler/icons-react'
+import { IconSearch, IconGitMerge, IconCheck, IconArchive } from '@tabler/icons-react'
 import { useLinkStore } from '../../store/linkStore'
 import { hostOf } from '../../utils'
+import {
+  AppButton,
+  AppModal,
+  AppModalBody,
+  AppModalFooter,
+  AppModalHeader,
+  AppModalNote,
+  AppModalSearch,
+} from '../common/ModalShell'
 import './MergeLinkModal.css'
 
 // A tiny picker that asks "which link should this one become?".
@@ -18,6 +26,7 @@ export default function MergeLinkModal({ opened, onClose, sourceId, sourceTitle 
   const [query, setQuery] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
+  const [targetId, setTargetId] = useState(null)
 
   // The candidate list comes from the loaded links plus the full map, so the
   // user can merge into something that is not on the current page.
@@ -48,10 +57,12 @@ export default function MergeLinkModal({ opened, onClose, sourceId, sourceTitle 
       setQuery('')
       setError(null)
       setBusy(false)
+      setTargetId(null)
     }
   }, [opened])
 
-  const handleMerge = async (targetId) => {
+  const handleMerge = async () => {
+    if (!targetId || busy) return
     setBusy(true)
     setError(null)
     try {
@@ -63,66 +74,104 @@ export default function MergeLinkModal({ opened, onClose, sourceId, sourceTitle 
     }
   }
 
-  return (
-    <Modal
-      opened={opened}
-      onClose={onClose}
-      title="Merge into another link"
-      centered
-      size="lg"
-    >
-      <Stack gap="sm">
-        <Text size="sm" c="dimmed">
-          <strong>{sourceTitle}</strong> will be archived and its tags, summary and visit
-          count will be moved to the link you pick.
-        </Text>
+  const selectedTarget = filtered.find((l) => l._id === targetId) || null
 
-        <TextInput
-          leftSection={<IconSearch size={15} />}
-          placeholder="Search by title or URL…"
+  return (
+    <AppModal opened={opened} onClose={onClose} size="lg" className="merge-modal-root">
+      <AppModalHeader
+        icon={<IconGitMerge size={20} />}
+        title="Merge into another link"
+        subtitle="Fold one link into another"
+        onClose={busy ? undefined : onClose}
+      />
+
+      <AppModalBody>
+        <div className="merge-modal-intro">
+          <AppModalNote
+            tone="info"
+            icon={<IconArchive size={14} />}
+          >
+            <strong>{sourceTitle}</strong> will be archived and its tags, summary and visit
+            count will move to the link you pick. Archiving is reversible.
+          </AppModalNote>
+        </div>
+
+        <AppModalSearch
           value={query}
-          onChange={(e) => setQuery(e.currentTarget.value)}
+          onChange={setQuery}
+          placeholder="Search by title or URL…"
           autoFocus
         />
 
-        {error && (
-          <Text size="sm" c="red">
+        {error ? (
+          <div className="merge-modal-error" role="alert">
             {error}
-          </Text>
-        )}
+          </div>
+        ) : null}
 
-        <ScrollArea.Autosize mah={320}>
+        <div className="merge-modal-list">
           {filtered.length === 0 ? (
-            <Text size="sm" c="dimmed" py="md">
-              {candidates.length === 0 ? 'There are no other links to merge into.' : 'Nothing matches that search.'}
-            </Text>
+            <div className="app-modal-empty">
+              <IconSearch size={26} opacity={0.4} />
+              <div>
+                {candidates.length === 0
+                  ? 'There are no other links to merge into.'
+                  : 'Nothing matches that search.'}
+              </div>
+            </div>
           ) : (
-            <Stack gap={4}>
-              {filtered.map((l) => (
+            filtered.map((l) => {
+              const selected = targetId === l._id
+              return (
                 <button
                   key={l._id}
                   type="button"
-                  className="merge-target"
+                  className={`app-modal-row ${selected ? 'is-selected' : ''}`}
                   disabled={busy}
-                  onClick={() => handleMerge(l._id)}
+                  onClick={() => setTargetId(l._id)}
+                  aria-pressed={selected}
                 >
-                  <div className="merge-target-main">
-                    <div className="merge-target-title">{l.title || l.url}</div>
-                    <div className="merge-target-url">{hostOf(l.url)}</div>
-                  </div>
-                  {busy ? <Loader size={14} /> : <IconGitMerge size={16} />}
+                  <span
+                    className={`merge-target-radio ${selected ? 'is-checked' : ''}`}
+                    aria-hidden="true"
+                  >
+                    {selected ? <IconCheck size={11} stroke={3} /> : null}
+                  </span>
+                  <span className="app-modal-row-main">
+                    <span className="app-modal-row-title">{l.title || l.url}</span>
+                    <span className="app-modal-row-meta">{hostOf(l.url)}</span>
+                  </span>
+                  {selected ? <IconGitMerge size={16} className="merge-target-icon" /> : null}
                 </button>
-              ))}
-            </Stack>
+              )
+            })
           )}
-        </ScrollArea.Autosize>
+        </div>
+      </AppModalBody>
 
-        <Group justify="flex-end">
-          <Button variant="subtle" color="gray" onClick={onClose} disabled={busy}>
-            Cancel
-          </Button>
-        </Group>
-      </Stack>
-    </Modal>
+      <AppModalFooter
+        meta={
+          selectedTarget ? (
+            <>
+              Merging into <strong>{selectedTarget.title || selectedTarget.url}</strong>
+            </>
+          ) : (
+            `${filtered.length} candidate${filtered.length === 1 ? '' : 's'}`
+          )
+        }
+      >
+        <AppButton variant="subtle" onClick={onClose} disabled={busy}>
+          Cancel
+        </AppButton>
+        <AppButton
+          onClick={handleMerge}
+          loading={busy}
+          disabled={!targetId}
+          leftSection={<IconGitMerge size={15} />}
+        >
+          Merge links
+        </AppButton>
+      </AppModalFooter>
+    </AppModal>
   )
 }

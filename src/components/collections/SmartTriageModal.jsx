@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
-import { Modal, Select, TextInput, Button, Progress, Loader } from '@mantine/core'
+import { Select, TextInput, Button, Progress, Loader } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
 import {
   IconSparkles,
@@ -15,6 +15,7 @@ import { ACCENT_COLORS } from '../../constants'
 import { useLinkStore } from '../../store/linkStore'
 import { useUiStore } from '../../store/uiStore'
 import { hostOf, faviconUrl, safeUrl } from '../../utils'
+import { AppModal, AppModalBody, AppModalHeader } from '../common/ModalShell'
 import './SmartTriageModal.css'
 
 function SmartTriageContent({ onClose }) {
@@ -358,29 +359,22 @@ export default function SmartTriageModal() {
   const closeTriage = useUiStore((s) => s.closeTriage)
 
   return (
-    <Modal
+    <AppModal
       opened={isOpen}
       onClose={closeTriage}
-      title={
-        <div className="triage-title-box">
-          <div className="triage-title-icon">
-            <IconSparkles size={18} />
-          </div>
-          <div>
-            <span className="triage-main-title">Smart Triage & Auto-Organizer</span>
-            <span className="triage-sub-title">Achieve Inbox Zero by batch-clustering domains</span>
-          </div>
-        </div>
-      }
       size="xl"
-      centered
-      classNames={{
-        header: 'triage-modal-header',
-        body: 'triage-modal-body',
-        content: 'triage-modal-content',
-      }}
+      tone="success"
+      className="triage-modal-root"
     >
-      {isOpen && <SmartTriageContent onClose={closeTriage} />}
-    </Modal>
+      <AppModalHeader
+        icon={<IconSparkles size={20} />}
+        title="Smart Triage & Auto-Organizer"
+        subtitle="Achieve Inbox Zero by batch-clustering domains"
+        onClose={closeTriage}
+      />
+      <AppModalBody className="triage-modal-body">
+        {isOpen && <SmartTriageContent onClose={closeTriage} />}
+      </AppModalBody>
+    </AppModal>
   )
 }

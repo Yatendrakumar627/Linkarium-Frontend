@@ -1,21 +1,20 @@
 import { useEffect, useState } from 'react'
-import {
-  Modal,
-  TextInput,
-  Button,
-  Group,
-  Stack,
-  TagsInput,
-  Select,
-  Checkbox,
-  Loader,
-} from '@mantine/core'
+import { TagsInput, Select, Checkbox } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
-import { IconPlayerPlay, IconDeviceFloppy } from '@tabler/icons-react'
+import { IconPlayerPlay, IconDeviceFloppy, IconWand, IconTags, IconFolder, IconStar, IconArchive } from '@tabler/icons-react'
 import { useUiStore } from '../../store/uiStore'
 import { useSavedViewStore } from '../../store/savedViewStore'
 import { useLinkStore } from '../../store/linkStore'
 import QueryField from '../savedViews/QueryField'
+import {
+  AppButton,
+  AppModal,
+  AppModalBody,
+  AppModalFooter,
+  AppModalHeader,
+  AppModalSection,
+} from '../common/ModalShell'
+import { accessibleClearButtonProps, renderAccessibleTagPill } from '../common/tagInput'
 import './RuleEditor.css'
 
 // Create or edit an automation rule.
@@ -78,10 +77,10 @@ export default function RuleEditor() {
       }
       if (isEdit) {
         await updateRule(existing._id, { name: name.trim(), query, actions })
-        notifications.show({ message: 'Rule updated', color: 'green' })
+        notifications.show({ message: 'Rule updated', color: 'cyan' })
       } else {
         await createRule({ name: name.trim(), query, actions, kind: 'rule' })
-        notifications.show({ message: 'Rule created', color: 'green' })
+        notifications.show({ message: 'Rule created', color: 'cyan' })
       }
       close()
     } catch (err) {
@@ -118,92 +117,158 @@ export default function RuleEditor() {
   }
 
   const collectionOptions = collections.map((c) => ({ value: c.id, label: c.name }))
+  const actionCount =
+    addTags.length +
+    removeTags.length +
+    (collectionId ? 1 : 0) +
+    (favorite ? 1 : 0) +
+    (archive ? 1 : 0)
 
   return (
-    <Modal opened onClose={close} title={isEdit ? 'Edit rule' : 'New rule'} centered size="lg">
-      <Stack gap="md">
-        <TextInput
-          label="Name"
-          placeholder="Tag my AI articles"
-          value={name}
-          onChange={(e) => setName(e.currentTarget.value)}
-          data-autofocus
-        />
+    <AppModal opened onClose={close} size="lg" className="rule-editor-root">
+      <AppModalHeader
+        icon={<IconWand size={20} />}
+        title={isEdit ? 'Edit rule' : 'New rule'}
+        subtitle="Automatically tidy the links that match a query"
+        onClose={saving ? undefined : close}
+      />
 
-        <QueryField
-          value={query}
-          onChange={setQuery}
-          label="When a link matches"
-          placeholder="domain:github.com tag:ai"
-        />
-
-        <div className="re-actions">
-          <div className="re-label">Then</div>
-
-          <TagsInput
-            label="Add these tags"
-            placeholder="readlater"
-            value={addTags}
-            onChange={setAddTags}
-            clearable
-          />
-
-          <TagsInput
-            label="Remove these tags"
-            placeholder="unread"
-            value={removeTags}
-            onChange={setRemoveTags}
-            clearable
-          />
-
-          {collectionOptions.length > 0 && (
-            <Select
-              label="Move to collection"
-              placeholder="No collection"
-              data={collectionOptions}
-              value={collectionId}
-              onChange={setCollectionId}
-              clearable
+      <AppModalBody className="rule-editor-body">
+        <AppModalSection label="When a link matches">
+          <div className="app-modal-field">
+            <label className="app-modal-label" htmlFor="rule-name">
+              Rule name
+            </label>
+            <input
+              id="rule-name"
+              className="app-modal-input"
+              placeholder="Tag my AI articles"
+              value={name}
+              onChange={(e) => setName(e.currentTarget.value)}
+              data-autofocus
+              maxLength={60}
             />
-          )}
+          </div>
 
-          <Checkbox
-            label="Mark as favorite"
-            checked={favorite}
-            onChange={(e) => setFavorite(e.currentTarget.checked)}
-          />
+          <div style={{ marginTop: 13 }}>
+            <QueryField
+              value={query}
+              onChange={setQuery}
+              label=""
+              placeholder="domain:github.com tag:ai"
+            />
+          </div>
+        </AppModalSection>
 
-          <Checkbox
-            label="Archive the link"
-            checked={archive}
-            onChange={(e) => setArchive(e.currentTarget.checked)}
-          />
-        </div>
+        <AppModalSection
+          label="Then"
+          action={
+            <span className="re-action-count">
+              {actionCount} action{actionCount === 1 ? '' : 's'}
+            </span>
+          }
+        >
+          <div className="re-actions">
+            <div className="re-action">
+              <span className="re-action-icon">
+                <IconTags size={14} />
+              </span>
+              <div className="re-action-body">
+                <TagsInput
+                  label="Add these tags"
+                  placeholder="readlater"
+                  value={addTags}
+                  onChange={setAddTags}
+                  clearable
+                  clearButtonProps={accessibleClearButtonProps}
+                  renderPill={renderAccessibleTagPill}
+                />
+              </div>
+            </div>
 
-        <Group gap={8} justify="flex-end">
-          {running && <Loader size={16} />}
-          <Button
+            <div className="re-action">
+              <span className="re-action-icon">
+                <IconTags size={14} />
+              </span>
+              <div className="re-action-body">
+                <TagsInput
+                  label="Remove these tags"
+                  placeholder="unread"
+                  value={removeTags}
+                  onChange={setRemoveTags}
+                  clearable
+                  clearButtonProps={accessibleClearButtonProps}
+                  renderPill={renderAccessibleTagPill}
+                />
+              </div>
+            </div>
+
+            {collectionOptions.length > 0 ? (
+              <div className="re-action">
+                <span className="re-action-icon">
+                  <IconFolder size={14} />
+                </span>
+                <div className="re-action-body">
+                  <Select
+                    label="Move to collection"
+                    placeholder="No collection"
+                    data={collectionOptions}
+                    value={collectionId}
+                    onChange={setCollectionId}
+                    clearable
+                  />
+                </div>
+              </div>
+            ) : null}
+
+            <div className="re-action">
+              <span className="re-action-icon">
+                <IconStar size={14} />
+              </span>
+              <div className="re-action-body re-action-body-tight">
+                <Checkbox
+                  label="Mark as favorite"
+                  checked={favorite}
+                  onChange={(e) => setFavorite(e.currentTarget.checked)}
+                />
+              </div>
+            </div>
+
+            <div className="re-action">
+              <span className="re-action-icon">
+                <IconArchive size={14} />
+              </span>
+              <div className="re-action-body re-action-body-tight">
+                <Checkbox
+                  label="Archive the link"
+                  checked={archive}
+                  onChange={(e) => setArchive(e.currentTarget.checked)}
+                />
+              </div>
+            </div>
+          </div>
+        </AppModalSection>
+      </AppModalBody>
+
+      <AppModalFooter
+        lead={
+          <AppButton
             variant="subtle"
-            color="gray"
             onClick={handleTest}
             loading={running}
             leftSection={<IconPlayerPlay size={15} />}
           >
-            Test
-          </Button>
-          <Button
-            variant="default"
-            onClick={close}
-            disabled={saving}
-            leftSection={<IconDeviceFloppy size={15} />}
-          >
-            Cancel
-          </Button>
-          <Button onClick={handleSave} loading={saving}>
-            {isEdit ? 'Save changes' : 'Create rule'}
-          </Button>
-        </Group>
-      </Stack>
-    </Modal>
+            Test rule
+          </AppButton>
+        }
+      >
+        <AppButton variant="outline" onClick={close} disabled={saving}>
+          Cancel
+        </AppButton>
+        <AppButton onClick={handleSave} loading={saving} leftSection={<IconDeviceFloppy size={15} />}>
+          {isEdit ? 'Save changes' : 'Create rule'}
+        </AppButton>
+      </AppModalFooter>
+    </AppModal>
   )
 }
