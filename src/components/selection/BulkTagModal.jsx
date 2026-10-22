@@ -25,6 +25,7 @@ export default function BulkTagModal({ opened, onClose, onConfirm }) {
   const selectedIds = useUiStore((s) => s.selectedIds)
 
   const [value, setValue] = useState([])
+  const [initialTags, setInitialTags] = useState([])
   const [busy, setBusy] = useState(false)
 
   useEffect(() => {
@@ -34,7 +35,9 @@ export default function BulkTagModal({ opened, onClose, onConfirm }) {
       if (!selectedIds.has(link._id)) continue
       for (const tag of link.tags || []) existing.add(tag)
     }
-    setValue([...existing])
+    const tagsOnSelection = [...existing]
+    setValue(tagsOnSelection)
+    setInitialTags(tagsOnSelection)
     setBusy(false)
   }, [opened, links, selectedIds])
 
@@ -46,7 +49,7 @@ export default function BulkTagModal({ opened, onClose, onConfirm }) {
   )
 
   const handleConfirm = async () => {
-    if (!value.length) {
+    if (!value.length && !initialTags.length) {
       notifications.show({ message: 'Pick at least one tag.', color: 'gray' })
       return
     }
@@ -121,7 +124,7 @@ export default function BulkTagModal({ opened, onClose, onConfirm }) {
         <AppButton variant="subtle" onClick={onClose} disabled={busy}>
           Cancel
         </AppButton>
-        <AppButton onClick={handleConfirm} loading={busy} disabled={!value.length}>
+        <AppButton onClick={handleConfirm} loading={busy} disabled={!value.length && !initialTags.length}>
           Apply tags
         </AppButton>
       </AppModalFooter>

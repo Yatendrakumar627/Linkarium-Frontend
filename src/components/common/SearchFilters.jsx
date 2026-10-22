@@ -4,6 +4,7 @@ import { IconCheck, IconFilter } from '@tabler/icons-react'
 import { useUiStore } from '../../store/uiStore'
 import { useLinkStore } from '../../store/linkStore'
 import { hasOperator, toggleOperator } from '../../utils/searchQuery'
+import './SearchFilters.css'
 
 // Quick filters that append (or remove) a query operator without typing.
 // They are grouped so the menu stays readable as the list grows.
@@ -48,7 +49,7 @@ export default function SearchFilters() {
   const toggle = (operator) => setSearch(toggleOperator(search, operator))
 
   return (
-    <Menu shadow="md" width={230} position="bottom-start" offset={6}>
+    <Menu shadow="md" width={240} position="bottom-start" offset={6} withinPortal>
       <Menu.Target>
         <button
           type="button"
@@ -60,7 +61,7 @@ export default function SearchFilters() {
         </button>
       </Menu.Target>
 
-      <Menu.Dropdown>
+      <Menu.Dropdown className="search-filter-dropdown">
         {FLAG_GROUPS.map((group, index) => (
           <Fragment key={group.label}>
             {index > 0 && <Menu.Divider />}
@@ -89,11 +90,18 @@ export default function SearchFilters() {
             <Menu.Divider />
             <Menu.Label>Collections</Menu.Label>
             {collections.slice(0, 8).map((collection) => {
-              const operator = `collection:${collection.name}`
+              // Prefer the readable name. Fall back to the id when the name
+              // cannot be expressed as a single token — the tokenizer splits on
+              // whitespace, so `collection:My Work` would become two unrelated
+              // tokens. Ids are accepted by the server and always safe.
+              const collectionId = collection.id || collection._id
+              const name = collection.name || ''
+              const unsafeName = !name || /\s/.test(name) || name.includes(':') || name.startsWith('-')
+              const operator = unsafeName ? `collection:${collectionId}` : `collection:${name}`
               const active = hasOperator(search, operator)
               return (
                 <Menu.Item
-                  key={collection.id || collection._id}
+                  key={collectionId}
                   onClick={() => toggle(operator)}
                   leftSection={
                     <span className={`filter-check${active ? ' is-active' : ''}`}>

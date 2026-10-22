@@ -128,6 +128,7 @@ function ProfileForm({ user, updateProfile }) {
 
 function PreferencesForm({ user }) {
   const prefs = user?.preferences || {}
+  const setUser = useAuthStore((s) => s.setUser)
   const [digestEnabled, setDigestEnabled] = useState(Boolean(prefs.digestEnabled))
   const [digestDay, setDigestDay] = useState(String(prefs.digestDay ?? 1))
   const [digestHour, setDigestHour] = useState(prefs.digestHour ?? 8)
@@ -141,7 +142,7 @@ function PreferencesForm({ user }) {
     e.preventDefault()
     setBusy(true)
     try {
-      await userApi.preferences({
+      const data = await userApi.preferences({
         digestEnabled,
         digestDay: parseInt(digestDay, 10),
         digestHour: Number(digestHour),
@@ -150,6 +151,9 @@ function PreferencesForm({ user }) {
         theme,
         timezone,
       })
+      // The server returns the updated user. Without storing it the form kept
+      // looking at stale preferences and the saved values never took effect.
+      if (data?.user) setUser(data.user)
       notifications.show({ message: 'Preferences saved', color: 'cyan' })
     } catch (err) {
       notifications.show({ message: err.message, color: 'red' })

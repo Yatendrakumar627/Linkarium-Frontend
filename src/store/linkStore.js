@@ -24,6 +24,19 @@ export const useLinkStore = create((set, get) => {
   // Client-side mirror of the server's visit debounce window.
   const lastVisitAt = new Map()
 
+  // True when the current list is narrowed by something a mutation can change
+  // (a query, tag, collection or the favorites view). Mutating a link locally
+  // is not enough in those views: the link may no longer belong in the list.
+  const hasActiveFilter = (params) =>
+    Boolean(params && (params.q || params.tag || params.collection || params.favorite !== undefined))
+
+  const refreshActiveFilteredList = async () => {
+    const { lastParams } = get()
+    if (hasActiveFilter(lastParams)) {
+      await get().fetchLinks(lastParams, { reset: true })
+    }
+  }
+
   return {
     links: [],
     total: 0,
@@ -175,13 +188,32 @@ export const useLinkStore = create((set, get) => {
         if (reset && (err.status === 0 || (typeof navigator !== 'undefined' && !navigator.onLine))) {
           const cached = await getCachedLinks().catch(() => [])
           if (cached.length) {
+            // Serve the best local approximation of the active view and mark
+            // which params it belongs to. Without this the view kept showing
+            // the previous query's skeleton forever.
+            let visible = cached.filter((l) => !l.deletedAt)
+            if (params.favorite === 'true' || params.favorite === true) {
+              visible = visible.filter((l) => l.favorite)
+            }
+            if (params.collection) {
+              visible = visible.filter((l) => String(l.collectionId) === String(params.collection))
+            }
+            if (params.tag) {
+              const tag = String(params.tag).toLowerCase()
+              visible = visible.filter((l) =>
+                (l.tags || []).some((t) => String(t).toLowerCase() === tag)
+              )
+            }
             set({
-              links: cached,
-              total: cached.length,
+              links: visible,
+              total: visible.length,
               hasMore: false,
               loading: false,
               loadingMore: false,
               error: null,
+              lastParams: params,
+              activeParamsKey: JSON.stringify(params),
+              parsed: null,
             })
             return
           }
@@ -217,6 +249,7 @@ export const useLinkStore = create((set, get) => {
         links: s.links.map((l) => (l._id === id ? updated : l)),
         mapLinks: s.mapLoaded ? s.mapLinks.map((l) => (l._id === id ? updated : l)) : s.mapLinks,
       }))
+      await refreshActiveFilteredList()
       get().refreshTags()
       return updated
     },
@@ -253,6 +286,7 @@ export const useLinkStore = create((set, get) => {
           ? s.mapLinks.map((l) => (idSet.has(l._id) ? { ...l, collectionId } : l))
           : s.mapLinks,
       }))
+      await refreshActiveFilteredList()
       get().refreshSummary()
     },
 
@@ -368,6 +402,7 @@ export const useLinkStore = create((set, get) => {
         links: apply(s.links),
         mapLinks: s.mapLoaded ? apply(s.mapLinks) : s.mapLinks,
       }))
+      await refreshActiveFilteredList()
       get().refreshTags()
       get().refreshSummary()
     },
@@ -405,6 +440,7 @@ export const useLinkStore = create((set, get) => {
         links: s.links.map((l) => (l._id === id ? link : l)),
         mapLinks: s.mapLoaded ? s.mapLinks.map((l) => (l._id === id ? link : l)) : s.mapLinks,
       }))
+      await refreshActiveFilteredList()
       get().refreshTags()
       get().refreshSummary()
       return link
@@ -499,6 +535,7 @@ export const useLinkStore = create((set, get) => {
           mapLinks: s.mapLoaded ? revert(s.mapLinks) : s.mapLinks,
         }))
       }
+      await refreshActiveFilteredList()
       get().refreshSummary()
     },
 

@@ -66,6 +66,12 @@ export const useAuthStore = create((set) => ({
     return user
   },
 
+  // Replace the cached user after an endpoint returns an updated record
+  // (e.g. preferences). Keeps the rest of the app in sync without a re-login.
+  setUser(user) {
+    set({ user })
+  },
+
   async logout() {
     try {
       await authApi.logout()

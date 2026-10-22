@@ -74,9 +74,33 @@ export default function SelectionToolbar() {
 
   const handleTagConfirm = async (tags) => {
     try {
-      await bulkTag([...selectedIds], tags, 'add')
+      const ids = [...selectedIds]
+      const selected = links.filter((l) => selectedIds.has(l._id))
+      const existing = new Set()
+      for (const link of selected) {
+        for (const tag of link.tags || []) existing.add(tag)
+      }
+
+      // The modal shows the union of the selected links' tags. Anything the
+      // user added is an "add" operation; anything they removed is a "remove"
+      // operation. Previously every confirm was an add, which made removing
+      // tags in bulk impossible.
+      const desiredLower = new Set(tags.map((t) => String(t).toLowerCase()))
+      const existingLower = new Set([...existing].map((t) => String(t).toLowerCase()))
+      const added = tags.filter((t) => !existingLower.has(String(t).toLowerCase()))
+      const removed = [...existing].filter((t) => !desiredLower.has(String(t).toLowerCase()))
+
+      if (added.length) await bulkTag(ids, added, 'add')
+      if (removed.length) await bulkTag(ids, removed, 'remove')
+
       setTagOpened(false)
-      notifications.show({ message: `${count} link(s) tagged`, color: 'green' })
+      notifications.show({
+        message:
+          added.length || removed.length
+            ? `${count} link(s) updated`
+            : 'No tag changes to apply',
+        color: added.length || removed.length ? 'green' : 'gray',
+      })
     } catch (err) {
       notifications.show({ message: err.message, color: 'red' })
     }

@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useState } from 'react'
 import { notifications } from '@mantine/notifications'
 import { useLinkStore } from '../../store/linkStore'
 import { useUiStore } from '../../store/uiStore'
+import { useAuthStore } from '../../store/authStore'
 import Sidebar from './Sidebar'
 import Topbar from './Topbar'
 import Hub from '../views/Hub'
@@ -24,6 +25,15 @@ const ReaderModal = lazy(() => import('../links/ReaderModal'))
 const SessionsModal = lazy(() => import('../profile/SessionsModal'))
 const ApiKeysModal = lazy(() => import('../profile/ApiKeysModal'))
 const AddWebsitesToTagModal = lazy(() => import('../tags/AddWebsitesToTagModal'))
+
+// The preference names and the internal view names do not match one-to-one.
+const DEFAULT_VIEW_TYPES = {
+  dashboard: 'dashboard',
+  links: 'all',
+  favorites: 'favorites',
+  insights: 'analytics',
+  archive: 'archived',
+}
 
 export default function AppShell() {
   const fetchMeta = useLinkStore((s) => s.fetchMeta)
@@ -56,7 +66,13 @@ export default function AppShell() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const q = params.get('q')
-    if (!q) return
+    if (!q) {
+      // No deep link: honour the user's saved "default opening view".
+      const defaultView = useAuthStore.getState().user?.preferences?.defaultView
+      const type = DEFAULT_VIEW_TYPES[defaultView]
+      if (type) setView({ type })
+      return
+    }
     setSearch(q.trim())
     setView({ type: 'all' })
     // Clean the address bar so a reload does not re-apply the filter twice.

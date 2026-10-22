@@ -8,7 +8,7 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  padding: 8px 16px 16px 14px;
+  padding: 8px 14px 16px 14px;
   overflow: hidden;
 }
 .content {
@@ -16,7 +16,7 @@
   position: relative;
   overflow-y: auto;
   overflow-x: hidden;
-  padding-right: 4px;
+  padding: 0 2px;
 }
 .content.visual-active {
   overflow: hidden;
@@ -24,6 +24,9 @@
 
 @media (max-width: 62em) {
   .main {
-    padding: 8px 12px 14px;
+    padding: 8px 10px 14px 10px;
+  }
+  .content {
+    padding: 0;
   }
 }

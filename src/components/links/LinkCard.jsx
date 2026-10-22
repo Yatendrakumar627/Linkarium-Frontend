@@ -98,7 +98,9 @@ function LinkCard({ link, trashMode = false }) {
   useEffect(() => {
     if (!expanded) return
     const onDown = (e) => {
-      if (menuRef.current?.contains(e.target)) return
+      // The actions menu is portalled outside the card, so a click inside it
+      // must not collapse the expanded card.
+      if (menuOpenRef.current) return
       if (!e.target.closest('.link-card.expanded')) setExpanded(false)
     }
     document.addEventListener('pointerdown', onDown)
@@ -415,8 +417,214 @@ function LinkCard({ link, trashMode = false }) {
         </div>
         <div className="link-card-body">
           <div className="link-title">{link.title}</div>
-          {link.description && <div className="link-description">{link.description}</div>}
+          <div className={`link-description ${link.description ? '' : 'is-empty'}`}>
+            {link.description || '\u00A0'}
+          </div>
         </div>
+        <div className="link-card-head-actions">
+          {trashMode ? (
+            <span className="trash-expiry-badge">
+              <IconFlame size={12} />
+              {daysLeft === 0 ? 'Deletes today' : `${daysLeft} day${daysLeft === 1 ? '' : 's'} left`}
+            </span>
+          ) : (
+            !selectionMode && (
+              <button
+                className={`action-btn like ${link.favorite ? 'on' : ''} link-favorite-btn`}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  toggleFavorite(link)
+                }}
+                title={link.favorite ? 'Unfavorite' : 'Favorite'}
+                aria-label={link.favorite ? 'Unfavorite' : 'Favorite'}
+              >
+                <IconStar size={16} fill={link.favorite ? 'currentColor' : 'none'} />
+              </button>
+            )
+          )}
+
+          {!selectionMode && (
+            <Menu
+              position="bottom-end"
+              offset={6}
+              shadow="xl"
+              withinPortal
+              opened={menuOpen}
+              onChange={setMenuOpen}
+              closeOnItemClick
+              zIndex={300}
+              transitionProps={{ duration: 120, transition: 'fade' }}
+            >
+              <Menu.Target>
+                <button
+                  type="button"
+                  className="link-card-menu-btn"
+                  aria-haspopup="menu"
+                  aria-expanded={menuOpen}
+                  aria-label="More actions"
+                  title="More actions"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                  }}
+                  onPointerDown={(e) => e.stopPropagation()}
+                >
+                  <IconDotsVertical size={17} />
+                </button>
+              </Menu.Target>
+
+              <Menu.Dropdown className="link-card-menu">
+                {trashMode ? (
+                  <>
+                    <Menu.Item
+                      leftSection={<IconExternalLink size={16} />}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        openInTab()
+                      }}
+                    >
+                      Open
+                    </Menu.Item>
+                    <Menu.Item
+                      leftSection={<IconCopy size={16} />}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleCopy(e)
+                      }}
+                    >
+                      Copy
+                    </Menu.Item>
+                    <Menu.Item
+                      leftSection={<IconArrowBackUp size={16} />}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleRestore(e)
+                      }}
+                    >
+                      Restore
+                    </Menu.Item>
+                    <Menu.Item
+                      color="red"
+                      leftSection={<IconTrash size={16} />}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleDeleteForever(e)
+                      }}
+                    >
+                      Delete Forever
+                    </Menu.Item>
+                  </>
+                ) : (
+                  <>
+                    <Menu.Item
+                      leftSection={<IconExternalLink size={16} />}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        openInTab()
+                      }}
+                    >
+                      Open
+                    </Menu.Item>
+                    <Menu.Item
+                      leftSection={<IconCopy size={16} />}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleCopy(e)
+                      }}
+                    >
+                      Copy
+                    </Menu.Item>
+                    <Menu.Item
+                      leftSection={<IconBook size={16} />}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        openReader(link)
+                      }}
+                    >
+                      Reader view
+                    </Menu.Item>
+                    <Menu.Item
+                      leftSection={<IconPencil size={16} />}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        openEditor(link)
+                      }}
+                    >
+                      Edit
+                    </Menu.Item>
+                    <Menu.Item
+                      component="a"
+                      href={`https://web.archive.org/web/*/${encodeURIComponent(link.url)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      leftSection={<IconHistory size={16} />}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      Archive Snapshot
+                    </Menu.Item>
+                    <Menu.Item
+                      leftSection={isArchived ? <IconArchiveOff size={16} /> : <IconArchive size={16} />}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        if (isArchived) handleUnarchive(e)
+                        else handleArchive(e)
+                      }}
+                    >
+                      {isArchived ? 'Unarchive' : 'Archive'}
+                    </Menu.Item>
+                    <Menu.Item
+                      leftSection={<IconSparkles size={16} />}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleEnrich(e)
+                      }}
+                    >
+                      Fetch details
+                    </Menu.Item>
+                    <Menu.Item
+                      leftSection={<IconGitMerge size={16} />}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setMergeOpen(true)
+                      }}
+                    >
+                      Merge into…
+                    </Menu.Item>
+                    <Menu.Item
+                      leftSection={<IconWand size={16} />}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleApplyRules(e)
+                      }}
+                    >
+                      Run rules
+                    </Menu.Item>
+                    <Menu.Divider />
+                    <Menu.Item
+                      color="red"
+                      leftSection={<IconTrash size={16} />}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleDelete(e)
+                      }}
+                    >
+                      Delete
+                    </Menu.Item>
+                  </>
+                )}
+              </Menu.Dropdown>
+            </Menu>
+          )}
+        </div>
+      </div>
+
+      <div className="link-meta">
+        <span className="link-domain">{hostOf(link.url)}</span>
+        <span className="meta-sep">·</span>
+        <span className="link-meta-visits">
+          <IconEye size={13} /> {link.visits || 0}
+        </span>
+        <span className="meta-sep">·</span>
+        <span>{timeAgoShort(link.createdAt)}</span>
         {!trashMode && !selectionMode && (
           <LinkHealthBadge
             status={link.health?.status}
@@ -430,208 +638,6 @@ function LinkCard({ link, trashMode = false }) {
             <IconArchive size={12} /> Archived
           </span>
         )}
-        {trashMode ? (
-          <span className="trash-expiry-badge">
-            <IconFlame size={12} />
-            {daysLeft === 0 ? 'Deletes today' : `${daysLeft} day${daysLeft === 1 ? '' : 's'} left`}
-          </span>
-        ) : (
-          !selectionMode && (
-            <button
-              className={`action-btn like ${link.favorite ? 'on' : ''} link-favorite-btn`}
-              onClick={(e) => {
-                e.stopPropagation()
-                toggleFavorite(link)
-              }}
-              title={link.favorite ? 'Unfavorite' : 'Favorite'}
-              aria-label={link.favorite ? 'Unfavorite' : 'Favorite'}
-            >
-              <IconStar size={17} fill={link.favorite ? 'currentColor' : 'none'} />
-            </button>
-          )
-        )}
-
-        {!selectionMode && (
-          <Menu
-            position="bottom-end"
-            offset={6}
-            shadow="xl"
-            withinPortal
-            opened={menuOpen}
-            onChange={setMenuOpen}
-            closeOnItemClick
-            zIndex={300}
-            transitionProps={{ duration: 120, transition: 'fade' }}
-          >
-            <Menu.Target>
-              <button
-                type="button"
-                className="link-card-menu-btn"
-                aria-haspopup="menu"
-                aria-expanded={menuOpen}
-                aria-label="More actions"
-                title="More actions"
-                onClick={(e) => {
-                  e.stopPropagation()
-                }}
-                onPointerDown={(e) => e.stopPropagation()}
-              >
-                <IconDotsVertical size={18} />
-              </button>
-            </Menu.Target>
-
-            <Menu.Dropdown className="link-card-menu">
-              {trashMode ? (
-                <>
-                  <Menu.Item
-                    leftSection={<IconExternalLink size={16} />}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      openInTab()
-                    }}
-                  >
-                    Open
-                  </Menu.Item>
-                  <Menu.Item
-                    leftSection={<IconCopy size={16} />}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleCopy(e)
-                    }}
-                  >
-                    Copy
-                  </Menu.Item>
-                  <Menu.Item
-                    leftSection={<IconArrowBackUp size={16} />}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleRestore(e)
-                    }}
-                  >
-                    Restore
-                  </Menu.Item>
-                  <Menu.Item
-                    color="red"
-                    leftSection={<IconTrash size={16} />}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleDeleteForever(e)
-                    }}
-                  >
-                    Delete Forever
-                  </Menu.Item>
-                </>
-              ) : (
-                <>
-                  <Menu.Item
-                    leftSection={<IconExternalLink size={16} />}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      openInTab()
-                    }}
-                  >
-                    Open
-                  </Menu.Item>
-                  <Menu.Item
-                    leftSection={<IconCopy size={16} />}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleCopy(e)
-                    }}
-                  >
-                    Copy
-                  </Menu.Item>
-                  <Menu.Item
-                    leftSection={<IconBook size={16} />}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      openReader(link)
-                    }}
-                  >
-                    Reader view
-                  </Menu.Item>
-                  <Menu.Item
-                    leftSection={<IconPencil size={16} />}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      openEditor(link)
-                    }}
-                  >
-                    Edit
-                  </Menu.Item>
-                  <Menu.Item
-                    component="a"
-                    href={`https://web.archive.org/web/*/${encodeURIComponent(link.url)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    leftSection={<IconHistory size={16} />}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    Archive Snapshot
-                  </Menu.Item>
-                  <Menu.Item
-                    leftSection={isArchived ? <IconArchiveOff size={16} /> : <IconArchive size={16} />}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      if (isArchived) handleUnarchive(e)
-                      else handleArchive(e)
-                    }}
-                  >
-                    {isArchived ? 'Unarchive' : 'Archive'}
-                  </Menu.Item>
-                  <Menu.Item
-                    leftSection={<IconSparkles size={16} />}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleEnrich(e)
-                    }}
-                  >
-                    Fetch details
-                  </Menu.Item>
-                  <Menu.Item
-                    leftSection={<IconGitMerge size={16} />}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setMergeOpen(true)
-                    }}
-                  >
-                    Merge into…
-                  </Menu.Item>
-                  <Menu.Item
-                    leftSection={<IconWand size={16} />}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleApplyRules(e)
-                    }}
-                  >
-                    Run rules
-                  </Menu.Item>
-                  <Menu.Divider />
-                  <Menu.Item
-                    color="red"
-                    leftSection={<IconTrash size={16} />}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleDelete(e)
-                    }}
-                  >
-                    Delete
-                  </Menu.Item>
-                </>
-              )}
-            </Menu.Dropdown>
-          </Menu>
-        )}
-      </div>
-
-      <div className="link-meta">
-        <span className="link-domain">{hostOf(link.url)}</span>
-        <span className="meta-sep">·</span>
-        <span className="link-meta-visits">
-          <IconEye size={13} /> {link.visits || 0}
-        </span>
-        <span className="meta-sep">·</span>
-        <span>{timeAgoShort(link.createdAt)}</span>
         {link.note && (
           <>
             <span className="meta-sep">·</span>
@@ -651,16 +657,20 @@ function LinkCard({ link, trashMode = false }) {
         )}
       </div>
 
-      {tags.length > 0 && (
-        <div className="link-card-tags">
-          {tags.slice(0, 3).map((tag) => (
-            <span key={tag} className="link-tag-chip">
-              #{tag}
-            </span>
-          ))}
-          {tags.length > 3 && <span className="link-tag-chip link-tag-more">+{tags.length - 3}</span>}
-        </div>
-      )}
+      <div className="link-card-tags">
+        {tags.length > 0 ? (
+          <>
+            {tags.slice(0, 3).map((tag) => (
+              <span key={tag} className="link-tag-chip">
+                #{tag}
+              </span>
+            ))}
+            {tags.length > 3 && <span className="link-tag-chip link-tag-more">+{tags.length - 3}</span>}
+          </>
+        ) : (
+          <span className="link-tag-chip link-tag-empty">#untagged</span>
+        )}
+      </div>
 
       {!selectionMode && (
         <div className="link-drawer">

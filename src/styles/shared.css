@@ -136,6 +136,7 @@
   white-space: nowrap;
   overflow: hidden;
   min-width: 0;
+  height: 20px;
 }
 .link-meta-visits {
   display: inline-flex;
@@ -149,9 +150,17 @@
 
 .link-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
   gap: 12px;
+  width: 100%;
   padding-bottom: 24px;
+}
+
+@media (max-width: 40em) {
+  .link-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
 }
 
 .skeleton-card {

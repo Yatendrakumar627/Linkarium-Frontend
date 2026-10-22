@@ -27,7 +27,6 @@ export function ApiKeysList() {
   const [newKeyName, setNewKeyName] = useState('')
   const [readScope, setReadScope] = useState(true)
   const [writeScope, setWriteScope] = useState(true)
-  const [deleteScope, setDeleteScope] = useState(false)
   const [expiresInDays, setExpiresInDays] = useState('90')
   const [busy, setBusy] = useState(false)
   const [revealedKey, setRevealedKey] = useState(null)
@@ -60,7 +59,6 @@ export function ApiKeysList() {
     const scopes = []
     if (readScope) scopes.push('links:read')
     if (writeScope) scopes.push('links:write')
-    if (deleteScope) scopes.push('links:delete')
 
     if (!scopes.length) {
       setError('Please select at least one permission scope.')
@@ -203,12 +201,6 @@ export function ApiKeysList() {
                 label="links:write"
                 checked={writeScope}
                 onChange={(e) => setWriteScope(e.currentTarget.checked)}
-              />
-              <Checkbox
-                size="xs"
-                label="links:delete"
-                checked={deleteScope}
-                onChange={(e) => setDeleteScope(e.currentTarget.checked)}
               />
             </div>
           </div>

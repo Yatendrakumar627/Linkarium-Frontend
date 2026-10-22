@@ -151,3 +151,31 @@
   background-size: 200% 100%;
   animation: shimmer 1.6s infinite linear;
 }
+
+@media (max-width: 34em) {
+  .stat-tile {
+    padding: 10px 12px;
+    border-radius: 14px;
+  }
+  .stat-tile-top {
+    gap: 4px;
+  }
+  .stat-icon {
+    width: 28px;
+    height: 28px;
+  }
+  .stat-icon svg {
+    width: 16px;
+    height: 16px;
+  }
+  .stat-subtext {
+    font-size: 9.5px;
+    padding: 1px 6px;
+  }
+  .stat-tile .stat-value {
+    font-size: 20px;
+  }
+  .stat-tile .stat-label {
+    font-size: 11px;
+  }
+}

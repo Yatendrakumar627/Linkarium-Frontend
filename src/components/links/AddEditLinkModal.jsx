@@ -75,6 +75,10 @@ function CollectionSelect({ collections, value, onChange, addCollection }) {
       onOptionSubmit={(val) => {
         if (val === '$create') {
           createCollection(createName)
+        } else if (val === '$clear') {
+          onChange(null)
+          setSearch('')
+          combobox.closeDropdown()
         } else {
           selectExisting(val)
         }
@@ -108,6 +112,14 @@ function CollectionSelect({ collections, value, onChange, addCollection }) {
 
       <Combobox.Dropdown className="le-dropdown">
         <Combobox.Options>
+          {value ? (
+            <Combobox.Option value="$clear" key="$clear">
+              <div className="le-col-option">
+                <IconFolder size={14} className="le-col-option-icon" />
+                <span>General (None)</span>
+              </div>
+            </Combobox.Option>
+          ) : null}
           {options}
           {createName && (
             <Combobox.Option value="$create" className="le-col-create-option">
@@ -301,7 +313,7 @@ function LinkEditorForm({ link: editingLink, links, collections, tags, addLink, 
         description: description.trim(),
         note: note.trim(),
         tags: linkTags,
-        collectionId: collectionId || undefined,
+        collectionId: collectionId || null,
         color,
       }
 
@@ -335,7 +347,7 @@ function LinkEditorForm({ link: editingLink, links, collections, tags, addLink, 
         description: description.trim(),
         note: note.trim(),
         tags: linkTags,
-        collectionId: collectionId || undefined,
+        collectionId: collectionId || null,
         color,
         favorite,
       })
@@ -618,7 +630,7 @@ function LinkEditorForm({ link: editingLink, links, collections, tags, addLink, 
             <CollectionSelect
               collections={collections}
               value={collectionId || null}
-              onChange={(v) => typeof v === 'string' && setCollectionId(v)}
+              onChange={(v) => setCollectionId(v || '')}
               addCollection={addCollection}
             />
           </div>

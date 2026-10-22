@@ -218,11 +218,12 @@
   }
 }
 
-/* Mobile header: swap to the compact layout (☰ search add 3D avatar + full-width quick-save below) */
+/* Mobile header: swap to the compact layout (☰ search filter 3D add avatar + full-width quick-save below) */
 @media (max-width: 62em) {
   .topbar {
     flex-wrap: wrap;
     gap: 8px 6px;
+    align-items: center;
   }
   .topbar .topbar-title,
   .topbar .topbar-sort,
@@ -235,65 +236,126 @@
   .topbar .topbar-visual-mobile,
   .topbar .topbar-newlink-mobile {
     display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
   }
   .topbar .menu-btn {
     order: 1;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
   }
   .topbar .topbar-controls {
     order: 2;
     flex: 1 1 0%;
     min-width: 0;
+    gap: 4px;
   }
-  .topbar .topbar-visual-mobile {
-    order: 3;
-  }
-  .topbar .topbar-newlink-mobile {
-    order: 4;
-  }
-  .topbar .topbar-right {
-    order: 5;
-  }
-  .topbar .quick-save {
-    order: 6;
-    flex: 1 1 100%;
-  }
-  .quick-save-box {
-    height: 40px;
+  .topbar .search-box {
+    flex: 1 1 auto;
+    min-width: 0;
   }
   .topbar .search-input {
     min-width: 0;
     width: 100%;
   }
-  .search-box {
-    flex: 1 1 auto;
+  .topbar .search-input .mantine-Input-input {
+    height: 34px;
+    min-height: 34px;
+    font-size: 12.5px;
+    padding-left: 28px;
+    padding-right: 8px;
+  }
+  /* Hide the ⌘K shortcut badge on touch/mobile viewports to avoid overlapping input text */
+  .topbar .search-kbd-btn {
+    display: none;
+  }
+  .topbar .search-filter-btn {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    display: grid;
+    place-items: center;
+    border-radius: 9px;
+  }
+  .topbar .topbar-visual-mobile {
+    order: 3;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    display: grid;
+    place-items: center;
+    border-radius: 9px;
+  }
+  .topbar .topbar-newlink-mobile {
+    order: 4;
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    padding: 0;
+    border-radius: 9px;
+    display: grid;
+    place-items: center;
   }
   .topbar-newlink-mobile .new-link-label {
     display: none;
   }
-  .topbar-newlink-mobile {
-    padding: 0 10px;
+  .topbar-newlink-mobile .mantine-Button-section {
+    margin: 0;
   }
-  .topbar-right {
-    gap: 6px;
+  .topbar .topbar-right {
+    order: 5;
+    margin-left: 0;
+    gap: 4px;
   }
-  .topbar .topbar-icon-btn,
   .topbar .pd-trigger {
-    width: 36px;
-    height: 36px;
+    width: 34px;
+    height: 34px;
+    padding: 2px;
   }
   .topbar .pd-trigger .pd-avatar {
-    width: 27px;
-    height: 27px;
+    width: 28px;
+    height: 28px;
     font-size: 11px;
+  }
+  .topbar .quick-save {
+    order: 6;
+    flex: 1 1 100%;
+    margin-top: 2px;
+  }
+  .quick-save-box {
+    height: 38px;
   }
 }
 
 @media (max-width: 30em) {
   .topbar {
-    gap: 6px;
-    padding-bottom: 12px;
+    gap: 6px 4px;
+    padding-bottom: 8px;
   }
-  .search-input {
-    min-width: 64px;
+  .topbar .topbar-controls {
+    gap: 3px;
+  }
+  .topbar .menu-btn,
+  .topbar .search-filter-btn,
+  .topbar .topbar-visual-mobile,
+  .topbar .topbar-newlink-mobile,
+  .topbar .pd-trigger {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+  }
+  .topbar .search-input .mantine-Input-input {
+    height: 32px;
+    min-height: 32px;
+  }
+  .topbar .pd-trigger .pd-avatar {
+    width: 26px;
+    height: 26px;
+    font-size: 10px;
   }
 }

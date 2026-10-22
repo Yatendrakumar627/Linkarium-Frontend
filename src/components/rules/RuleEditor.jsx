@@ -29,7 +29,7 @@ export default function RuleEditor() {
 
   const createRule = useSavedViewStore((s) => s.create)
   const updateRule = useSavedViewStore((s) => s.update)
-  const runRule = useSavedViewStore((s) => s.run)
+  const previewQuery = useSavedViewStore((s) => s.preview)
 
   const collections = useLinkStore((s) => s.collections)
 
@@ -91,22 +91,14 @@ export default function RuleEditor() {
   }
 
   // A dry run tells the user what the rule would do before it does it.
+  // Previewing must never persist the draft: an unsaved rule is a draft, and
+  // clicking "Test rule" should not create it behind the user's back.
   const handleTest = async () => {
     setRunning(true)
     try {
-      let ruleId = existing?._id
-      if (!ruleId) {
-        const created = await createRule({
-          name: name.trim() || 'Test rule',
-          query,
-          actions: { addTags, removeTags, collectionId, favorite, archive },
-          kind: 'rule',
-        })
-        ruleId = created._id
-      }
-      const { result } = await runRule(ruleId, true)
+      const { count } = await previewQuery(query)
       notifications.show({
-        message: `${result?.matched ?? 0} link(s) would match`,
+        message: `${count ?? 0} link(s) would match`,
         color: 'violet',
       })
     } catch (err) {

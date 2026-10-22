@@ -105,7 +105,7 @@ export default function TwoFactorSetup() {
     setBusy(true)
     setError(null)
     try {
-      await userApi.totpDisable({ currentPassword: disablePassword, code: disableCode })
+      await userApi.totpDisable({ password: disablePassword, code: disableCode })
       notifications.show({
         message: 'Two-Factor Authentication disabled.',
         color: 'gray',
