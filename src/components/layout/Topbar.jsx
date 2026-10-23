@@ -1,8 +1,10 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Button, Menu, Select } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
-import { IconBox, IconDownload, IconDotsVertical, IconLayoutGrid, IconMenu2, IconPlus, IconUpload } from '@tabler/icons-react'
+import { IconBox, IconDownload, IconDotsVertical, IconLayoutGrid, IconMenu2, IconPlus, IconUpload, IconCrown } from '@tabler/icons-react'
 import { useUiStore } from '../../store/uiStore'
+import { useAuthStore } from '../../store/authStore'
 import { linksApi } from '../../api/endpoints'
 import { downloadBlob } from '../../utils'
 import ProfileDropdown from '../profile/ProfileDropdown'
@@ -66,6 +68,8 @@ function viewTitle(view, visualMode) {
 }
 
 export default function Topbar({ onMenu }) {
+  const navigate = useNavigate()
+  const user = useAuthStore((s) => s.user)
   const view = useUiStore((s) => s.view)
   const sort = useUiStore((s) => s.sort)
   const setSort = useUiStore((s) => s.setSort)
@@ -167,6 +171,24 @@ export default function Topbar({ onMenu }) {
       </Button>
 
       <div className="topbar-right">
+        {user?.role === 'admin' && (
+          <Button
+            size="xs"
+            variant="light"
+            color="orange"
+            leftSection={<IconCrown size={15} color="#f59e0b" />}
+            onClick={() => navigate('/admin')}
+            style={{
+              background: 'rgba(245, 158, 11, 0.12)',
+              border: '1px solid rgba(245, 158, 11, 0.35)',
+              color: '#fbbf24',
+              fontWeight: 600,
+            }}
+          >
+            Admin Panel
+          </Button>
+        )}
+
         <div className="more-wrap">
           <Menu shadow="md" width={196} position="bottom-end">
             <Menu.Target>

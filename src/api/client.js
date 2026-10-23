@@ -100,6 +100,11 @@ async function request(path, { method = 'GET', body, auth = true, headers } = {}
 
   if (!res.ok) {
     if (res.status === 401 && auth) endSession()
+    if (res.status === 403 && path.startsWith('/admin')) {
+      if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/auth')) {
+        window.location.assign('/')
+      }
+    }
     const err = new ApiError(data?.error || res.statusText || 'Request failed', res.status)
     err.data = data
     throw err

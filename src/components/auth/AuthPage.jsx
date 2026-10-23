@@ -55,12 +55,24 @@ export default function AuthPage() {
           setOtpCode('')
           return
         }
+        if (res?.role === 'admin') {
+          navigate('/admin')
+          return
+        }
       } else if (mode === '2fa') {
         if (!otpCode.trim()) throw new Error('Please enter your code.')
-        await verifyOtp({ challengeId, code: otpCode.trim() })
+        const userRes = await verifyOtp({ challengeId, code: otpCode.trim() })
+        if (userRes?.role === 'admin') {
+          navigate('/admin')
+          return
+        }
       } else {
         if (!name.trim()) throw new Error('Please enter your name.')
-        await register({ name, email, password })
+        const userRes = await register({ name, email, password })
+        if (userRes?.role === 'admin') {
+          navigate('/admin')
+          return
+        }
       }
       navigate('/')
     } catch (err) {

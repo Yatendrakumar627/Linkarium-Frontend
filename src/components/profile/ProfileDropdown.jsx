@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { notifications } from '@mantine/notifications'
-import { IconChevronRight, IconDownload, IconLogout, IconUpload, IconUser } from '@tabler/icons-react'
+import { IconChevronRight, IconDownload, IconLogout, IconUpload, IconUser, IconCrown } from '@tabler/icons-react'
 import { linksApi } from '../../api/endpoints'
 import { useAuthStore } from '../../store/authStore'
 import { useUiStore } from '../../store/uiStore'
@@ -74,6 +74,11 @@ export default function ProfileDropdown() {
   }
 
   const handleItem = (key) => {
+    if (key === 'admin') {
+      close()
+      navigate('/admin')
+      return
+    }
     if (key === 'profile') {
       close()
       openProfile()
@@ -123,10 +128,26 @@ export default function ProfileDropdown() {
               {initialsOf(user?.name)}
             </span>
             <div className="pd-user">
-              <div className="pd-name">{user?.name}</div>
+              <div className="pd-name">
+                {user?.name}
+                {user?.role === 'admin' && ' 👑'}
+              </div>
               <div className="pd-email">{user?.email}</div>
             </div>
           </div>
+
+          {user?.role === 'admin' && (
+            <button
+              type="button"
+              className="pd-item"
+              style={{ color: '#fbbf24', fontWeight: 600, background: 'rgba(245, 158, 11, 0.1)' }}
+              role="menuitem"
+              onClick={() => handleItem('admin')}
+            >
+              <IconCrown size={16} color="#fbbf24" />
+              Master Admin Panel
+            </button>
+          )}
 
           <button
             type="button"

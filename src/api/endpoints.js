@@ -123,3 +123,25 @@ export const apiKeysApi = {
 export const shareApi = {
   public: (slug) => api.get(`/share/${slug}`, { auth: false }),
 }
+
+export const adminApi = {
+  overview: () => api.get('/admin/overview'),
+  users: (params = {}) => api.get(withQuery('/admin/users', params)),
+  user: (id) => api.get(`/admin/users/${id}`),
+  userLinks: (id, params = {}) => api.get(withQuery(`/admin/users/${id}/links`, params)),
+  updateStatus: (id, status) => api.patch(`/admin/users/${id}/status`, { status }),
+  updateRole: (id, role) => api.patch(`/admin/users/${id}/role`, { role }),
+  resetSessions: (id) => api.post(`/admin/users/${id}/reset-sessions`),
+  resetPassword: (id, newPassword) => api.post(`/admin/users/${id}/reset-password`, { newPassword }),
+  deleteUser: (id) => api.del(`/admin/users/${id}`),
+  links: (params = {}) => api.get(withQuery('/admin/links', params)),
+  deleteLink: (id) => api.del(`/admin/links/${id}`),
+  sessions: (params = {}) => api.get(withQuery('/admin/sessions', params)),
+  revokeSession: (id) => api.del(`/admin/sessions/${id}`),
+  exportReport: () => api.download('/admin/export'),
+  databaseOverview: () => api.get('/admin/database/overview'),
+  databaseCollection: (name, params = {}) => api.get(withQuery(`/admin/database/collection/${name}`, params)),
+  databaseDump: () => api.download('/admin/database/dump'),
+  activityStream: () => api.get('/admin/activity'),
+}
+

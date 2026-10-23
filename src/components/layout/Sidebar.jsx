@@ -21,16 +21,21 @@ import {
   IconRefresh,
   IconFlame,
   IconPlayerPlay,
+  IconCrown,
 } from '@tabler/icons-react'
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { notifications } from '@mantine/notifications'
 import { useLinkStore } from '../../store/linkStore'
 import { useUiStore } from '../../store/uiStore'
+import { useAuthStore } from '../../store/authStore'
 import { useSavedViewStore } from '../../store/savedViewStore'
 import { iconFor } from '../../utils/icons'
 import './Sidebar.css'
 
 export default function Sidebar({ open, collapsed = false, onNavigate, onMouseEnter, onMouseLeave }) {
+  const navigate = useNavigate()
+  const user = useAuthStore((s) => s.user)
   const summary = useLinkStore((s) => s.summary)
   const collections = useLinkStore((s) => s.collections)
   const tags = useLinkStore((s) => s.tags)
@@ -216,6 +221,30 @@ export default function Sidebar({ open, collapsed = false, onNavigate, onMouseEn
         </div>
         {navOpen && (
           <nav className="sidebar-nav">
+            {user?.role === 'admin' && (
+              <div
+                className="nav-item admin-nav-item"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(217, 119, 6, 0.25) 100%)',
+                  border: '1px solid rgba(245, 158, 11, 0.35)',
+                  color: '#fbbf24',
+                  fontWeight: 600,
+                  marginBottom: '6px',
+                }}
+                onClick={() => {
+                  navigate('/admin')
+                  onNavigate?.()
+                }}
+                title="Master Admin Panel"
+                aria-label="Master Admin Panel"
+              >
+                <IconCrown size={17} color="#fbbf24" />
+                <span className="nav-label">Admin Panel</span>
+                <span className="nav-count" style={{ background: '#f59e0b', color: '#000', fontWeight: 700 }}>
+                  ROOT
+                </span>
+              </div>
+            )}
             {navItems.map((item) => {
               const active = view.type === item.type
               return (
