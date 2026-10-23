@@ -56,6 +56,35 @@ export default function AppShell() {
 
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [sidebarHover, setSidebarHover] = useState(false)
+  // The 3D backdrop is purely decorative but pulls in a large three.js chunk
+  // and compiles shaders on the main thread. Keep it off the critical path:
+  // wait for the first paint and the initial API burst, then mount it while
+  // the browser is idle. Users who ask for reduced motion, save-data, or a
+  // very slow connection never pay for it at all.
+  const [showBackground, setShowBackground] = useState(false)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const connection = navigator.connection
+    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
+    const slowConnection = /(^|-)2g$/.test(connection?.effectiveType || '')
+    if (reduceMotion || connection?.saveData || slowConnection) return
+
+    let idleId
+    const start = () => setShowBackground(true)
+    const timer = window.setTimeout(() => {
+      if ('requestIdleCallback' in window) {
+        idleId = window.requestIdleCallback(start, { timeout: 3000 })
+      } else {
+        start()
+      }
+    }, 2500)
+
+    return () => {
+      window.clearTimeout(timer)
+      if (idleId !== undefined) window.cancelIdleCallback?.(idleId)
+    }
+  }, [])
 
   useEffect(() => {
     fetchMeta().catch((err) => notifications.show({ message: err.message, color: 'red' }))
@@ -161,7 +190,7 @@ export default function AppShell() {
 
   return (
     <>
-      {!visualMode && (
+      {showBackground && !visualMode && (
         <Suspense fallback={null}>
           <Background3D />
         </Suspense>

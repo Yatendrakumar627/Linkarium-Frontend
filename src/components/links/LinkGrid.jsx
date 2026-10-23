@@ -1,18 +1,7 @@
-import { motion } from 'framer-motion'
 import LinkCard from './LinkCard'
 import EmptyState from '../common/EmptyState'
 import { IconLink } from '@tabler/icons-react'
 import './LinkGrid.css'
-
-const container = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.05 } },
-}
-
-const item = {
-  hidden: { opacity: 0, y: 18, scale: 0.98 },
-  show: { opacity: 1, y: 0, scale: 1, transition: { type: 'spring', stiffness: 260, damping: 26 } },
-}
 
 export default function LinkGrid({ links, trashMode = false, emptyTitle = 'No links found', emptySubtitle }) {
   if (!links.length) {
@@ -20,12 +9,18 @@ export default function LinkGrid({ links, trashMode = false, emptyTitle = 'No li
   }
 
   return (
-    <motion.div className="link-grid" variants={container} initial="hidden" animate="show">
-      {links.map((link) => (
-        <motion.div key={link._id} variants={item} className="link-grid-item">
+    <div className="link-grid">
+      {links.map((link, index) => (
+        <div
+          key={link._id}
+          className="link-grid-item"
+          // CSS handles the stagger, so framer-motion no longer has to be part
+          // of the eager boot bundle (it is still lazy-loaded by the 3D view).
+          style={{ '--link-index': index }}
+        >
           <LinkCard link={link} trashMode={trashMode} />
-        </motion.div>
+        </div>
       ))}
-    </motion.div>
+    </div>
   )
 }

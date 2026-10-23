@@ -28,7 +28,9 @@ export default defineConfig({
               norm.includes('/node_modules/react-dom/') ||
               norm.includes('/node_modules/react-router/') ||
               norm.includes('/node_modules/react-router-dom/') ||
-              norm.includes('/node_modules/scheduler/')
+              norm.includes('/node_modules/scheduler/') ||
+              norm.includes('/node_modules/zustand/') ||
+              norm.includes('/node_modules/use-sync-external-store/')
             ) {
               return 'vendor-react'
             }

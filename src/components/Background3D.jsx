@@ -62,7 +62,7 @@ function Rig({ enabled = true }) {
 
 // ---- Starfield particles (optimized count for 60fps across all GPUs) ----
 const STAR_POSITIONS = (() => {
-  const n = 250
+  const n = 160
   const arr = new Float32Array(n * 3)
   for (let i = 0; i < n; i++) {
     const r = 14 + Math.random() * 14
@@ -203,9 +203,9 @@ function Background3DInner() {
   return (
     <div className="scene-canvas">
       <Canvas
-        dpr={[1, 1.5]}
+        dpr={[1, 1.25]}
         frameloop={isVisible && !isScrolling ? 'always' : 'never'}
-        gl={{ antialias: true, alpha: true, powerPreference: 'low-power' }}
+        gl={{ antialias: false, alpha: true, powerPreference: 'low-power' }}
         camera={{ position: [0, 0.5, 10], fov: 50 }}
         onCreated={({ gl }) => {
           glRef.current = gl

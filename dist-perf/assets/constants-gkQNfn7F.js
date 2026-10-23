@@ -1,0 +1,1 @@
+var e=[`#00e5ff`,`#6a18b8`,`#3b0a6b`,`#00b4d8`,`#a855f7`,`#ec4899`,`#10b981`,`#f59e0b`],t=e.slice(0,6);export{t as n,e as t};
