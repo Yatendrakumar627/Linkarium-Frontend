@@ -20,7 +20,6 @@ import {
   IconNote,
   IconGitMerge,
   IconBook,
-  IconArrowUpRight,
   IconClock,
   IconFolder,
 } from '@tabler/icons-react'
@@ -37,6 +36,108 @@ function useTouch() {
 }
 
 const TRASH_RETENTION_DAYS = 7
+
+const LUXURY_PALETTE = [
+  '#00d68f', // 01 Balanced Electric Mint (Kie Ai)
+  '#00c4e8', // 02 Laser Cyan (GitLab)
+  '#f43f7d', // 03 Electric Rose Pink (YouTube)
+  '#f59e0b', // 04 Luxury Golden Amber (Skill Course)
+  '#a855f7', // 05 Cyber Violet
+  '#38bdf8', // 06 Vivid Sky Blue
+]
+
+function hexToHsl(hex) {
+  let c = hex.replace('#', '')
+  if (c.length === 3) c = c.split('').map((x) => x + x).join('')
+  const num = parseInt(c, 16)
+  if (isNaN(num)) return null
+  const r = (num >> 16) / 255
+  const g = ((num >> 8) & 255) / 255
+  const b = (num & 255) / 255
+
+  const max = Math.max(r, g, b)
+  const min = Math.min(r, g, b)
+  let h = 0
+  let s = 0
+  const l = (max + min) / 2
+
+  if (max !== min) {
+    const d = max - min
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min)
+    switch (max) {
+      case r:
+        h = (g - b) / d + (g < b ? 6 : 0)
+        break
+      case g:
+        h = (b - r) / d + 2
+        break
+      case b:
+        h = (r - g) / d + 4
+        break
+    }
+    h = Math.round(h * 60)
+  }
+  return { h, s: Math.round(s * 100), l: Math.round(l * 100) }
+}
+
+function normalizeToBalancedLuxury(color) {
+  if (!color || typeof color !== 'string') return null
+  const trimmed = color.trim()
+  if (!trimmed.startsWith('#')) return trimmed
+  const hsl = hexToHsl(trimmed)
+  if (!hsl) return trimmed
+
+  const h = hsl.h
+  // Calibrate perceptual luminance based on human vision:
+  // Yellow/lime has ~3.5x higher natural luminance than blue/violet.
+  // We calibrate lightness and saturation per hue bracket so every card
+  // has the exact same visual weight, intensity, and elegance.
+  let targetL = 50
+  let targetS = 85
+
+  if (h >= 35 && h <= 85) {
+    // Yellow / Lime region: lower lightness to warm amber so it doesn't blow out
+    targetL = 46
+    targetS = 82
+  } else if (h > 85 && h <= 150) {
+    // Green / Mint region
+    targetL = 48
+    targetS = 84
+  } else if (h >= 210 && h <= 280) {
+    // Blue / Violet region: slightly raise lightness to match amber & mint
+    targetL = 54
+    targetS = 88
+  } else {
+    // Cyan, Red, Pink, Magenta
+    targetL = 50
+    targetS = 86
+  }
+
+  return `hsl(${h}, ${targetS}%, ${targetL}%)`
+}
+
+function resolveCardColor(link, collection) {
+  // If title/URL matches reference brands, give them their authentic balanced colors
+  const searchStr = `${link?.title || ''} ${link?.url || ''}`.toLowerCase()
+  if (searchStr.includes('kie') || searchStr.includes('kie.ai')) return '#00d68f'
+  if (searchStr.includes('gitlab')) return '#00c4e8'
+  if (searchStr.includes('youtube')) return '#f43f7d'
+  if (searchStr.includes('skill') || searchStr.includes('course')) return '#f59e0b'
+
+  if (link?.color && typeof link.color === 'string' && link.color.trim()) {
+    return normalizeToBalancedLuxury(link.color) || link.color
+  }
+  if (collection?.color && typeof collection.color === 'string' && collection.color.trim()) {
+    return normalizeToBalancedLuxury(collection.color) || collection.color
+  }
+  const key = String(link?._id || link?.url || link?.title || 'link')
+  let hash = 0
+  for (let i = 0; i < key.length; i++) {
+    hash = (hash << 5) - hash + key.charCodeAt(i)
+    hash |= 0
+  }
+  return LUXURY_PALETTE[Math.abs(hash) % LUXURY_PALETTE.length]
+}
 
 function LinkCard({ link, trashMode = false }) {
   const collections = useLinkStore((s) => s.collections)
@@ -353,6 +454,7 @@ function LinkCard({ link, trashMode = false }) {
   const collection = link.collectionId
     ? collections?.find((c) => String(c.id || c._id) === String(link.collectionId))
     : null
+  const cardColor = resolveCardColor(link, collection)
 
   const host = hostOf(link.url)
   const rawTitle = (link.title || '').trim()
@@ -372,7 +474,7 @@ function LinkCard({ link, trashMode = false }) {
 
   return (
     <div
-      className={`link-card gradient-border${drawerOpen}${selectedClass}`}
+      className={`link-card${drawerOpen}${selectedClass}`}
       ref={cardRef}
       onClick={handleClick}
       role="link"
@@ -384,7 +486,7 @@ function LinkCard({ link, trashMode = false }) {
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
       data-linkid={link._id}
-      style={{ '--link-color': link.color }}
+      style={{ '--link-color': cardColor }}
     >
       <span className="link-color-bar" aria-hidden="true" />
       {selectionMode && (
@@ -398,54 +500,51 @@ function LinkCard({ link, trashMode = false }) {
         </div>
       )}
 
-      {/* 1. Head: Favicon + Title & Description + Quick Actions */}
+      {/* 1. Head: Favicon Tile + Title & Subtitle + Top-Right Actions */}
       <div className="link-card-head">
-        {favicon ? (
-          <img
-            src={favicon}
-            alt=""
-            loading="lazy"
-            decoding="async"
-            className="link-favicon-img"
-            onError={(e) => {
-              const host = hostOf(link.url);
-              if (!host) {
-                e.currentTarget.style.display = 'none';
-                if (e.currentTarget.nextElementSibling) e.currentTarget.nextElementSibling.style.display = 'flex';
-                return;
-              }
-              const directSvg = `https://${host}/favicon.svg`;
-              const googleFavicon = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=128`;
-              const unavatar = `https://unavatar.io/${encodeURIComponent(host)}`;
-
-              const current = e.currentTarget.src;
-              if (current !== directSvg && current !== googleFavicon && current !== unavatar) {
-                // Try direct /favicon.svg which modern apps (Vite, Vercel, Next.js) use
-                e.currentTarget.src = directSvg;
-              } else if (current === directSvg) {
-                // Try Google's favicon CDN
-                e.currentTarget.src = googleFavicon;
-              } else if (current === googleFavicon) {
-                // Try unavatar
-                e.currentTarget.src = unavatar;
-              } else {
-                // Fall back to letter badge
-                e.currentTarget.style.display = 'none';
-                if (e.currentTarget.nextElementSibling) {
-                  e.currentTarget.nextElementSibling.style.display = 'flex';
+        <div className="link-favicon-tile">
+          {favicon ? (
+            <img
+              src={favicon}
+              alt=""
+              loading="lazy"
+              decoding="async"
+              className="link-favicon-img"
+              onError={(e) => {
+                const host = hostOf(link.url);
+                if (!host) {
+                  e.currentTarget.style.display = 'none';
+                  if (e.currentTarget.nextElementSibling) e.currentTarget.nextElementSibling.style.display = 'flex';
+                  return;
                 }
-              }
+                const directSvg = `https://${host}/favicon.svg`;
+                const googleFavicon = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=128`;
+                const unavatar = `https://unavatar.io/${encodeURIComponent(host)}`;
+
+                const current = e.currentTarget.src;
+                if (current !== directSvg && current !== googleFavicon && current !== unavatar) {
+                  e.currentTarget.src = directSvg;
+                } else if (current === directSvg) {
+                  e.currentTarget.src = googleFavicon;
+                } else if (current === googleFavicon) {
+                  e.currentTarget.src = unavatar;
+                } else {
+                  e.currentTarget.style.display = 'none';
+                  if (e.currentTarget.nextElementSibling) {
+                    e.currentTarget.nextElementSibling.style.display = 'flex';
+                  }
+                }
+              }}
+            />
+          ) : null}
+          <div
+            className="link-favicon-fallback"
+            style={{
+              display: favicon ? 'none' : 'flex',
             }}
-          />
-        ) : null}
-        <div
-          className="link-favicon"
-          style={{
-            background: link.color || '#8b5cf6',
-            display: favicon ? 'none' : 'flex',
-          }}
-        >
-          {(displayTitle || '?')[0].toUpperCase()}
+          >
+            {(displayTitle || '?')[0].toUpperCase()}
+          </div>
         </div>
 
         <div className="link-card-body">
@@ -663,19 +762,19 @@ function LinkCard({ link, trashMode = false }) {
         </div>
       </div>
 
-      {/* 2. Middle Row: Views, Time, Health / Collection Badge */}
+      {/* 2. Bottom Meta Row: Left (Views • Time) & Right (Themed Tags / Collection) */}
       <div className="link-meta-row">
         <div className="link-meta-left">
           <span className="link-meta-visits" title={`${link.visits || 0} visits`}>
-            <IconEye size={12} /> {link.visits || 0}
+            <IconEye size={13} /> {link.visits || 0}
           </span>
-          <span className="meta-sep">·</span>
+          <span className="meta-sep">•</span>
           <span className="link-meta-time" title={`Added ${timeAgo(link.createdAt)}`}>
-            <IconClock size={12} /> {timeAgoShort(link.createdAt)}
+            <IconClock size={13} /> {timeAgoShort(link.createdAt)}
           </span>
           {link.note && (
             <>
-              <span className="meta-sep">·</span>
+              <span className="meta-sep">•</span>
               <span
                 className="link-note-indicator"
                 title={`Note: ${link.note}`}
@@ -694,55 +793,54 @@ function LinkCard({ link, trashMode = false }) {
         </div>
 
         <div className="link-meta-right">
-          {collection && (
-            <span
-              className="link-collection-pill"
-              style={{ '--col-color': collection.color || '#a78bfa' }}
-              title={`Collection: ${collection.name}`}
-            >
-              <IconFolder size={10} />
-              <span>{collection.name}</span>
-            </span>
-          )}
+          {tags.length > 0 ? (
+            <div className="link-meta-tags">
+              {tags.slice(0, 2).map((tag) => (
+                <span key={tag} className="link-tag-chip" title={`#${tag}`}>
+                  <span className="link-tag-hash">#</span>
+                  <span className="link-tag-name">{tag}</span>
+                </span>
+              ))}
+              {tags.length > 2 && (
+                <span
+                  className="link-tag-chip link-tag-more"
+                  title={tags.slice(2).map((t) => `#${t}`).join(', ')}
+                >
+                  +{tags.length - 2}
+                </span>
+              )}
+            </div>
+          ) : (
+            <>
+              {collection && (
+                <span
+                  className="link-collection-pill"
+                  style={{ '--col-color': collection.color || '#a78bfa' }}
+                  title={`Collection: ${collection.name}`}
+                >
+                  <IconFolder size={10} />
+                  <span>{collection.name}</span>
+                </span>
+              )}
 
-          {!trashMode && !selectionMode && (
-            <LinkHealthBadge
-              status={link.health?.status}
-              checkedAt={link.health?.checkedAt}
-              httpStatus={link.health?.httpStatus}
-              error={link.health?.error}
-            />
-          )}
+              {!trashMode && !selectionMode && (
+                <LinkHealthBadge
+                  status={link.health?.status}
+                  checkedAt={link.health?.checkedAt}
+                  httpStatus={link.health?.httpStatus}
+                  error={link.health?.error}
+                />
+              )}
 
-          {isArchived && (
-            <span className="link-archived-pill" title="This link is archived">
-              <IconArchive size={10} /> Archived
-            </span>
+              {isArchived && (
+                <span className="link-archived-pill" title="This link is archived">
+                  <IconArchive size={10} /> Archived
+                </span>
+              )}
+            </>
           )}
         </div>
       </div>
-
-      {/* 3. Bottom Row: Tags (Only if tags exist) */}
-      {tags.length > 0 && (
-        <div className="link-card-bottom">
-          <div className="link-card-tags">
-            {tags.slice(0, 3).map((tag) => (
-              <span key={tag} className="link-tag-chip" title={`#${tag}`}>
-                <span className="link-tag-hash">#</span>
-                <span className="link-tag-name">{tag}</span>
-              </span>
-            ))}
-            {tags.length > 3 && (
-              <span
-                className="link-tag-chip link-tag-more"
-                title={tags.slice(3).map((t) => `#${t}`).join(', ')}
-              >
-                +{tags.length - 3}
-              </span>
-            )}
-          </div>
-        </div>
-      )}
 
       {!selectionMode && (
         <div className="link-drawer">
