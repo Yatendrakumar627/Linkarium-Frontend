@@ -4,9 +4,9 @@ export const theme = createTheme({
   primaryColor: 'violet',
   defaultRadius: 'md',
   fontFamily:
-    '"Inter", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif',
+    '"Plus Jakarta Sans", "Outfit", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
   headings: {
-    fontFamily: '"Space Grotesk", "Inter", sans-serif',
+    fontFamily: '"Outfit", "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, sans-serif',
     fontWeight: '600',
   },
   colors: {

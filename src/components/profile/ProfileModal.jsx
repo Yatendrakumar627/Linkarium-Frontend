@@ -134,7 +134,6 @@ function PreferencesForm({ user }) {
   const [digestHour, setDigestHour] = useState(prefs.digestHour ?? 8)
   const [autoEnrich, setAutoEnrich] = useState(prefs.autoEnrich !== false)
   const [defaultView, setDefaultView] = useState(prefs.defaultView || 'dashboard')
-  const [theme, setTheme] = useState(prefs.theme || 'dark')
   const [timezone, setTimezone] = useState(prefs.timezone || (Intl?.DateTimeFormat?.()?.resolvedOptions?.()?.timeZone || 'UTC'))
   const [busy, setBusy] = useState(false)
 
@@ -148,7 +147,6 @@ function PreferencesForm({ user }) {
         digestHour: Number(digestHour),
         autoEnrich,
         defaultView,
-        theme,
         timezone,
       })
       // The server returns the updated user. Without storing it the form kept
@@ -227,32 +225,19 @@ function PreferencesForm({ user }) {
           </div>
         </div>
 
-        <Group grow>
-          <Select
-            size="xs"
-            label="Default opening view"
-            value={defaultView}
-            onChange={setDefaultView}
-            data={[
-              { value: 'dashboard', label: 'Dashboard' },
-              { value: 'links', label: 'All Links' },
-              { value: 'favorites', label: 'Favorites' },
-              { value: 'insights', label: 'Analytics' },
-              { value: 'archive', label: 'Archive' },
-            ]}
-          />
-          <Select
-            size="xs"
-            label="Color theme"
-            value={theme}
-            onChange={setTheme}
-            data={[
-              { value: 'dark', label: 'Dark universe' },
-              { value: 'light', label: 'Light' },
-              { value: 'system', label: 'System default' },
-            ]}
-          />
-        </Group>
+        <Select
+          size="xs"
+          label="Default opening view"
+          value={defaultView}
+          onChange={setDefaultView}
+          data={[
+            { value: 'dashboard', label: 'Dashboard' },
+            { value: 'links', label: 'All Links' },
+            { value: 'favorites', label: 'Favorites' },
+            { value: 'insights', label: 'Analytics' },
+            { value: 'archive', label: 'Archive' },
+          ]}
+        />
 
         <TextInput
           size="xs"

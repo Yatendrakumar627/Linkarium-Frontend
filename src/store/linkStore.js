@@ -8,8 +8,6 @@ import {
 } from '../api/endpoints'
 import {
   cacheLinks,
-  cacheCollections,
-  cacheTags,
   getCachedLinks,
   queueMutation,
   removeCachedLinks,
@@ -137,8 +135,6 @@ export const useLinkStore = create((set, get) => {
         analyticsApi.summary(),
       ])
       set({ collections, tags, summary })
-      cacheCollections(collections).catch(() => {})
-      cacheTags(tags).catch(() => {})
       // The health counters live on their own endpoint — a failure there must
       // not break the whole boot.
       get().refreshHealth()

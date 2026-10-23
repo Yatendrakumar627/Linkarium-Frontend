@@ -99,26 +99,6 @@ export function AppModalFooter({ children, meta, lead }) {
   )
 }
 
-export function AppModalField({ label, hint, error, htmlFor, children }) {
-  return (
-    <div className="app-modal-field">
-      {label ? (
-        <label className="app-modal-label" htmlFor={htmlFor}>
-          {label}
-        </label>
-      ) : null}
-      {children}
-      {error ? (
-        <div className="app-modal-hint" style={{ color: '#ff8787' }}>
-          {error}
-        </div>
-      ) : hint ? (
-        <div className="app-modal-hint">{hint}</div>
-      ) : null}
-    </div>
-  )
-}
-
 export function AppModalSearch({ value, onChange, placeholder = 'Search…', autoFocus }) {
   return (
     <div className="app-modal-search">

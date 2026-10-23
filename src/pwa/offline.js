@@ -13,28 +13,8 @@ export async function cacheLinks(links) {
   }
 }
 
-export async function cacheCollections(collections) {
-  if (Array.isArray(collections) && collections.length) {
-    await putRecords('collections', collections)
-  }
-}
-
-export async function cacheTags(tags) {
-  if (Array.isArray(tags) && tags.length) {
-    await putRecords('tags', tags)
-  }
-}
-
 export async function getCachedLinks() {
   return getAllRecords('links')
-}
-
-export async function getCachedCollections() {
-  return getAllRecords('collections')
-}
-
-export async function getCachedTags() {
-  return getAllRecords('tags')
 }
 
 export async function removeCachedLinks(ids) {

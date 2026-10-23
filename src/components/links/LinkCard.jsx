@@ -20,11 +20,14 @@ import {
   IconNote,
   IconGitMerge,
   IconBook,
+  IconArrowUpRight,
+  IconClock,
+  IconFolder,
 } from '@tabler/icons-react'
 import { notifications } from '@mantine/notifications'
 import { useLinkStore } from '../../store/linkStore'
 import { useUiStore } from '../../store/uiStore'
-import { faviconUrl, hostOf, safeUrl, timeAgoShort } from '../../utils'
+import { faviconUrl, hostOf, safeUrl, timeAgoShort, timeAgo } from '../../utils'
 import LinkHealthBadge from './LinkHealthBadge'
 import MergeLinkModal from './MergeLinkModal'
 import './LinkCard.css'
@@ -36,6 +39,7 @@ function useTouch() {
 const TRASH_RETENTION_DAYS = 7
 
 function LinkCard({ link, trashMode = false }) {
+  const collections = useLinkStore((s) => s.collections)
   const recordVisit = useLinkStore((s) => s.recordVisit)
   const toggleFavorite = useLinkStore((s) => s.toggleFavorite)
   const removeLink = useLinkStore((s) => s.removeLink)
@@ -58,6 +62,8 @@ function LinkCard({ link, trashMode = false }) {
   const [expanded, setExpanded] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [mergeOpen, setMergeOpen] = useState(false)
+  const [copied, setCopied] = useState(false)
+  const copyTimerRef = useRef(null)
   const cardRef = useRef(null)
   const menuOpenRef = useRef(false)
   const longPressTimer = useRef(null)
@@ -183,14 +189,18 @@ function LinkCard({ link, trashMode = false }) {
   useEffect(() => {
     return () => {
       if (longPressTimer.current) clearTimeout(longPressTimer.current)
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current)
     }
   }, [])
 
   const handleCopy = async (e) => {
-    e.stopPropagation()
+    e?.stopPropagation?.()
     try {
       await navigator.clipboard.writeText(link.url)
-      notifications.show({ message: 'URL copied', color: 'green' })
+      setCopied(true)
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current)
+      copyTimerRef.current = setTimeout(() => setCopied(false), 1600)
+      notifications.show({ message: 'URL copied', color: 'green', autoClose: 2000 })
     } catch {
       notifications.show({ message: 'Could not copy URL', color: 'red' })
     }
@@ -327,7 +337,7 @@ function LinkCard({ link, trashMode = false }) {
     }
   }
 
-  const favicon = faviconUrl(link.url, link.og?.favicon, link.og?.image)
+  const favicon = faviconUrl(link.url, link.og?.favicon)
   const drawerOpen = expanded ? ' expanded' : ''
   const selectedClass = isSelected ? ' selected' : ''
   const isArchived = Boolean(link.archivedAt)
@@ -339,6 +349,26 @@ function LinkCard({ link, trashMode = false }) {
   const daysLeft = trashExpiry
     ? Math.max(0, Math.ceil((trashExpiry - new Date()) / (1000 * 60 * 60 * 24)))
     : null
+
+  const collection = link.collectionId
+    ? collections?.find((c) => String(c.id || c._id) === String(link.collectionId))
+    : null
+
+  const host = hostOf(link.url)
+  const rawTitle = (link.title || '').trim()
+  const hasDistinctTitle = Boolean(rawTitle && rawTitle.toLowerCase() !== host?.toLowerCase())
+  const displayTitle = hasDistinctTitle ? rawTitle : host
+
+  let displaySub = host
+  if (!hasDistinctTitle) {
+    try {
+      const u = new URL(link.url)
+      const path = (u.pathname === '/' ? '' : u.pathname) + (u.search || '')
+      displaySub = path ? `${host}${path}` : host
+    } catch {
+      displaySub = host
+    }
+  }
 
   return (
     <div
@@ -368,6 +398,7 @@ function LinkCard({ link, trashMode = false }) {
         </div>
       )}
 
+      {/* 1. Head: Favicon + Title & Description + Quick Actions */}
       <div className="link-card-head">
         {favicon ? (
           <img
@@ -375,6 +406,7 @@ function LinkCard({ link, trashMode = false }) {
             alt=""
             loading="lazy"
             decoding="async"
+            className="link-favicon-img"
             onError={(e) => {
               const host = hostOf(link.url);
               if (!host) {
@@ -413,24 +445,38 @@ function LinkCard({ link, trashMode = false }) {
             display: favicon ? 'none' : 'flex',
           }}
         >
-          {(link.title || '?')[0].toUpperCase()}
+          {(displayTitle || '?')[0].toUpperCase()}
         </div>
+
         <div className="link-card-body">
-          <div className="link-title">{link.title}</div>
-          <div className={`link-description ${link.description ? '' : 'is-empty'}`}>
-            {link.description || '\u00A0'}
+          <div
+            className="link-title"
+            title={
+              link.description
+                ? `${displayTitle}\n\n${link.description}`
+                : (displayTitle || link.url)
+            }
+          >
+            {displayTitle}
           </div>
+          {displaySub ? (
+            <div className="link-url-sub" title={link.url}>
+              {displaySub}
+            </div>
+          ) : null}
         </div>
+
         <div className="link-card-head-actions">
           {trashMode ? (
             <span className="trash-expiry-badge">
               <IconFlame size={12} />
-              {daysLeft === 0 ? 'Deletes today' : `${daysLeft} day${daysLeft === 1 ? '' : 's'} left`}
+              {daysLeft === 0 ? 'Today' : `${daysLeft}d left`}
             </span>
           ) : (
             !selectionMode && (
               <button
-                className={`action-btn like ${link.favorite ? 'on' : ''} link-favorite-btn`}
+                type="button"
+                className={`link-head-action-btn link-favorite-btn ${link.favorite ? 'on' : ''}`}
                 onClick={(e) => {
                   e.stopPropagation()
                   toggleFavorite(link)
@@ -438,7 +484,7 @@ function LinkCard({ link, trashMode = false }) {
                 title={link.favorite ? 'Unfavorite' : 'Favorite'}
                 aria-label={link.favorite ? 'Unfavorite' : 'Favorite'}
               >
-                <IconStar size={16} fill={link.favorite ? 'currentColor' : 'none'} />
+                <IconStar size={15} fill={link.favorite ? 'currentColor' : 'none'} />
               </button>
             )
           )}
@@ -458,7 +504,7 @@ function LinkCard({ link, trashMode = false }) {
               <Menu.Target>
                 <button
                   type="button"
-                  className="link-card-menu-btn"
+                  className="link-head-action-btn link-card-menu-btn"
                   aria-haspopup="menu"
                   aria-expanded={menuOpen}
                   aria-label="More actions"
@@ -468,7 +514,7 @@ function LinkCard({ link, trashMode = false }) {
                   }}
                   onPointerDown={(e) => e.stopPropagation()}
                 >
-                  <IconDotsVertical size={17} />
+                  <IconDotsVertical size={15} />
                 </button>
               </Menu.Target>
 
@@ -617,70 +663,109 @@ function LinkCard({ link, trashMode = false }) {
         </div>
       </div>
 
-      <div className="link-meta">
-        <span className="link-domain">{hostOf(link.url)}</span>
-        <span className="meta-sep">·</span>
-        <span className="link-meta-visits">
-          <IconEye size={13} /> {link.visits || 0}
-        </span>
-        <span className="meta-sep">·</span>
-        <span>{timeAgoShort(link.createdAt)}</span>
-        {!trashMode && !selectionMode && (
-          <LinkHealthBadge
-            status={link.health?.status}
-            checkedAt={link.health?.checkedAt}
-            httpStatus={link.health?.httpStatus}
-            error={link.health?.error}
-          />
-        )}
-        {isArchived && (
-          <span className="link-archived-pill" title="This link is archived and hidden from the other views.">
-            <IconArchive size={12} /> Archived
+      {/* 2. Middle Row: Views, Time, Health / Collection Badge */}
+      <div className="link-meta-row">
+        <div className="link-meta-left">
+          <span className="link-meta-visits" title={`${link.visits || 0} visits`}>
+            <IconEye size={12} /> {link.visits || 0}
           </span>
-        )}
-        {link.note && (
-          <>
-            <span className="meta-sep">·</span>
+          <span className="meta-sep">·</span>
+          <span className="link-meta-time" title={`Added ${timeAgo(link.createdAt)}`}>
+            <IconClock size={12} /> {timeAgoShort(link.createdAt)}
+          </span>
+          {link.note && (
+            <>
+              <span className="meta-sep">·</span>
+              <span
+                className="link-note-indicator"
+                title={`Note: ${link.note}`}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  openEditor(link)
+                }}
+                role="button"
+                tabIndex={0}
+                aria-label="View note"
+              >
+                <IconNote size={12} />
+              </span>
+            </>
+          )}
+        </div>
+
+        <div className="link-meta-right">
+          {collection && (
             <span
-              className="link-note-indicator"
-              title={link.note}
-              onClick={(e) => {
-                e.stopPropagation()
-                openEditor(link)
-              }}
-              role="img"
-              aria-label="This link has a note"
+              className="link-collection-pill"
+              style={{ '--col-color': collection.color || '#a78bfa' }}
+              title={`Collection: ${collection.name}`}
             >
-              <IconNote size={13} />
+              <IconFolder size={10} />
+              <span>{collection.name}</span>
             </span>
-          </>
-        )}
+          )}
+
+          {!trashMode && !selectionMode && (
+            <LinkHealthBadge
+              status={link.health?.status}
+              checkedAt={link.health?.checkedAt}
+              httpStatus={link.health?.httpStatus}
+              error={link.health?.error}
+            />
+          )}
+
+          {isArchived && (
+            <span className="link-archived-pill" title="This link is archived">
+              <IconArchive size={10} /> Archived
+            </span>
+          )}
+        </div>
       </div>
 
-      <div className="link-card-tags">
-        {tags.length > 0 ? (
-          <>
+      {/* 3. Bottom Row: Tags (Only if tags exist) */}
+      {tags.length > 0 && (
+        <div className="link-card-bottom">
+          <div className="link-card-tags">
             {tags.slice(0, 3).map((tag) => (
-              <span key={tag} className="link-tag-chip">
-                #{tag}
+              <span key={tag} className="link-tag-chip" title={`#${tag}`}>
+                <span className="link-tag-hash">#</span>
+                <span className="link-tag-name">{tag}</span>
               </span>
             ))}
-            {tags.length > 3 && <span className="link-tag-chip link-tag-more">+{tags.length - 3}</span>}
-          </>
-        ) : (
-          <span className="link-tag-chip link-tag-empty">#untagged</span>
-        )}
-      </div>
+            {tags.length > 3 && (
+              <span
+                className="link-tag-chip link-tag-more"
+                title={tags.slice(3).map((t) => `#${t}`).join(', ')}
+              >
+                +{tags.length - 3}
+              </span>
+            )}
+          </div>
+        </div>
+      )}
 
       {!selectionMode && (
         <div className="link-drawer">
           <div className="link-drawer-inner">
             <div className="link-actions">
-              <button className="action-btn" onClick={(e) => { e.stopPropagation(); openInTab() }} title="Open in new tab">
-                <IconExternalLink size={14} /> Open
+              <button
+                className="action-btn"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  openInTab()
+                }}
+                title="Open in new tab"
+                aria-label="Open in new tab"
+              >
+                <IconExternalLink size={14} />
               </button>
-              <button className="action-btn" onClick={handleCopy} title="Copy URL">
-                <IconCopy size={14} /> Copy
+              <button
+                className="action-btn"
+                onClick={handleCopy}
+                title={copied ? 'Copied URL!' : 'Copy URL'}
+                aria-label="Copy URL"
+              >
+                {copied ? <IconCheck size={14} stroke={2.5} /> : <IconCopy size={14} />}
               </button>
               {trashMode ? (
                 <>
@@ -688,11 +773,17 @@ function LinkCard({ link, trashMode = false }) {
                     className="action-btn"
                     onClick={handleRestore}
                     title="Restore link"
+                    aria-label="Restore link"
                   >
-                    <IconArrowBackUp size={14} /> Restore
+                    <IconArrowBackUp size={14} />
                   </button>
-                  <button className="action-btn danger link-action-delete" onClick={handleDeleteForever} title="Delete permanently">
-                    <IconTrash size={14} /> Delete Forever
+                  <button
+                    className="action-btn danger link-action-delete"
+                    onClick={handleDeleteForever}
+                    title="Delete permanently"
+                    aria-label="Delete permanently"
+                  >
+                    <IconTrash size={14} />
                   </button>
                 </>
               ) : (
@@ -703,9 +794,10 @@ function LinkCard({ link, trashMode = false }) {
                       e.stopPropagation()
                       openReader(link)
                     }}
-                    title="Read article"
+                    title="Reader view"
+                    aria-label="Reader view"
                   >
-                    <IconBook size={14} /> Read
+                    <IconBook size={14} />
                   </button>
                   <button
                     className="action-btn"
@@ -714,11 +806,17 @@ function LinkCard({ link, trashMode = false }) {
                       openEditor(link)
                     }}
                     title="Edit link"
+                    aria-label="Edit link"
                   >
-                    <IconPencil size={14} /> Edit
+                    <IconPencil size={14} />
                   </button>
-                  <button className="action-btn danger link-action-delete" onClick={handleDelete} title="Move to trash">
-                    <IconTrash size={14} /> Delete
+                  <button
+                    className="action-btn danger link-action-delete"
+                    onClick={handleDelete}
+                    title="Move to trash"
+                    aria-label="Move to trash"
+                  >
+                    <IconTrash size={14} />
                   </button>
                 </>
               )}

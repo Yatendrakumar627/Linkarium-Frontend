@@ -70,9 +70,10 @@
   flex-shrink: 0;
 }
 .sidebar-brand-name {
-  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-family: var(--font-display);
   font-size: 19px;
   font-weight: 600;
+  letter-spacing: -0.02em;
 }
 
 .sidebar-nav {

@@ -8,7 +8,6 @@ import {
   IconMovie,
   IconBrain,
   IconQuestionMark,
-  IconHash,
   IconTag,
 } from '@tabler/icons-react'
 import { safeUrl, faviconUrl, hostOf } from '../../utils'

@@ -40,12 +40,8 @@ export const linksApi = {
   bulkUnarchive: (ids) => api.post('/links/bulk-unarchive', { ids }),
   bulkTag: (ids, tags, mode = 'add') => api.post('/links/bulk-tag', { ids, tags, mode }),
   merge: (sourceId, targetId) => api.post(`/links/${sourceId}/merge`, { targetId }),
-  unmerge: (id) => api.post(`/links/${id}/unmerge`),
-  archived: (params = {}) => api.get(withQuery('/links/archived', params)),
-  merged: (params = {}) => api.get(withQuery('/links/merged', params)),
   duplicates: (params = {}) => api.get(withQuery('/links/duplicates', params)),
   enrich: (id) => api.post(`/links/${id}/enrich`),
-  enrichBatch: (ids) => api.post('/links/enrich-batch', { ids }),
   applyRules: (id) => api.post(`/links/${id}/apply-rules`),
   applyRulesBulk: (ids) => api.post('/links/apply-rules', { ids }),
   article: (id) => api.get(`/links/${id}/article`),
@@ -82,7 +78,6 @@ export const userApi = {
   totpSetup: () => api.post('/user/totp/setup'),
   totpEnable: (code) => api.post('/user/totp/enable', { code }),
   totpDisable: (payload) => api.post('/user/totp/disable', payload),
-  totpRecoveryCodes: (payload) => api.post('/user/totp/recovery-codes', payload),
 }
 
 export const metadataApi = {
@@ -93,14 +88,10 @@ export const enrichApi = {
   // Read a page's OpenGraph card without saving anything.
   preview: (url) => api.post('/enrich/preview', { url }),
   link: (id) => api.post(`/links/${id}/enrich`),
-  batch: (ids) => api.post('/links/enrich-batch', { ids }),
 }
 
 export const linkHealthApi = {
   summary: () => api.get('/link-health/summary'),
-  links: (status = 'broken', limit = 50) => api.get(withQuery('/link-health/links', { status, limit })),
-  checkOne: (id) => api.post(`/link-health/${id}/check`),
-  recheck: (ids) => api.post('/link-health/recheck', { ids }),
 }
 
 export const savedViewsApi = {
@@ -114,11 +105,7 @@ export const savedViewsApi = {
 }
 
 export const insightsApi = {
-  overview: (days = 30) => api.get(withQuery('/insights/overview', { days })),
   resurface: (limit = 12) => api.get(withQuery('/insights/resurface', { limit })),
-  domains: (limit = 10) => api.get(withQuery('/insights/domains', { limit })),
-  heatmap: (weeks = 26, tz) => api.get(withQuery('/insights/heatmap', { weeks, tz })),
-  collectionsHealth: () => api.get('/insights/collections-health'),
 }
 
 export const sessionsApi = {

@@ -426,13 +426,87 @@
   background: rgba(18, 16, 40, 0.98) !important;
   backdrop-filter: blur(28px) !important;
   -webkit-backdrop-filter: blur(28px) !important;
-  border: 1px solid rgba(139, 92, 246, 0.28) !important;
+  border: 1px solid rgba(139, 92, 246, 0.35) !important;
   border-radius: 14px !important;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6) !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7), 0 0 1px 1px rgba(139, 92, 246, 0.2) !important;
   padding: 6px !important;
   z-index: 400 !important;
   color: #f1f5f9 !important;
+  max-height: min(220px, 40vh) !important;
   overflow: hidden !important;
+}
+
+.le-dropdown .mantine-Combobox-options,
+.le-dropdown [data-combobox-options] {
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+/* Fallback for dropdowns without ScrollArea */
+.le-dropdown:not(:has(.mantine-ScrollArea-root)) .mantine-Combobox-options,
+.le-dropdown:not(:has(.mantine-ScrollArea-root)) [data-combobox-options] {
+  max-height: 195px !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: rgba(139, 92, 246, 0.7) rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Mantine ScrollArea root & viewport */
+.le-dropdown .mantine-ScrollArea-root {
+  max-height: 195px !important;
+}
+
+.le-dropdown .mantine-ScrollArea-viewport {
+  max-height: 195px !important;
+  overscroll-behavior: contain !important;
+}
+
+/* Custom styled Mantine ScrollArea Scrollbar (type="always") */
+.le-dropdown .mantine-ScrollArea-scrollbar {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-radius: 999px !important;
+  width: 7px !important;
+  padding: 1px !important;
+  margin-right: 2px !important;
+  transition: background 0.15s ease !important;
+}
+
+.le-dropdown .mantine-ScrollArea-scrollbar:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+}
+
+.le-dropdown .mantine-ScrollArea-thumb {
+  background: rgba(139, 92, 246, 0.75) !important;
+  border-radius: 999px !important;
+  box-shadow: 0 0 6px rgba(139, 92, 246, 0.5) !important;
+  transition: background 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.le-dropdown .mantine-ScrollArea-thumb:hover {
+  background: rgba(168, 85, 247, 1) !important;
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.8) !important;
+}
+
+/* Universal WebKit scrollbar styling across dropdown viewports */
+.le-dropdown ::-webkit-scrollbar {
+  width: 7px !important;
+}
+
+.le-dropdown ::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-radius: 999px !important;
+}
+
+.le-dropdown ::-webkit-scrollbar-thumb {
+  background: rgba(139, 92, 246, 0.75) !important;
+  border-radius: 999px !important;
+  box-shadow: 0 0 6px rgba(139, 92, 246, 0.5) !important;
+}
+
+.le-dropdown ::-webkit-scrollbar-thumb:hover {
+  background: rgba(168, 85, 247, 1) !important;
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.8) !important;
 }
 
 /* CRITICAL: Never render empty ghost box/border/shadow when Mantine Combobox marks dropdown as hidden */
@@ -654,9 +728,10 @@
 }
 
 .le-conflict-title {
-  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-family: var(--font-display);
   font-size: 15px;
   font-weight: 700;
+  letter-spacing: -0.015em;
   color: #fff;
 }
 

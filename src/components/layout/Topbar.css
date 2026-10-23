@@ -6,7 +6,7 @@
   flex-wrap: nowrap;
 }
 .page-title {
-  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-family: var(--font-display);
   font-size: 22px;
   font-weight: 700;
   letter-spacing: -0.025em;
@@ -43,7 +43,6 @@
 .search-filter-btn {
   flex-shrink: 0;
 }
-.search-kbd,
 .search-kbd-btn {
   font-size: 11px;
   font-family: inherit;
@@ -119,11 +118,6 @@
   color: #00e5ff;
   box-shadow: 0 0 16px rgba(0, 229, 255, 0.25);
 }
-.topbar .action-btn.mobile-only {
-  padding: 6px;
-  border-radius: 10px;
-}
-
 /* Mobile-only variants (topbar-visual-mobile / topbar-newlink-mobile) are hidden on desktop */
 .topbar .topbar-visual-mobile,
 .topbar .topbar-newlink-mobile {

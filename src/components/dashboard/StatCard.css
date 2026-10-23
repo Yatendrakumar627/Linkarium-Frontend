@@ -90,7 +90,7 @@
 }
 
 .stat-tile .stat-value {
-  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-family: var(--font-display);
   font-size: 25px;
   font-weight: 700;
   letter-spacing: -0.03em;

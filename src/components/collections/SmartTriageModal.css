@@ -363,27 +363,9 @@
    Mobile Responsiveness Overhauls (< 640px)
    ========================================================================= */
 @media (max-width: 640px) {
-  .triage-modal-content {
-    border-radius: 14px !important;
-    margin: 8px auto !important;
-    max-width: calc(100vw - 16px) !important;
-  }
-
-  .triage-modal-header {
-    padding: 10px 12px !important;
-  }
-
   .triage-modal-body {
     padding: 10px 10px !important;
     max-height: calc(82vh - 56px) !important;
-  }
-
-  .triage-main-title {
-    font-size: 0.95rem;
-  }
-
-  .triage-sub-title {
-    font-size: 0.72rem;
   }
 
   .triage-progress-card {

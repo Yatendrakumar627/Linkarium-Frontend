@@ -5,7 +5,6 @@ import LoadingSkeletons from '../common/LoadingSkeletons'
 import EmptyState from '../common/EmptyState'
 import ErrorState from '../common/ErrorState'
 import { IconHistory } from '@tabler/icons-react'
-import './RecentlyVisitedView.css'
 
 export default function RecentlyVisitedView() {
   const [state, setState] = useState({ status: 'loading', rows: null, error: '' })

@@ -4,7 +4,7 @@
   height: 100%;
   overflow: hidden;
   background-color: #0b0e14;
-  font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--font-body);
   color: #fff;
   border-radius: var(--radius-card, 16px);
 }

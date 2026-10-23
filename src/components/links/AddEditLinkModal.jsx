@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Combobox, InputBase, Loader, TagsInput, TextInput, Textarea, useCombobox } from '@mantine/core'
+import { Combobox, InputBase, Loader, ScrollArea, TagsInput, TextInput, Textarea, useCombobox } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
 import {
   IconAlertTriangle,
@@ -112,23 +112,25 @@ function CollectionSelect({ collections, value, onChange, addCollection }) {
 
       <Combobox.Dropdown className="le-dropdown">
         <Combobox.Options>
-          {value ? (
-            <Combobox.Option value="$clear" key="$clear">
-              <div className="le-col-option">
-                <IconFolder size={14} className="le-col-option-icon" />
-                <span>General (None)</span>
-              </div>
-            </Combobox.Option>
-          ) : null}
-          {options}
-          {createName && (
-            <Combobox.Option value="$create" className="le-col-create-option">
-              + New collection "{createName}"
-            </Combobox.Option>
-          )}
-          {!createName && options.length === 0 && (
-            <Combobox.Empty>No collections yet — type to create one.</Combobox.Empty>
-          )}
+          <ScrollArea.Autosize mah={195} type="always" scrollbarSize={7} offsetScrollbars>
+            {value ? (
+              <Combobox.Option value="$clear" key="$clear">
+                <div className="le-col-option">
+                  <IconFolder size={14} className="le-col-option-icon" />
+                  <span>General (None)</span>
+                </div>
+              </Combobox.Option>
+            ) : null}
+            {options}
+            {createName && (
+              <Combobox.Option value="$create" className="le-col-create-option">
+                + New collection "{createName}"
+              </Combobox.Option>
+            )}
+            {!createName && options.length === 0 && (
+              <Combobox.Empty>No collections yet — type to create one.</Combobox.Empty>
+            )}
+          </ScrollArea.Autosize>
         </Combobox.Options>
       </Combobox.Dropdown>
     </Combobox>
@@ -361,7 +363,7 @@ function LinkEditorForm({ link: editingLink, links, collections, tags, addLink, 
   }
 
   const trimmedUrl = url.trim()
-  const favicon = faviconUrl(trimmedUrl, previewFavicon, editingLink?.og?.image)
+  const favicon = faviconUrl(trimmedUrl, previewFavicon)
   const domain = hostOf(trimmedUrl)
   const showPreview = extracting || extractError || siteName || isLikelyUrl(trimmedUrl)
 

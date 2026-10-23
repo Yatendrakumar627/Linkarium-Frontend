@@ -33,7 +33,7 @@ export function getYouTubeThumbnail(url) {
   }
 }
 
-export function faviconUrl(url, ogFavicon = null, ogImage = null) {
+export function faviconUrl(url, ogFavicon = null) {
   try {
     // 1. If it's a YouTube video link, use its actual video/song thumbnail poster as the icon
     const ytThumb = getYouTubeThumbnail(url)

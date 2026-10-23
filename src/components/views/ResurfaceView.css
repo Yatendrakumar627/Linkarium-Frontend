@@ -33,9 +33,10 @@
   text-align: center;
 }
 .resurface-empty-title {
-  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-family: var(--font-display);
   font-size: 17px;
   font-weight: 600;
+  letter-spacing: -0.015em;
   color: var(--text-primary);
 }
 .resurface-empty-subtitle {

@@ -19,12 +19,6 @@ function openDb() {
         linkStore.createIndex('updatedAt', 'updatedAt', { unique: false })
         linkStore.createIndex('favorite', 'favorite', { unique: false })
       }
-      if (!db.objectStoreNames.contains('collections')) {
-        db.createObjectStore('collections', { keyPath: '_id' })
-      }
-      if (!db.objectStoreNames.contains('tags')) {
-        db.createObjectStore('tags', { keyPath: 'name' })
-      }
       if (!db.objectStoreNames.contains('outbox')) {
         db.createObjectStore('outbox', { keyPath: 'id', autoIncrement: true })
       }

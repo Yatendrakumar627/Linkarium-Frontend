@@ -15,12 +15,6 @@
 .links-error-text {
   flex: 1;
 }
-.links-view-gap {
-  margin-top: 18px;
-}
-.links-view-wrap .links-loadmore {
-  color: var(--text-primary);
-}
 .links-view-sentinel {
   height: 1px;
 }
