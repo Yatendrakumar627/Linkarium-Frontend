@@ -13,6 +13,7 @@ import {
   Tabs,
   Progress,
   Pagination,
+  Table,
 } from '@mantine/core'
 import { useDebouncedValue } from '@mantine/hooks'
 import { notifications } from '@mantine/notifications'
@@ -701,22 +702,121 @@ export default function AdminDashboard() {
     <div className="admin-shell">
       {/* Top Console Bar */}
       <header className="admin-header">
-        <div className="admin-brand-cluster">
-          <div className="master-crown-badge">
-            <IconCrown size={22} color="#f59e0b" />
+        <div className="admin-header-main-row">
+          <div className="admin-brand-cluster">
+            <div className="master-crown-badge">
+              <IconCrown size={20} color="#ffffff" />
+            </div>
+            <div className="admin-brand-info">
+              <div className="admin-brand-title">
+                <span>Linkarium</span> <span className="gold-text">Admin</span>
+                <Badge variant="gradient" gradient={{ from: '#6a18b8', to: '#00e5ff', deg: 135 }} size="xs" radius="sm" className="root-console-badge">
+                  ROOT
+                </Badge>
+              </div>
+              <div className="admin-brand-sub">
+                Platform Governance &amp; Deep Telemetry
+              </div>
+            </div>
           </div>
-          <div>
-            <div className="admin-brand-title">
-              Linkarium <span className="gold-text">Master Admin</span>
+
+          {/* Desktop Direct Action Buttons */}
+          <div className="admin-desktop-actions">
+            <div className="system-status-pill">
+              <span className="pulse-dot" />
+              <span>MongoDB {system.mongoState || 'connected'}</span>
+              <span className="dot-sep">•</span>
+              <span>{(metrics.totalUsers || 0).toLocaleString()} Users</span>
+              <span className="dot-sep">•</span>
+              <span>{(metrics.totalLinks || 0).toLocaleString()} Links</span>
             </div>
-            <div className="admin-brand-sub">
-              Platform Governance, Deep User Telemetry &amp; System Pulse
-            </div>
+
+            <Button
+              size="xs"
+              variant="light"
+              color="cyan"
+              leftSection={<IconDownload size={14} />}
+              onClick={handleExportAudit}
+            >
+              Export Audit
+            </Button>
+
+            <Button
+              size="xs"
+              variant="subtle"
+              color="gray"
+              leftSection={<IconArrowLeft size={15} />}
+              onClick={() => navigate('/')}
+            >
+              Back to App
+            </Button>
+
+            <Button
+              size="xs"
+              color="red"
+              variant="subtle"
+              leftSection={<IconLogout size={14} />}
+              onClick={() => {
+                logout()
+                navigate('/auth')
+              }}
+            >
+              Sign Out
+            </Button>
+          </div>
+
+          {/* Mobile Quick Action Buttons */}
+          <div className="admin-mobile-actions">
+            <Tooltip label="Back to App" withArrow>
+              <ActionIcon
+                size="md"
+                variant="subtle"
+                color="gray"
+                onClick={() => navigate('/')}
+                aria-label="Back to App"
+              >
+                <IconArrowLeft size={18} />
+              </ActionIcon>
+            </Tooltip>
+
+            <Menu position="bottom-end" withArrow shadow="md">
+              <Menu.Target>
+                <ActionIcon size="md" variant="default" aria-label="Console Actions">
+                  <IconDotsVertical size={16} />
+                </ActionIcon>
+              </Menu.Target>
+              <Menu.Dropdown>
+                <Menu.Label>Console Actions</Menu.Label>
+                <Menu.Item
+                  leftSection={<IconDownload size={15} />}
+                  onClick={handleExportAudit}
+                >
+                  Export Audit JSON
+                </Menu.Item>
+                <Menu.Item
+                  leftSection={<IconArrowLeft size={15} />}
+                  onClick={() => navigate('/')}
+                >
+                  Return to Linkarium App
+                </Menu.Item>
+                <Menu.Divider />
+                <Menu.Item
+                  color="red"
+                  leftSection={<IconLogout size={15} />}
+                  onClick={() => {
+                    logout()
+                    navigate('/auth')
+                  }}
+                >
+                  Sign Out of Console
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
           </div>
         </div>
 
-        <div className="admin-header-actions">
-          {/* Live Dynamic Sync Control Pill */}
+        {/* Live Dynamic Sync Control Bar */}
+        <div className="admin-sync-bar-row">
           <div className="live-sync-pill">
             <span className={`live-radar-dot ${autoSyncSecs > 0 ? 'active' : 'paused'}`} />
             <div className="live-sync-meta">
@@ -763,7 +863,7 @@ export default function AdminDashboard() {
               <ActionIcon
                 size="sm"
                 variant="subtle"
-                color="yellow"
+                color="cyan"
                 loading={isLiveSyncing || refreshing}
                 onClick={() => syncTelemetry(false)}
                 className="sync-now-btn"
@@ -773,47 +873,13 @@ export default function AdminDashboard() {
             </Tooltip>
           </div>
 
-          <div className="system-status-pill">
+          {/* Quick mobile status info */}
+          <div className="mobile-status-quick">
             <span className="pulse-dot" />
-            <span>MongoDB {system.mongoState || 'connected'}</span>
-            <span className="dot-sep">•</span>
             <span>{(metrics.totalUsers || 0).toLocaleString()} Users</span>
             <span className="dot-sep">•</span>
             <span>{(metrics.totalLinks || 0).toLocaleString()} Links</span>
           </div>
-
-          <Button
-            size="xs"
-            variant="light"
-            color="orange"
-            leftSection={<IconDownload size={14} />}
-            onClick={handleExportAudit}
-          >
-            Export Audit
-          </Button>
-
-          <Button
-            size="xs"
-            variant="subtle"
-            color="gray"
-            leftSection={<IconArrowLeft size={15} />}
-            onClick={() => navigate('/')}
-          >
-            Back to Universe
-          </Button>
-
-          <Button
-            size="xs"
-            color="red"
-            variant="light"
-            leftSection={<IconLogout size={14} />}
-            onClick={() => {
-              logout()
-              navigate('/auth')
-            }}
-          >
-            Sign Out
-          </Button>
         </div>
       </header>
 
@@ -828,14 +894,14 @@ export default function AdminDashboard() {
             <Tabs.Tab
               value="users"
               leftSection={<IconUsers size={16} />}
-              rightSection={<Badge size="xs" variant="filled" color="orange" radius="xl">{(metrics.totalUsers || 0).toLocaleString()}</Badge>}
+              rightSection={<Badge size="xs" variant="filled" color="grape" radius="xl">{(metrics.totalUsers || 0).toLocaleString()}</Badge>}
             >
               User Directory &amp; Tracking
             </Tabs.Tab>
             <Tabs.Tab
               value="links"
               leftSection={<IconLink size={16} />}
-              rightSection={<Badge size="xs" variant="filled" color="blue" radius="xl">{(metrics.totalLinks || 0).toLocaleString()}</Badge>}
+              rightSection={<Badge size="xs" variant="filled" color="cyan" radius="xl">{(metrics.totalLinks || 0).toLocaleString()}</Badge>}
             >
               Global Links Explorer
             </Tabs.Tab>
@@ -849,9 +915,16 @@ export default function AdminDashboard() {
             <Tabs.Tab
               value="database"
               leftSection={<IconDatabase size={16} />}
-              rightSection={<Badge size="xs" variant="filled" color="cyan" radius="xl">{(dbOverview?.collections?.length || 0).toLocaleString()}</Badge>}
+              rightSection={<Badge size="xs" variant="filled" color="indigo" radius="xl">{(dbOverview?.collections?.length || 0).toLocaleString()}</Badge>}
             >
               Database Center &amp; Atlas Vault
+            </Tabs.Tab>
+            <Tabs.Tab
+              value="security"
+              leftSection={<IconShieldCheck size={16} />}
+              rightSection={<Badge size="xs" variant="filled" color="yellow" radius="xl">Root</Badge>}
+            >
+              Security &amp; Master Authority
             </Tabs.Tab>
           </Tabs.List>
 
@@ -861,7 +934,7 @@ export default function AdminDashboard() {
           <Tabs.Panel value="overview" pt="lg">
             {loadingOverview && !overview ? (
               <div className="tab-loading-state">
-                <Loader color="orange" size="lg" />
+                <Loader color="cyan" size="lg" />
                 <Text size="sm" c="dimmed">Loading system intelligence &amp; metrics...</Text>
               </div>
             ) : (
@@ -1305,28 +1378,33 @@ export default function AdminDashboard() {
                 ) : users.length === 0 ? (
                   <div className="empty-sub">No users found matching current filters.</div>
                 ) : (
-                  <div className="responsive-table-wrapper">
-                    <table className="admin-table">
-                      <thead>
-                        <tr>
-                          <th>User Identity</th>
-                          <th>Role</th>
-                          <th>Status</th>
-                          <th>Security</th>
-                          <th>Links</th>
-                          <th>Visits</th>
-                          <th>Collections</th>
-                          <th>Active Devices</th>
-                          <th>Last Login &amp; IP</th>
-                          <th>Joined</th>
-                          <th style={{ textAlign: 'right' }}>Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
+                  <Table.ScrollContainer minWidth={1180} type="native" className="admin-table-scroll-container">
+                    <Table
+                      highlightOnHover
+                      verticalSpacing="md"
+                      horizontalSpacing="md"
+                      className="admin-mantine-table"
+                    >
+                      <Table.Thead>
+                        <Table.Tr>
+                          <Table.Th style={{ minWidth: 240 }}>User Identity</Table.Th>
+                          <Table.Th style={{ minWidth: 120 }}>Role</Table.Th>
+                          <Table.Th style={{ minWidth: 110 }}>Status</Table.Th>
+                          <Table.Th style={{ minWidth: 110 }}>Security</Table.Th>
+                          <Table.Th style={{ minWidth: 90 }}>Links</Table.Th>
+                          <Table.Th style={{ minWidth: 90 }}>Visits</Table.Th>
+                          <Table.Th style={{ minWidth: 110 }}>Collections</Table.Th>
+                          <Table.Th style={{ minWidth: 120 }}>Active Devices</Table.Th>
+                          <Table.Th style={{ minWidth: 160 }}>Last Login &amp; IP</Table.Th>
+                          <Table.Th style={{ minWidth: 110 }}>Joined</Table.Th>
+                          <Table.Th style={{ textAlign: 'right', minWidth: 160 }}>Actions</Table.Th>
+                        </Table.Tr>
+                      </Table.Thead>
+                      <Table.Tbody>
                         {users.map((u) => (
-                          <tr key={u._id} className={u.status === 'suspended' ? 'row-suspended' : ''}>
+                          <Table.Tr key={u._id} className={u.status === 'suspended' ? 'row-suspended' : ''}>
                             {/* User Identity */}
-                            <td className="user-id-cell">
+                            <Table.Td className="user-id-cell">
                               <div className="user-flex-item">
                                 <span
                                   className="user-table-avatar"
@@ -1353,10 +1431,10 @@ export default function AdminDashboard() {
                                   </div>
                                 </div>
                               </div>
-                            </td>
+                            </Table.Td>
 
                             {/* Role */}
-                            <td>
+                            <Table.Td className="user-role-cell">
                               {u.isMaster ? (
                                 <Badge color="yellow" variant="filled" size="sm">
                                   👑 Master
@@ -1370,10 +1448,10 @@ export default function AdminDashboard() {
                                   👤 User
                                 </Badge>
                               )}
-                            </td>
+                            </Table.Td>
 
                             {/* Status */}
-                            <td>
+                            <Table.Td className="user-status-cell">
                               {u.status === 'suspended' ? (
                                 <Badge color="red" variant="filled" size="sm">
                                   Suspended
@@ -1383,10 +1461,10 @@ export default function AdminDashboard() {
                                   Active
                                 </Badge>
                               )}
-                            </td>
+                            </Table.Td>
 
                             {/* Security (2FA) */}
-                            <td>
+                            <Table.Td className="user-security-cell">
                               {u.twoFactorEnabled ? (
                                 <Tooltip label="Two-factor authentication active">
                                   <span className="shield-active">
@@ -1398,41 +1476,41 @@ export default function AdminDashboard() {
                                   <IconShield size={14} /> None
                                 </span>
                               )}
-                            </td>
+                            </Table.Td>
 
                             {/* Links Breakdown */}
-                            <td>
+                            <Table.Td>
                               <div className="links-count-pill" title={`${u.activeLinks || 0} active, ${u.trashLinks || 0} trash`}>
                                 <IconLink size={13} />
                                 <strong>{u.totalLinks || 0}</strong>
                               </div>
-                            </td>
+                            </Table.Td>
 
                             {/* Visits */}
-                            <td className="visits-count-cell">
+                            <Table.Td className="visits-count-cell">
                               <span className="visit-badge">
                                 <IconFlame size={13} color="#f59e0b" />
                                 {u.totalVisits || 0}
                               </span>
-                            </td>
+                            </Table.Td>
 
                             {/* Collections */}
-                            <td>
+                            <Table.Td>
                               <span className="coll-count-text">
                                 {u.collectionsCount || 0}
                               </span>
-                            </td>
+                            </Table.Td>
 
                             {/* Active Devices */}
-                            <td>
+                            <Table.Td>
                               <span className={`device-pill ${u.activeSessionsCount > 0 ? 'online' : ''}`}>
                                 <IconDeviceDesktop size={13} />
                                 {u.activeSessionsCount || 0}
                               </span>
-                            </td>
+                            </Table.Td>
 
                             {/* Last Login & IP */}
-                            <td className="last-login-cell">
+                            <Table.Td className="last-login-cell">
                               <div className="last-login-time">
                                 {u.lastLoginAt
                                   ? new Date(u.lastLoginAt).toLocaleDateString(undefined, {
@@ -1446,15 +1524,15 @@ export default function AdminDashboard() {
                               <div className="last-login-ip code-font">
                                 {u.lastLoginIp || '—'}
                               </div>
-                            </td>
+                            </Table.Td>
 
                             {/* Joined Date */}
-                            <td className="joined-date-cell">
+                            <Table.Td className="joined-date-cell">
                               {new Date(u.createdAt).toLocaleDateString()}
-                            </td>
+                            </Table.Td>
 
                             {/* Actions Dropdown */}
-                            <td style={{ textAlign: 'right' }}>
+                            <Table.Td style={{ textAlign: 'right' }}>
                               <div className="action-buttons-cell">
                                 <Button
                                   size="xs"
@@ -1564,12 +1642,12 @@ export default function AdminDashboard() {
                                   </Menu.Dropdown>
                                 </Menu>
                               </div>
-                            </td>
-                          </tr>
+                            </Table.Td>
+                          </Table.Tr>
                         ))}
-                      </tbody>
-                    </table>
-                  </div>
+                      </Table.Tbody>
+                    </Table>
+                  </Table.ScrollContainer>
                 )}
                 {!loadingUsers && users.length > 0 && (
                   <TablePager
@@ -1646,23 +1724,28 @@ export default function AdminDashboard() {
                 ) : globalLinks.length === 0 ? (
                   <div className="empty-sub">No links found matching search query.</div>
                 ) : (
-                  <div className="responsive-table-wrapper">
-                    <table className="admin-table">
-                      <thead>
-                        <tr>
-                          <th>Link Title &amp; Target URL</th>
-                          <th>Owner Account</th>
-                          <th>Collection</th>
-                          <th>Visits</th>
-                          <th>Tags</th>
-                          <th>Created</th>
-                          <th style={{ textAlign: 'right' }}>Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
+                  <Table.ScrollContainer minWidth={980} type="native" className="admin-table-scroll-container">
+                    <Table
+                      highlightOnHover
+                      verticalSpacing="md"
+                      horizontalSpacing="md"
+                      className="admin-mantine-table"
+                    >
+                      <Table.Thead>
+                        <Table.Tr>
+                          <Table.Th style={{ minWidth: 280 }}>Link Title &amp; Target URL</Table.Th>
+                          <Table.Th style={{ minWidth: 180 }}>Owner Account</Table.Th>
+                          <Table.Th style={{ minWidth: 140 }}>Collection</Table.Th>
+                          <Table.Th style={{ minWidth: 90 }}>Visits</Table.Th>
+                          <Table.Th style={{ minWidth: 140 }}>Tags</Table.Th>
+                          <Table.Th style={{ minWidth: 110 }}>Created</Table.Th>
+                          <Table.Th style={{ textAlign: 'right', minWidth: 110 }}>Actions</Table.Th>
+                        </Table.Tr>
+                      </Table.Thead>
+                      <Table.Tbody>
                         {globalLinks.map((link) => (
-                          <tr key={link._id}>
-                            <td style={{ maxWidth: 320 }}>
+                          <Table.Tr key={link._id}>
+                            <Table.Td style={{ maxWidth: 320 }}>
                               <div className="link-title-line">
                                 <span
                                   className="link-dot"
@@ -1675,8 +1758,8 @@ export default function AdminDashboard() {
                               <div className="link-url-text" title={link.url}>
                                 {link.url}
                               </div>
-                            </td>
-                            <td>
+                            </Table.Td>
+                            <Table.Td>
                               {link.user ? (
                                 <div className="user-flex-item">
                                   <span
@@ -1693,8 +1776,8 @@ export default function AdminDashboard() {
                               ) : (
                                 <span className="dim-text">Unknown</span>
                               )}
-                            </td>
-                            <td>
+                            </Table.Td>
+                            <Table.Td>
                               {link.collectionId ? (
                                 <span className="coll-tag" style={{ borderColor: link.collectionId.color }}>
                                   {link.collectionId.name}
@@ -1702,13 +1785,13 @@ export default function AdminDashboard() {
                               ) : (
                                 <span className="dim-text">Unorganized</span>
                               )}
-                            </td>
-                            <td>
+                            </Table.Td>
+                            <Table.Td>
                               <span className="visit-badge">
                                 <IconFlame size={13} color="#f59e0b" /> {link.visits || 0}
                               </span>
-                            </td>
-                            <td>
+                            </Table.Td>
+                            <Table.Td>
                               <div className="tag-chips">
                                 {(link.tags || []).slice(0, 3).map((t) => (
                                   <span key={t} className="tag-chip">
@@ -1716,11 +1799,11 @@ export default function AdminDashboard() {
                                   </span>
                                 ))}
                               </div>
-                            </td>
-                            <td className="joined-date-cell">
+                            </Table.Td>
+                            <Table.Td className="joined-date-cell">
                               {new Date(link.createdAt).toLocaleDateString()}
-                            </td>
-                            <td style={{ textAlign: 'right' }}>
+                            </Table.Td>
+                            <Table.Td style={{ textAlign: 'right' }}>
                               <div className="action-buttons-cell">
                                 <a
                                   href={link.url}
@@ -1743,12 +1826,12 @@ export default function AdminDashboard() {
                                   <IconTrash size={15} />
                                 </ActionIcon>
                               </div>
-                            </td>
-                          </tr>
+                            </Table.Td>
+                          </Table.Tr>
                         ))}
-                      </tbody>
-                    </table>
-                  </div>
+                      </Table.Tbody>
+                    </Table>
+                  </Table.ScrollContainer>
                 )}
                 {!loadingLinks && globalLinks.length > 0 && (
                   <TablePager
@@ -1799,22 +1882,27 @@ export default function AdminDashboard() {
                 ) : globalSessions.length === 0 ? (
                   <div className="empty-sub">No active sessions found.</div>
                 ) : (
-                  <div className="responsive-table-wrapper">
-                    <table className="admin-table">
-                      <thead>
-                        <tr>
-                          <th>User</th>
-                          <th>Device &amp; Operating System</th>
-                          <th>IP Origin</th>
-                          <th>Last Activity</th>
-                          <th>Session Expiry</th>
-                          <th style={{ textAlign: 'right' }}>Action</th>
-                        </tr>
-                      </thead>
-                      <tbody>
+                  <Table.ScrollContainer minWidth={920} type="native" className="admin-table-scroll-container">
+                    <Table
+                      highlightOnHover
+                      verticalSpacing="md"
+                      horizontalSpacing="md"
+                      className="admin-mantine-table"
+                    >
+                      <Table.Thead>
+                        <Table.Tr>
+                          <Table.Th style={{ minWidth: 220 }}>User</Table.Th>
+                          <Table.Th style={{ minWidth: 220 }}>Device &amp; Operating System</Table.Th>
+                          <Table.Th style={{ minWidth: 140 }}>IP Origin</Table.Th>
+                          <Table.Th style={{ minWidth: 150 }}>Last Activity</Table.Th>
+                          <Table.Th style={{ minWidth: 150 }}>Session Expiry</Table.Th>
+                          <Table.Th style={{ textAlign: 'right', minWidth: 100 }}>Action</Table.Th>
+                        </Table.Tr>
+                      </Table.Thead>
+                      <Table.Tbody>
                         {globalSessions.map((s) => (
-                          <tr key={s._id}>
-                            <td>
+                          <Table.Tr key={s._id}>
+                            <Table.Td>
                               {s.user ? (
                                 <div className="user-flex-item">
                                   <span
@@ -1838,8 +1926,8 @@ export default function AdminDashboard() {
                               ) : (
                                 <span className="dim-text">Orphaned Token</span>
                               )}
-                            </td>
-                            <td>
+                            </Table.Td>
+                            <Table.Td>
                               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                 <IconDeviceDesktop size={18} color="#10b981" />
                                 <div>
@@ -1851,17 +1939,17 @@ export default function AdminDashboard() {
                                   </div>
                                 </div>
                               </div>
-                            </td>
-                            <td className="code-font" style={{ color: '#60a5fa' }}>
+                            </Table.Td>
+                            <Table.Td className="code-font" style={{ color: '#60a5fa' }}>
                               {s.ip || 'Local / Unknown'}
-                            </td>
-                            <td className="last-login-cell">
+                            </Table.Td>
+                            <Table.Td className="last-login-cell">
                               {new Date(s.lastUsedAt).toLocaleString()}
-                            </td>
-                            <td className="dim-text" style={{ fontSize: '0.8rem' }}>
+                            </Table.Td>
+                            <Table.Td className="dim-text" style={{ fontSize: '0.8rem' }}>
                               {new Date(s.expiresAt).toLocaleString()}
-                            </td>
-                            <td style={{ textAlign: 'right' }}>
+                            </Table.Td>
+                            <Table.Td style={{ textAlign: 'right' }}>
                               <Button
                                 size="xs"
                                 color="red"
@@ -1872,12 +1960,12 @@ export default function AdminDashboard() {
                               >
                                 Terminate
                               </Button>
-                            </td>
-                          </tr>
+                            </Table.Td>
+                          </Table.Tr>
                         ))}
-                      </tbody>
-                    </table>
-                  </div>
+                      </Table.Tbody>
+                    </Table>
+                  </Table.ScrollContainer>
                 )}
                 {!loadingSessions && globalSessions.length > 0 && (
                   <TablePager
@@ -2184,24 +2272,29 @@ export default function AdminDashboard() {
                 ) : (collectionData?.documents || []).length === 0 ? (
                   <div className="empty-sub">No documents found in "{selectedCollection}".</div>
                 ) : (
-                  <div className="responsive-table-wrapper">
-                    <table className="admin-table db-data-table">
-                      <thead>
-                        <tr>
-                          <th style={{ width: 100 }}>Action</th>
-                          <th style={{ width: 200 }}>Document _id</th>
+                  <Table.ScrollContainer minWidth={850} type="native" className="admin-table-scroll-container">
+                    <Table
+                      highlightOnHover
+                      verticalSpacing="md"
+                      horizontalSpacing="md"
+                      className="admin-mantine-table db-data-table"
+                    >
+                      <Table.Thead>
+                        <Table.Tr>
+                          <Table.Th style={{ width: 100, minWidth: 90 }}>Action</Table.Th>
+                          <Table.Th style={{ width: 220, minWidth: 200 }}>Document _id</Table.Th>
                           {(collectionData?.schemaKeys || [])
                             .filter((k) => k !== '_id' && k !== '__v' && k !== 'password' && k !== 'totp' && k !== 'recoveryCodes')
                             .slice(0, 6)
                             .map((k) => (
-                              <th key={k} className="code-font">{k}</th>
+                              <Table.Th key={k} className="code-font" style={{ minWidth: 140 }}>{k}</Table.Th>
                             ))}
-                        </tr>
-                      </thead>
-                      <tbody>
+                        </Table.Tr>
+                      </Table.Thead>
+                      <Table.Tbody>
                         {collectionData.documents.map((doc) => (
-                          <tr key={String(doc._id)} className="db-doc-row">
-                            <td>
+                          <Table.Tr key={String(doc._id)} className="db-doc-row">
+                            <Table.Td>
                               <Button
                                 size="xs"
                                 variant="light"
@@ -2211,10 +2304,10 @@ export default function AdminDashboard() {
                               >
                                 JSON
                               </Button>
-                            </td>
-                            <td className="code-font" style={{ color: '#06b6d4', fontWeight: 600 }}>
+                            </Table.Td>
+                            <Table.Td className="code-font" style={{ color: '#06b6d4', fontWeight: 600 }}>
                               {String(doc._id)}
-                            </td>
+                            </Table.Td>
                             {(collectionData.schemaKeys || [])
                               .filter((k) => k !== '_id' && k !== '__v' && k !== 'password' && k !== 'totp' && k !== 'recoveryCodes')
                               .slice(0, 6)
@@ -2237,16 +2330,16 @@ export default function AdminDashboard() {
                                   }
                                 }
                                 return (
-                                  <td key={k} className="doc-field-cell" title={String(displayVal)}>
+                                  <Table.Td key={k} className="doc-field-cell" title={String(displayVal)}>
                                     {displayVal}
-                                  </td>
+                                  </Table.Td>
                                 )
                               })}
-                          </tr>
+                          </Table.Tr>
                         ))}
-                      </tbody>
-                    </table>
-                  </div>
+                      </Table.Tbody>
+                    </Table>
+                  </Table.ScrollContainer>
                 )}
                 {!loadingCollectionData && (collectionData?.documents || []).length > 0 && (
                   <TablePager

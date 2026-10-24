@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import {
-  Modal,
   Tabs,
   Badge,
   Button,
@@ -8,6 +7,7 @@ import {
   Text,
   TextInput,
   Tooltip,
+  Table,
 } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
 import {
@@ -24,10 +24,12 @@ import {
   IconShieldCheck,
   IconShieldX,
   IconSettings,
+  IconX,
 } from '@tabler/icons-react'
 import { adminApi } from '../../api/endpoints'
 import { useAuthStore } from '../../store/authStore'
 import { initialsOf } from '../../utils'
+import { AppModal, AppModalBody } from '../common/ModalShell'
 import './UserInspectorModal.css'
 
 export default function UserInspectorModal({ opened, onClose, userId, onRefreshParent }) {
@@ -120,32 +122,15 @@ export default function UserInspectorModal({ opened, onClose, userId, onRefreshP
   const stats = data?.stats
 
   return (
-    <Modal
+    <AppModal
       opened={opened}
       onClose={onClose}
       size="xl"
-      centered
-      overlayProps={{ blur: 4, opacity: 0.65 }}
-      styles={{
-        content: {
-          background: 'rgba(15, 18, 28, 0.96)',
-          backdropFilter: 'blur(24px)',
-          border: '1px solid rgba(255, 255, 255, 0.12)',
-          borderRadius: 20,
-          color: '#fff',
-          boxShadow: '0 25px 60px rgba(0, 0, 0, 0.65)',
-        },
-        header: {
-          background: 'transparent',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-          color: '#fff',
-        },
-        body: {
-          padding: '1.5rem',
-        },
-      }}
-      title={
-        <div className="inspector-modal-header">
+      className="inspector-modal-root"
+      tone="default"
+    >
+      <div className="inspector-modal-header">
+        <div className="inspector-header-left">
           <div
             className="inspector-avatar"
             style={{ background: user?.avatarColor || 'var(--accent-gradient)' }}
@@ -154,32 +139,32 @@ export default function UserInspectorModal({ opened, onClose, userId, onRefreshP
           </div>
           <div className="inspector-title-info">
             <div className="inspector-name-row">
-              <span className="inspector-name">{user?.name || 'Loading...'}</span>
+              <span className="inspector-name">{user?.name || (loading ? 'Loading...' : 'User Details')}</span>
               {user?.isMaster ? (
-                <Badge color="yellow" variant="filled" size="sm">
+                <Badge color="yellow" variant="filled" size="xs">
                   👑 Master Admin
                 </Badge>
               ) : user?.role === 'admin' ? (
-                <Badge color="blue" variant="light" size="sm">
+                <Badge color="blue" variant="light" size="xs">
                   🛡️ Admin
                 </Badge>
-              ) : (
-                <Badge color="gray" variant="light" size="sm">
+              ) : user?.role ? (
+                <Badge color="gray" variant="light" size="xs">
                   👤 User
                 </Badge>
-              )}
+              ) : null}
               {user?.status === 'suspended' ? (
-                <Badge color="red" variant="filled" size="sm">
+                <Badge color="red" variant="filled" size="xs">
                   Suspended
                 </Badge>
-              ) : (
-                <Badge color="teal" variant="light" size="sm">
+              ) : user?.status ? (
+                <Badge color="teal" variant="light" size="xs">
                   Active
                 </Badge>
-              )}
+              ) : null}
             </div>
             <div className="inspector-email-row">
-              <span className="inspector-email">{user?.email}</span>
+              <span className="inspector-email">{user?.email || (loading ? 'Retrieving telemetry...' : '')}</span>
               {user?._id && (
                 <Tooltip label={copiedId ? 'Copied!' : 'Copy User ID'}>
                   <button type="button" className="copy-id-btn" onClick={copyUserId}>
@@ -191,28 +176,37 @@ export default function UserInspectorModal({ opened, onClose, userId, onRefreshP
             </div>
           </div>
         </div>
-      }
-    >
-      {loading ? (
-        <div className="inspector-loading">
-          <Loader color="blue" size="md" />
-          <Text size="sm" c="dimmed">
-            Retrieving complete user telemetry...
-          </Text>
-        </div>
-      ) : !data ? (
-        <div style={{ textAlign: 'center', padding: '2.5rem 1rem' }}>
-          <Text size="sm" c="red" mb="md">
-            Failed to load user profile, or user no longer exists in database.
-          </Text>
-          <Button size="xs" variant="default" onClick={onClose}>
-            Close Inspector
-          </Button>
-        </div>
-      ) : (
-        <div className="inspector-body">
-          {/* Quick Metrics Bar */}
-          <div className="inspector-kpi-grid">
+        <button
+          type="button"
+          className="action-btn app-modal-close inspector-close-btn"
+          onClick={onClose}
+          aria-label="Close inspector"
+        >
+          <IconX size={18} />
+        </button>
+      </div>
+
+      <AppModalBody className="inspector-modal-body">
+        {loading ? (
+          <div className="inspector-loading">
+            <Loader color="cyan" size="md" />
+            <Text size="sm" c="dimmed">
+              Retrieving complete user telemetry...
+            </Text>
+          </div>
+        ) : !data ? (
+          <div style={{ textAlign: 'center', padding: '2.5rem 1rem' }}>
+            <Text size="sm" c="red" mb="md">
+              Failed to load user profile, or user no longer exists in database.
+            </Text>
+            <Button size="xs" variant="default" onClick={onClose}>
+              Close Inspector
+            </Button>
+          </div>
+        ) : (
+          <div className="inspector-content">
+            {/* Quick Metrics Bar */}
+            <div className="inspector-kpi-grid">
             <div className="kpi-card">
               <div className="kpi-label">Total Links</div>
               <div className="kpi-value">{stats?.links?.total || 0}</div>
@@ -430,22 +424,27 @@ export default function UserInspectorModal({ opened, onClose, userId, onRefreshP
                 {filteredLinks.length === 0 ? (
                   <div className="empty-state">No links found for this user.</div>
                 ) : (
-                  <div className="inspector-links-table-wrapper">
-                    <table className="inspector-table">
-                      <thead>
-                        <tr>
-                          <th>Title &amp; URL</th>
-                          <th>Collection</th>
-                          <th>Visits</th>
-                          <th>Tags</th>
-                          <th>Saved At</th>
-                          <th>Action</th>
-                        </tr>
-                      </thead>
-                      <tbody>
+                  <Table.ScrollContainer minWidth={620} type="native" className="admin-table-scroll-container">
+                    <Table
+                      highlightOnHover
+                      verticalSpacing="sm"
+                      horizontalSpacing="md"
+                      className="admin-mantine-table"
+                    >
+                      <Table.Thead>
+                        <Table.Tr>
+                          <Table.Th style={{ minWidth: 220 }}>Title &amp; URL</Table.Th>
+                          <Table.Th style={{ minWidth: 120 }}>Collection</Table.Th>
+                          <Table.Th style={{ minWidth: 70 }}>Visits</Table.Th>
+                          <Table.Th style={{ minWidth: 110 }}>Tags</Table.Th>
+                          <Table.Th style={{ minWidth: 95 }}>Saved At</Table.Th>
+                          <Table.Th style={{ textAlign: 'right', minWidth: 60 }}>Action</Table.Th>
+                        </Table.Tr>
+                      </Table.Thead>
+                      <Table.Tbody>
                         {filteredLinks.map((link) => (
-                          <tr key={link._id}>
-                            <td className="link-cell">
+                          <Table.Tr key={link._id}>
+                            <Table.Td className="link-cell">
                               <div className="link-title-line">
                                 <span
                                   className="link-dot"
@@ -458,8 +457,8 @@ export default function UserInspectorModal({ opened, onClose, userId, onRefreshP
                               <div className="link-url-text" title={link.url}>
                                 {link.url}
                               </div>
-                            </td>
-                            <td>
+                            </Table.Td>
+                            <Table.Td>
                               {link.collectionId ? (
                                 <span
                                   className="coll-tag"
@@ -470,9 +469,9 @@ export default function UserInspectorModal({ opened, onClose, userId, onRefreshP
                               ) : (
                                 <span className="dim-text">Unorganized</span>
                               )}
-                            </td>
-                            <td className="visits-cell">{link.visits || 0}</td>
-                            <td>
+                            </Table.Td>
+                            <Table.Td className="visits-cell">{link.visits || 0}</Table.Td>
+                            <Table.Td>
                               <div className="tag-chips">
                                 {(link.tags || []).slice(0, 3).map((t) => (
                                   <span key={t} className="tag-chip">
@@ -485,11 +484,11 @@ export default function UserInspectorModal({ opened, onClose, userId, onRefreshP
                                   </span>
                                 )}
                               </div>
-                            </td>
-                            <td className="date-cell">
+                            </Table.Td>
+                            <Table.Td className="date-cell">
                               {new Date(link.createdAt).toLocaleDateString()}
-                            </td>
-                            <td>
+                            </Table.Td>
+                            <Table.Td style={{ textAlign: 'right' }}>
                               <a
                                 href={link.url}
                                 target="_blank"
@@ -499,12 +498,12 @@ export default function UserInspectorModal({ opened, onClose, userId, onRefreshP
                               >
                                 <IconExternalLink size={15} />
                               </a>
-                            </td>
-                          </tr>
+                            </Table.Td>
+                          </Table.Tr>
                         ))}
-                      </tbody>
-                    </table>
-                  </div>
+                      </Table.Tbody>
+                    </Table>
+                  </Table.ScrollContainer>
                 )}
               </div>
             </Tabs.Panel>
@@ -664,8 +663,9 @@ export default function UserInspectorModal({ opened, onClose, userId, onRefreshP
               </div>
             </Tabs.Panel>
           </Tabs>
-        </div>
-      )}
-    </Modal>
+          </div>
+        )}
+      </AppModalBody>
+    </AppModal>
   )
 }
