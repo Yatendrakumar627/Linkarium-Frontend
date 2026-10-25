@@ -1,6 +1,7 @@
 import { create } from 'zustand'
+import { notifications } from '@mantine/notifications'
 import { authApi, userApi } from '../api/endpoints'
-import { setToken, clearToken } from '../api/token'
+import { setToken, clearToken, setLoggingOut } from '../api/token'
 import { useLinkStore } from './linkStore'
 import { useUiStore } from './uiStore'
 
@@ -16,12 +17,16 @@ export const useAuthStore = create((set) => ({
   status: 'idle', // idle | checking | authenticated | unauthenticated
 
   async bootstrap() {
+    if (useAuthStore.getState().status === 'checking') return
     set({ status: 'checking' })
     try {
-      const { accessToken, token, user } = await authApi.refresh()
-      const t = accessToken || token
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Auth check timeout')), 15000)
+      )
+      const res = await Promise.race([authApi.refresh(), timeoutPromise])
+      const t = res?.accessToken || res?.token
       if (t) setToken(t)
-      if (user) set({ user, status: 'authenticated' })
+      if (res?.user) set({ user: res.user, status: 'authenticated' })
       else set({ status: 'unauthenticated', user: null })
     } catch {
       clearToken()
@@ -73,6 +78,8 @@ export const useAuthStore = create((set) => ({
   },
 
   async logout() {
+    setLoggingOut(true)
+    notifications.clean()
     try {
       await authApi.logout()
     } catch {
@@ -81,5 +88,10 @@ export const useAuthStore = create((set) => ({
     clearToken()
     resetUserState()
     set({ user: null, status: 'unauthenticated' })
+    notifications.clean()
+    setTimeout(() => {
+      setLoggingOut(false)
+      notifications.clean()
+    }, 400)
   },
 }))

@@ -1,4 +1,4 @@
-import { getToken, setToken, clearToken } from './token'
+import { getToken, setToken, clearToken, getIsLoggingOut } from './token'
 
 const API_BASE = import.meta.env.VITE_API_BASE
 const BASE = API_BASE ? `${API_BASE.replace(/\/+$/, '').replace(/\/api$/i, '')}/api` : '/api'
@@ -8,6 +8,7 @@ class ApiError extends Error {
     super(message)
     this.status = status
     this.data = null
+    this.silent = false
   }
 }
 
@@ -21,23 +22,26 @@ async function parseBody(res) {
   }
 }
 
-// Single-flight refresh so parallel 401s share one round-trip instead of
-// stampeding the refresh endpoint.
+// Single-flight refresh so parallel 401s or bootstrap calls share one round-trip instead of
+// stampeding the refresh endpoint or tripping token reuse detection.
 let refreshPromise = null
 
-async function doRefresh() {
+export async function refreshSession() {
   if (refreshPromise) return refreshPromise
   refreshPromise = fetch(`${BASE}/auth/refresh`, {
     method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
   })
     .then(async (res) => {
-      if (!res.ok) throw new Error('refresh failed')
       const data = await parseBody(res)
+      if (!res.ok) {
+        throw new ApiError(data?.error || 'refresh failed', res.status)
+      }
       const token = data?.accessToken || data?.token
-      if (!token) throw new Error('refresh failed')
+      if (!token) throw new ApiError('No token returned from refresh', 401)
       setToken(token)
-      return token
+      return data
     })
     .finally(() => {
       refreshPromise = null
@@ -45,13 +49,25 @@ async function doRefresh() {
   return refreshPromise
 }
 
+async function doRefresh() {
+  const data = await refreshSession()
+  return data?.accessToken || data?.token
+}
+
 // Drop the in-memory access token and send the user back to the sign-in page.
 function endSession() {
   clearToken()
-  if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/auth')) {
+  if (getIsLoggingOut()) return
+  if (
+    typeof window !== 'undefined' &&
+    !window.location.pathname.startsWith('/auth') &&
+    !window.location.pathname.startsWith('/s/')
+  ) {
     window.location.assign('/auth')
   }
 }
+
+
 
 // The access token lives in memory only; the long-lived refresh token is an
 // httpOnly cookie, so every request is sent with credentials.
@@ -82,12 +98,19 @@ async function fetchWithAuth(path, options, triedRefresh = false) {
 
   // One transparent refresh attempt for protected endpoints.
   if (res.status === 401 && auth && !triedRefresh) {
+    if (getIsLoggingOut() || (typeof window !== 'undefined' && window.location.pathname.startsWith('/auth'))) {
+      const silentErr = new ApiError('Logged out', 401)
+      silentErr.silent = true
+      throw silentErr
+    }
     try {
       await doRefresh()
       return await fetchWithAuth(path, options, true)
     } catch {
       endSession()
-      throw new ApiError('Session expired. Please sign in again.', 401)
+      const err = new ApiError('Session expired. Please sign in again.', 401)
+      if (getIsLoggingOut()) err.silent = true
+      throw err
     }
   }
 

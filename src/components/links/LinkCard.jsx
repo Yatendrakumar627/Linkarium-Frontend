@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState, useCallback, memo } from 'react'
-import { Menu } from '@mantine/core'
+import { useEffect, useRef, useState, useCallback, useMemo, memo } from 'react'
+import { Menu, Tooltip, ActionIcon } from '@mantine/core'
 import {
   IconExternalLink,
   IconCopy,
@@ -153,6 +153,8 @@ function LinkCard({ link, trashMode = false }) {
   const openEditor = useUiStore((s) => s.openEditor)
   const openReader = useUiStore((s) => s.openReader)
   const openConfirmDialog = useUiStore((s) => s.openConfirmDialog)
+  const setView = useUiStore((s) => s.setView)
+  const openTagWebsitesModal = useUiStore((s) => s.openTagWebsitesModal)
 
   const selectionMode = useUiStore((s) => s.selectionMode)
   const isSelected = useUiStore((s) => s.selectedIds.has(link._id))
@@ -451,9 +453,19 @@ function LinkCard({ link, trashMode = false }) {
     ? Math.max(0, Math.ceil((trashExpiry - new Date()) / (1000 * 60 * 60 * 24)))
     : null
 
-  const collection = link.collectionId
-    ? collections?.find((c) => String(c.id || c._id) === String(link.collectionId))
-    : null
+  const collection = useMemo(() => {
+    if (link.collectionId && typeof link.collectionId === 'object' && link.collectionId.name) {
+      return link.collectionId
+    }
+    if (link.collection && typeof link.collection === 'object' && link.collection.name) {
+      return link.collection
+    }
+    const rawId = typeof link.collectionId === 'object' && link.collectionId !== null
+      ? String(link.collectionId._id || link.collectionId.id || '')
+      : String(link.collectionId || link.collection || '')
+    if (!rawId || rawId === 'null' || rawId === 'undefined') return null
+    return collections?.find((c) => String(c.id || c._id) === rawId) || null
+  }, [link.collectionId, link.collection, collections])
   const cardColor = resolveCardColor(link, collection)
 
   const host = hostOf(link.url)
@@ -548,20 +560,37 @@ function LinkCard({ link, trashMode = false }) {
         </div>
 
         <div className="link-card-body">
-          <div
-            className="link-title"
-            title={
+          <Tooltip
+            label={
               link.description
                 ? `${displayTitle}\n\n${link.description}`
                 : (displayTitle || link.url)
             }
+            withArrow
+            multiline
+            maw={340}
+            position="top-start"
+            openDelay={400}
+            transitionProps={{ duration: 150 }}
           >
-            {displayTitle}
-          </div>
-          {displaySub ? (
-            <div className="link-url-sub" title={link.url}>
-              {displaySub}
+            <div className="link-title">
+              {displayTitle}
             </div>
+          </Tooltip>
+          {displaySub ? (
+            <Tooltip
+              label={link.url}
+              withArrow
+              multiline
+              maw={340}
+              position="bottom-start"
+              openDelay={400}
+              transitionProps={{ duration: 150 }}
+            >
+              <div className="link-url-sub">
+                {displaySub}
+              </div>
+            </Tooltip>
           ) : null}
         </div>
 
@@ -573,8 +602,9 @@ function LinkCard({ link, trashMode = false }) {
             </span>
           ) : (
             !selectionMode && (
-              <button
-                type="button"
+              <ActionIcon
+                variant="subtle"
+                size="sm"
                 className={`link-head-action-btn link-favorite-btn ${link.favorite ? 'on' : ''}`}
                 onClick={(e) => {
                   e.stopPropagation()
@@ -584,7 +614,7 @@ function LinkCard({ link, trashMode = false }) {
                 aria-label={link.favorite ? 'Unfavorite' : 'Favorite'}
               >
                 <IconStar size={15} fill={link.favorite ? 'currentColor' : 'none'} />
-              </button>
+              </ActionIcon>
             )
           )}
 
@@ -601,8 +631,9 @@ function LinkCard({ link, trashMode = false }) {
               transitionProps={{ duration: 120, transition: 'fade' }}
             >
               <Menu.Target>
-                <button
-                  type="button"
+                <ActionIcon
+                  variant="subtle"
+                  size="sm"
                   className="link-head-action-btn link-card-menu-btn"
                   aria-haspopup="menu"
                   aria-expanded={menuOpen}
@@ -614,7 +645,7 @@ function LinkCard({ link, trashMode = false }) {
                   onPointerDown={(e) => e.stopPropagation()}
                 >
                   <IconDotsVertical size={15} />
-                </button>
+                </ActionIcon>
               </Menu.Target>
 
               <Menu.Dropdown className="link-card-menu">
@@ -762,7 +793,7 @@ function LinkCard({ link, trashMode = false }) {
         </div>
       </div>
 
-      {/* 2. Bottom Meta Row: Left (Views • Time) & Right (Themed Tags / Collection) */}
+      {/* 2. Middle Meta Row: Views • Time | Collection & Health Badge */}
       <div className="link-meta-row">
         <div className="link-meta-left">
           <span className="link-meta-visits" title={`${link.visits || 0} visits`}>
@@ -792,54 +823,114 @@ function LinkCard({ link, trashMode = false }) {
           )}
         </div>
 
+        {(collection || (!trashMode && !selectionMode) || isArchived) && (
+          <div className="link-meta-divider" aria-hidden="true" />
+        )}
+
         <div className="link-meta-right">
-          {tags.length > 0 ? (
-            <div className="link-meta-tags">
-              {tags.slice(0, 2).map((tag) => (
-                <span key={tag} className="link-tag-chip" title={`#${tag}`}>
-                  <span className="link-tag-hash">#</span>
-                  <span className="link-tag-name">{tag}</span>
-                </span>
-              ))}
-              {tags.length > 2 && (
-                <span
-                  className="link-tag-chip link-tag-more"
-                  title={tags.slice(2).map((t) => `#${t}`).join(', ')}
-                >
-                  +{tags.length - 2}
-                </span>
-              )}
-            </div>
-          ) : (
-            <>
-              {collection && (
-                <span
-                  className="link-collection-pill"
-                  style={{ '--col-color': collection.color || '#a78bfa' }}
-                  title={`Collection: ${collection.name}`}
-                >
-                  <IconFolder size={10} />
-                  <span>{collection.name}</span>
-                </span>
-              )}
+          {collection && (
+            <Tooltip
+              label={`Collection: ${collection.name}`}
+              withArrow
+              position="top"
+              openDelay={200}
+              transitionProps={{ duration: 150 }}
+            >
+              <span
+                className="link-collection-pill"
+                style={{ '--col-color': collection.color || '#a78bfa' }}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setView({
+                    type: 'collection',
+                    id: collection.id || collection._id,
+                    label: collection.name,
+                  })
+                }}
+                role="button"
+                tabIndex={0}
+                aria-label={`Filter by collection ${collection.name}`}
+              >
+                <IconFolder size={11} stroke={1.8} />
+                <span>{collection.name}</span>
+              </span>
+            </Tooltip>
+          )}
 
-              {!trashMode && !selectionMode && (
-                <LinkHealthBadge
-                  status={link.health?.status}
-                  checkedAt={link.health?.checkedAt}
-                  httpStatus={link.health?.httpStatus}
-                  error={link.health?.error}
-                />
-              )}
+          {!trashMode && !selectionMode && (
+            <LinkHealthBadge
+              status={link.health?.status}
+              checkedAt={link.health?.checkedAt}
+              httpStatus={link.health?.httpStatus}
+              error={link.health?.error}
+            />
+          )}
 
-              {isArchived && (
-                <span className="link-archived-pill" title="This link is archived">
-                  <IconArchive size={10} /> Archived
-                </span>
-              )}
-            </>
+          {isArchived && (
+            <Tooltip
+              label="Archived: hidden from main library"
+              withArrow
+              position="top"
+              openDelay={200}
+            >
+              <span className="link-archived-pill">
+                <IconArchive size={10} /> Archived
+              </span>
+            </Tooltip>
           )}
         </div>
+      </div>
+
+      {/* 3. Dedicated Bottom Tags Row (Maintains exact same height across all cards) */}
+      <div className={`link-tags-row ${tags.length === 0 ? 'empty' : ''}`} aria-hidden={tags.length === 0}>
+        {tags.length > 0 && tags.slice(0, 2).map((tag) => (
+          <Tooltip
+            key={tag}
+            label={`#${tag}`}
+            withArrow
+            position="top"
+            openDelay={200}
+            transitionProps={{ duration: 150 }}
+          >
+            <span
+              className="link-tag-chip"
+              onClick={(e) => {
+                e.stopPropagation()
+                openTagWebsitesModal(tag)
+              }}
+              role="button"
+              tabIndex={0}
+              aria-label={`Tag ${tag}`}
+            >
+              <span className="link-tag-hash">#</span>
+              <span className="link-tag-name">{tag}</span>
+            </span>
+          </Tooltip>
+        ))}
+        {tags.length > 2 && (
+          <Tooltip
+            label={tags.slice(2).map((t) => `#${t}`).join(', ')}
+            withArrow
+            position="top"
+            multiline
+            maw={220}
+            openDelay={150}
+            transitionProps={{ duration: 150 }}
+          >
+            <span
+              className="link-tag-more"
+              onClick={(e) => {
+                e.stopPropagation()
+                openTagWebsitesModal(tags[0])
+              }}
+              role="button"
+              tabIndex={0}
+              aria-label={`${tags.length - 2} more tags`}
+            >
+              +{tags.length - 2}
+            </span>
+          </Tooltip>
+        )}
       </div>
 
       {!selectionMode && (

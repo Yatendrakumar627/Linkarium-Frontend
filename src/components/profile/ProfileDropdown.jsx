@@ -97,8 +97,9 @@ export default function ProfileDropdown() {
     }
     if (key === 'logout') {
       close()
-      logout()
-      navigate('/auth')
+      logout().finally(() => {
+        navigate('/auth')
+      })
     }
   }
 

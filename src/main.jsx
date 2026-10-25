@@ -20,6 +20,7 @@ console.warn = (...args) => {
 }
 
 import App from './App.jsx'
+import RootErrorBoundary from './components/common/RootErrorBoundary'
 import { theme } from './theme'
 import { initOfflineSync, getCachedLinks, removeCachedLinks } from './pwa/offline'
 import { useLinkStore } from './store/linkStore'
@@ -43,11 +44,13 @@ initOfflineSync(api, async () => {
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <MantineProvider theme={theme} defaultColorScheme="dark">
-      <Notifications position="top-right" limit={4} />
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
-    </MantineProvider>
+    <RootErrorBoundary>
+      <MantineProvider theme={theme} defaultColorScheme="dark">
+        <Notifications position="top-right" limit={4} />
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </MantineProvider>
+    </RootErrorBoundary>
   </StrictMode>,
 )

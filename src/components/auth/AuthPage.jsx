@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Button,
@@ -6,6 +6,7 @@ import {
   PasswordInput,
   Alert,
 } from '@mantine/core'
+import { notifications } from '@mantine/notifications'
 import {
   IconArrowRight,
   IconWorld,
@@ -23,6 +24,11 @@ export default function AuthPage() {
   const login = useAuthStore((s) => s.login)
   const register = useAuthStore((s) => s.register)
   const verifyOtp = useAuthStore((s) => s.verifyOtp)
+
+  useEffect(() => {
+    notifications.clean()
+  }, [])
+
 
   const [mode, setMode] = useState('login') // 'login' | 'register' | '2fa'
   const [name, setName] = useState('')

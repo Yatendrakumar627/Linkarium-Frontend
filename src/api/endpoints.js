@@ -1,11 +1,11 @@
-import { api } from './client'
+import { api, refreshSession } from './client'
 import { withQuery } from '../utils'
 
 export const authApi = {
   register: (payload) => api.post('/auth/register', payload, { auth: false }),
   login: (payload) => api.post('/auth/login', payload, { auth: false }),
   verifyOtp: (payload) => api.post('/auth/verify-otp', payload, { auth: false }),
-  refresh: () => api.post('/auth/refresh', {}, { auth: false }),
+  refresh: () => refreshSession(),
   logout: () => api.post('/auth/logout'),
 }
 
@@ -138,7 +138,7 @@ export const adminApi = {
   deleteLink: (id) => api.del(`/admin/links/${id}`),
   sessions: (params = {}) => api.get(withQuery('/admin/sessions', params)),
   revokeSession: (id) => api.del(`/admin/sessions/${id}`),
-  exportReport: () => api.download('/admin/export'),
+  exportReport: (format = 'xlsx') => api.download(`/admin/export?format=${format}`),
   databaseOverview: () => api.get('/admin/database/overview'),
   databaseCollection: (name, params = {}) => api.get(withQuery(`/admin/database/collection/${name}`, params)),
   databaseDump: () => api.download('/admin/database/dump'),

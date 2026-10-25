@@ -342,6 +342,36 @@
 /* --------------------------------------------------------------------------
    3. Main Stage & Tabs
    -------------------------------------------------------------------------- */
+/* Universal Ultra-Luxury Scrollbars for Admin Console */
+.admin-shell * {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 229, 255, 0.25) transparent;
+}
+
+.admin-shell *::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.admin-shell *::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.admin-shell *::-webkit-scrollbar-thumb {
+  background: rgba(0, 229, 255, 0.22);
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.admin-shell *::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 229, 255, 0.5);
+  box-shadow: 0 0 10px rgba(0, 229, 255, 0.4);
+}
+
+.admin-shell *::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
 .admin-main-stage {
   flex: 1;
   max-width: 1560px;
@@ -362,30 +392,113 @@
   display: none !important;
 }
 
-.admin-tab-bar {
+/* Tab Bar Navigation Container & Controls */
+.admin-tab-nav-container {
+  position: relative;
+  width: 100%;
+  margin-bottom: 1.75rem;
+  display: flex;
+  align-items: center;
+}
+
+/* Subtle edge gradient fade masks when scrollable */
+.admin-tab-nav-container::before,
+.admin-tab-nav-container::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 36px;
+  pointer-events: none;
+  z-index: 3;
+  transition: opacity 0.25s ease;
+  border-radius: 16px;
+}
+
+.admin-tab-nav-container::before {
+  left: 0;
+  background: linear-gradient(to right, rgba(14, 10, 22, 0.95), transparent);
+  opacity: 0;
+}
+
+.admin-tab-nav-container.has-left-fade::before {
+  opacity: 1;
+}
+
+.admin-tab-nav-container::after {
+  right: 0;
+  background: linear-gradient(to left, rgba(14, 10, 22, 0.95), transparent);
+  opacity: 0;
+}
+
+.admin-tab-nav-container.has-right-fade::after {
+  opacity: 1;
+}
+
+/* Scroll chevron buttons */
+.admin-tab-scroll-btn {
+  position: absolute;
+  z-index: 5;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(18, 12, 32, 0.92);
+  border: 1px solid rgba(0, 229, 255, 0.35);
+  color: #00e5ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.7), 0 0 15px rgba(0, 229, 255, 0.3);
+  backdrop-filter: blur(12px);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 0;
+}
+
+.admin-tab-scroll-btn:hover {
+  background: rgba(0, 229, 255, 0.25);
+  color: #ffffff;
+  transform: scale(1.12);
+  border-color: #00e5ff;
+  box-shadow: 0 4px 18px rgba(0, 229, 255, 0.45);
+}
+
+.admin-tab-scroll-btn.left {
+  left: -12px;
+}
+
+.admin-tab-scroll-btn.right {
+  right: -12px;
+}
+
+/* Tab Bar with 100% Native Scrollbar Elimination */
+.admin-tab-bar,
+.admin-tabs .mantine-Tabs-list {
   background: rgba(14, 10, 22, 0.75) !important;
   border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.07)) !important;
   border-radius: 16px !important;
   padding: 5px !important;
-  margin-bottom: 1.75rem !important;
+  margin-bottom: 0 !important;
   display: flex !important;
   flex-wrap: nowrap !important;
-  gap: 5px !important;
+  gap: 6px !important;
   overflow-x: auto !important;
   overflow-y: hidden !important;
-  scrollbar-width: thin !important;
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE 10+ */
   -webkit-overflow-scrolling: touch !important;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 14px 34px -8px rgba(0, 0, 0, 0.75) !important;
   backdrop-filter: blur(24px) saturate(160%) !important;
   width: 100% !important;
+  scroll-behavior: smooth;
 }
 
-.admin-tab-bar::-webkit-scrollbar {
-  height: 3px;
-}
-.admin-tab-bar::-webkit-scrollbar-thumb {
-  background: rgba(0, 229, 255, 0.25);
-  border-radius: 999px;
+.admin-tab-bar::-webkit-scrollbar,
+.admin-tabs .mantine-Tabs-list::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
 }
 
 .admin-tab-bar button {
@@ -394,22 +507,22 @@
   border-radius: 11px !important;
   color: var(--text-secondary, #94a3b8) !important;
   font-weight: 600 !important;
-  font-size: 0.85rem !important;
-  padding: 8px 16px !important;
+  font-size: 0.83rem !important;
+  padding: 8px 15px !important;
   border: 1px solid transparent !important;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .admin-tab-bar button:hover {
   color: #ffffff !important;
-  background: rgba(255, 255, 255, 0.05) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
 }
 
 .admin-tab-bar button[data-active="true"] {
-  background: linear-gradient(135deg, rgba(106, 24, 184, 0.35) 0%, rgba(59, 10, 107, 0.45) 50%, rgba(0, 229, 255, 0.12) 100%) !important;
+  background: linear-gradient(135deg, rgba(106, 24, 184, 0.45) 0%, rgba(59, 10, 107, 0.55) 50%, rgba(0, 229, 255, 0.18) 100%) !important;
   color: #ffffff !important;
-  border-color: rgba(0, 229, 255, 0.35) !important;
-  box-shadow: 0 4px 18px rgba(0, 229, 255, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+  border-color: rgba(0, 229, 255, 0.4) !important;
+  box-shadow: 0 4px 18px rgba(0, 229, 255, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
 }
 
 /* --------------------------------------------------------------------------

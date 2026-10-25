@@ -46,6 +46,9 @@ import {
   IconLayersLinked,
   IconClock,
   IconUserPlus,
+  IconReportAnalytics,
+  IconChevronLeft,
+  IconChevronRight,
 } from '@tabler/icons-react'
 import { adminApi } from '../../api/endpoints'
 import { useAuthStore } from '../../store/authStore'
@@ -53,6 +56,7 @@ import { initialsOf, downloadBlob } from '../../utils'
 import UserInspectorModal from './UserInspectorModal'
 import AdminResetPasswordModal from './AdminResetPasswordModal'
 import RawDocumentModal from './RawDocumentModal'
+import AdminReportModal from './AdminReportModal'
 import ConfirmDialog from './ConfirmDialog'
 import './AdminDashboard.css'
 
@@ -138,6 +142,50 @@ export default function AdminDashboard() {
   // Modals state
   const [inspectUserId, setInspectUserId] = useState(null)
   const [resetPasswordUser, setResetPasswordUser] = useState(null)
+  const [reportModalOpen, setReportModalOpen] = useState(false)
+
+  // Responsive Tab Navigation State & Scroll Affordance
+  const tabBarRef = useRef(null)
+  const [canScrollLeft, setCanScrollLeft] = useState(false)
+  const [canScrollRight, setCanScrollRight] = useState(false)
+
+  const checkScrollBounds = useCallback(() => {
+    const el = tabBarRef.current
+    if (!el) return
+    const hasOverflow = el.scrollWidth > el.clientWidth + 4
+    setCanScrollLeft(el.scrollLeft > 10)
+    setCanScrollRight(hasOverflow && el.scrollLeft < el.scrollWidth - el.clientWidth - 10)
+  }, [])
+
+  useEffect(() => {
+    checkScrollBounds()
+    const handleResize = () => checkScrollBounds()
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [checkScrollBounds])
+
+  const scrollTabs = (direction) => {
+    if (!tabBarRef.current) return
+    const distance = direction === 'left' ? -220 : 220
+    tabBarRef.current.scrollBy({ left: distance, behavior: 'smooth' })
+  }
+
+  const handleTabsWheel = (e) => {
+    if (tabBarRef.current && e.deltaY !== 0) {
+      tabBarRef.current.scrollLeft += e.deltaY * 0.8
+      checkScrollBounds()
+    }
+  }
+
+  // Smoothly center active tab into view whenever tab changes
+  useEffect(() => {
+    if (!tabBarRef.current) return
+    const activeEl = tabBarRef.current.querySelector('[data-active="true"]')
+    if (activeEl) {
+      activeEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
+    }
+    checkScrollBounds()
+  }, [activeTab, checkScrollBounds])
 
   // Debounce free-text search so typing does not fire one request per keystroke.
   const [debouncedSearchQuery] = useDebouncedValue(searchQuery, 350)
@@ -660,14 +708,8 @@ export default function AdminDashboard() {
     })
   }
 
-  const handleExportAudit = async () => {
-    try {
-      const { blob, filename } = await adminApi.exportReport()
-      downloadBlob(blob, filename || `linkarium-audit-${Date.now()}.json`)
-      notifications.show({ message: 'Audit report downloaded successfully', color: 'teal' })
-    } catch (err) {
-      notifications.show({ message: err.message || 'Export failed', color: 'red' })
-    }
+  const handleExportAudit = () => {
+    setReportModalOpen(true)
   }
 
   const metrics = overview?.metrics || {}
@@ -733,12 +775,13 @@ export default function AdminDashboard() {
 
             <Button
               size="xs"
-              variant="light"
-              color="cyan"
-              leftSection={<IconDownload size={14} />}
+              variant="gradient"
+              gradient={{ from: '#00e5ff', to: '#6a18b8', deg: 135 }}
+              leftSection={<IconReportAnalytics size={14} />}
               onClick={handleExportAudit}
+              styles={{ root: { fontWeight: 600, boxShadow: '0 0 16px rgba(0, 229, 255, 0.25)' } }}
             >
-              Export Audit
+              Report Card
             </Button>
 
             <Button
@@ -757,8 +800,7 @@ export default function AdminDashboard() {
               variant="subtle"
               leftSection={<IconLogout size={14} />}
               onClick={() => {
-                logout()
-                navigate('/auth')
+                logout().finally(() => navigate('/auth'))
               }}
             >
               Sign Out
@@ -788,10 +830,10 @@ export default function AdminDashboard() {
               <Menu.Dropdown>
                 <Menu.Label>Console Actions</Menu.Label>
                 <Menu.Item
-                  leftSection={<IconDownload size={15} />}
+                  leftSection={<IconReportAnalytics size={15} />}
                   onClick={handleExportAudit}
                 >
-                  Export Audit JSON
+                  Report Card &amp; Analytics
                 </Menu.Item>
                 <Menu.Item
                   leftSection={<IconArrowLeft size={15} />}
@@ -804,8 +846,7 @@ export default function AdminDashboard() {
                   color="red"
                   leftSection={<IconLogout size={15} />}
                   onClick={() => {
-                    logout()
-                    navigate('/auth')
+                    logout().finally(() => navigate('/auth'))
                   }}
                 >
                   Sign Out of Console
@@ -865,7 +906,7 @@ export default function AdminDashboard() {
                 variant="subtle"
                 color="cyan"
                 loading={isLiveSyncing || refreshing}
-                onClick={() => syncTelemetry(false)}
+                onClick={handleRefreshAll}
                 className="sync-now-btn"
               >
                 <IconRefresh size={14} />
@@ -887,46 +928,73 @@ export default function AdminDashboard() {
       <main className="admin-main-stage">
         {/* Navigation Tabs */}
         <Tabs value={activeTab} onChange={setActiveTab} variant="outline" className="admin-tabs">
-          <Tabs.List className="admin-tab-bar">
-            <Tabs.Tab value="overview" leftSection={<IconActivity size={16} />}>
-              Executive Pulse &amp; Metrics
-            </Tabs.Tab>
-            <Tabs.Tab
-              value="users"
-              leftSection={<IconUsers size={16} />}
-              rightSection={<Badge size="xs" variant="filled" color="grape" radius="xl">{(metrics.totalUsers || 0).toLocaleString()}</Badge>}
+          <div className={`admin-tab-nav-container ${canScrollLeft ? 'has-left-fade' : ''} ${canScrollRight ? 'has-right-fade' : ''}`}>
+            {canScrollLeft && (
+              <button
+                type="button"
+                className="admin-tab-scroll-btn left"
+                onClick={() => scrollTabs('left')}
+                aria-label="Scroll tabs left"
+              >
+                <IconChevronLeft size={16} />
+              </button>
+            )}
+            <Tabs.List
+              ref={tabBarRef}
+              className="admin-tab-bar"
+              onScroll={checkScrollBounds}
+              onWheel={handleTabsWheel}
             >
-              User Directory &amp; Tracking
-            </Tabs.Tab>
-            <Tabs.Tab
-              value="links"
-              leftSection={<IconLink size={16} />}
-              rightSection={<Badge size="xs" variant="filled" color="cyan" radius="xl">{(metrics.totalLinks || 0).toLocaleString()}</Badge>}
-            >
-              Global Links Explorer
-            </Tabs.Tab>
-            <Tabs.Tab
-              value="sessions"
-              leftSection={<IconDeviceDesktop size={16} />}
-              rightSection={<Badge size="xs" variant="filled" color="teal" radius="xl">{(metrics.activeSessions || 0).toLocaleString()}</Badge>}
-            >
-              Active Sessions Radar
-            </Tabs.Tab>
-            <Tabs.Tab
-              value="database"
-              leftSection={<IconDatabase size={16} />}
-              rightSection={<Badge size="xs" variant="filled" color="indigo" radius="xl">{(dbOverview?.collections?.length || 0).toLocaleString()}</Badge>}
-            >
-              Database Center &amp; Atlas Vault
-            </Tabs.Tab>
-            <Tabs.Tab
-              value="security"
-              leftSection={<IconShieldCheck size={16} />}
-              rightSection={<Badge size="xs" variant="filled" color="yellow" radius="xl">Root</Badge>}
-            >
-              Security &amp; Master Authority
-            </Tabs.Tab>
-          </Tabs.List>
+              <Tabs.Tab value="overview" leftSection={<IconActivity size={16} />}>
+                Executive Pulse &amp; Metrics
+              </Tabs.Tab>
+              <Tabs.Tab
+                value="users"
+                leftSection={<IconUsers size={16} />}
+                rightSection={<Badge size="xs" variant="filled" color="grape" radius="xl">{(metrics.totalUsers || 0).toLocaleString()}</Badge>}
+              >
+                User Directory &amp; Tracking
+              </Tabs.Tab>
+              <Tabs.Tab
+                value="links"
+                leftSection={<IconLink size={16} />}
+                rightSection={<Badge size="xs" variant="filled" color="cyan" radius="xl">{(metrics.totalLinks || 0).toLocaleString()}</Badge>}
+              >
+                Global Links Explorer
+              </Tabs.Tab>
+              <Tabs.Tab
+                value="sessions"
+                leftSection={<IconDeviceDesktop size={16} />}
+                rightSection={<Badge size="xs" variant="filled" color="teal" radius="xl">{(metrics.activeSessions || 0).toLocaleString()}</Badge>}
+              >
+                Active Sessions Radar
+              </Tabs.Tab>
+              <Tabs.Tab
+                value="database"
+                leftSection={<IconDatabase size={16} />}
+                rightSection={<Badge size="xs" variant="filled" color="indigo" radius="xl">{(dbOverview?.collections?.length || 0).toLocaleString()}</Badge>}
+              >
+                Database Center &amp; Atlas Vault
+              </Tabs.Tab>
+              <Tabs.Tab
+                value="security"
+                leftSection={<IconShieldCheck size={16} />}
+                rightSection={<Badge size="xs" variant="filled" color="yellow" radius="xl">Root</Badge>}
+              >
+                Security &amp; Master Authority
+              </Tabs.Tab>
+            </Tabs.List>
+            {canScrollRight && (
+              <button
+                type="button"
+                className="admin-tab-scroll-btn right"
+                onClick={() => scrollTabs('right')}
+                aria-label="Scroll tabs right"
+              >
+                <IconChevronRight size={16} />
+              </button>
+            )}
+          </div>
 
           {/* ================================================================= */}
           {/* TAB 1: EXECUTIVE PULSE & METRICS */}
@@ -2385,6 +2453,14 @@ export default function AdminDashboard() {
         onClose={() => setRawDocModalData(null)}
         document={rawDocModalData?.document}
         collectionName={rawDocModalData?.collectionName}
+      />
+
+      {/* Dynamic Executive Report Card & Power BI Analytics Modal */}
+      <AdminReportModal
+        opened={reportModalOpen}
+        onClose={() => setReportModalOpen(false)}
+        overview={overview}
+        users={users}
       />
 
       {/* Branded confirmation dialog for destructive actions */}

@@ -87,7 +87,10 @@ export default function AppShell() {
   }, [])
 
   useEffect(() => {
-    fetchMeta().catch((err) => notifications.show({ message: err.message, color: 'red' }))
+    fetchMeta().catch((err) => {
+      if (err?.silent || useAuthStore.getState().status === 'unauthenticated') return
+      notifications.show({ id: 'fetch-meta-err', message: err.message, color: 'red' })
+    })
   }, [fetchMeta])
 
   // A deep link like `/?q=tag:ai` opens the app already filtered. The weekly

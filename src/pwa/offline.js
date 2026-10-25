@@ -37,11 +37,16 @@ export async function queueMutation(method, path, body) {
   return enqueueOutbox(method, path, body)
 }
 
+import { getToken } from '../api/token'
+
 let isReplaying = false
 
 export async function replayOutbox(apiClient, onReplay) {
   if (isReplaying || (typeof navigator !== 'undefined' && !navigator.onLine)) return
+  // Do not replay mutations before authentication is confirmed.
+  if (!getToken()) return
   isReplaying = true
+
   let changed = false
   try {
     const items = await getOutboxItems()
