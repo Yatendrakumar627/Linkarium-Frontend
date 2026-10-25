@@ -823,10 +823,6 @@ function LinkCard({ link, trashMode = false }) {
           )}
         </div>
 
-        {(collection || (!trashMode && !selectionMode) || isArchived) && (
-          <div className="link-meta-divider" aria-hidden="true" />
-        )}
-
         <div className="link-meta-right">
           {collection && (
             <Tooltip

@@ -324,10 +324,11 @@
   white-space: nowrap;
 }
 
-/* 2. Middle Meta Row: Views, Time, Divider, Collection, Health */
+/* 2. Middle Meta Row: Views, Time (Left) & Collection, Health (Right End) */
 .link-meta-row {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
   min-width: 0;
   width: 100%;
@@ -367,14 +368,6 @@
   flex-shrink: 0;
 }
 
-.link-meta-divider {
-  width: 1px;
-  height: 12px;
-  background: rgba(255, 255, 255, 0.14);
-  flex-shrink: 0;
-  margin: 0 2px;
-}
-
 .link-note-indicator {
   display: inline-flex;
   align-items: center;
@@ -393,9 +386,11 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  margin-left: auto;
   flex-shrink: 0;
   min-width: 0;
   overflow: hidden;
+  justify-content: flex-end;
 }
 
 /* Health badge */
@@ -587,11 +582,8 @@
   color: #ffffff;
 }
 
-/* Small screen responsiveness: keep title, domain and status visible; collapse tags */
+/* Small screen responsiveness: ensure tags remain visible and card UI stays uniform */
 @media (max-width: 640px) {
-  .link-tags-row {
-    display: none;
-  }
   .link-collection-pill {
     max-width: 90px;
   }
