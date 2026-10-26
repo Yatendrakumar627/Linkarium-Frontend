@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useState, useCallback, memo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Badge,
@@ -75,6 +75,388 @@ function formatRelativeTime(dateInput) {
   return `${diffDay}d ago`
 }
 
+/**
+ * Isolated LiveSyncControl micro-component.
+ * Encapsulates the 1-second interval so the main 2,500-line AdminDashboard
+ * never re-renders every second, boosting framerates and eliminating UI lag.
+ */
+const LiveSyncControl = memo(function LiveSyncControl({
+  autoSyncSecs,
+  setAutoSyncSecs,
+  isLiveSyncing,
+  refreshing,
+  lastSyncedAt,
+  onRefreshAll,
+  metrics,
+}) {
+  const [secondsAgo, setSecondsAgo] = useState(0)
+
+  useEffect(() => {
+    const update = () => {
+      setSecondsAgo(Math.max(0, Math.floor((Date.now() - lastSyncedAt) / 1000)))
+    }
+    update()
+    const ticker = setInterval(update, 1000)
+    return () => clearInterval(ticker)
+  }, [lastSyncedAt])
+
+  return (
+    <div className="admin-sync-bar-row">
+      <div className="live-sync-pill">
+        <span className={`live-radar-dot ${autoSyncSecs > 0 ? 'active' : 'paused'}`} />
+        <div className="live-sync-meta">
+          <span className="live-sync-label">
+            {autoSyncSecs > 0 ? (
+              <>
+                <strong>LIVE</strong> <span className="sync-rate">({autoSyncSecs}s)</span>
+              </>
+            ) : (
+              <span className="text-dimmed">PAUSED</span>
+            )}
+          </span>
+          <span className="live-sync-time">
+            {isLiveSyncing ? 'Syncing...' : secondsAgo === 0 ? 'Just now' : `${secondsAgo}s ago`}
+          </span>
+        </div>
+
+        <Select
+          size="xs"
+          variant="unstyled"
+          value={String(autoSyncSecs)}
+          onChange={(val) => setAutoSyncSecs(Number(val))}
+          data={[
+            { value: '5', label: '⚡ Fast (5s)' },
+            { value: '15', label: '🟢 Realtime (15s)' },
+            { value: '30', label: '⏱️ Normal (30s)' },
+            { value: '60', label: '🐢 Eco (60s)' },
+            { value: '0', label: '⏸️ Paused' },
+          ]}
+          className="sync-interval-select"
+          styles={{
+            input: {
+              color: '#94a3b8',
+              fontSize: '0.72rem',
+              padding: '2px 6px',
+              height: '24px',
+              minHeight: '24px',
+              cursor: 'pointer',
+            },
+          }}
+        />
+
+        <Tooltip label="Instant Telemetry Sync" withArrow>
+          <ActionIcon
+            size="sm"
+            variant="subtle"
+            color="cyan"
+            loading={isLiveSyncing || refreshing}
+            onClick={onRefreshAll}
+            className="sync-now-btn"
+          >
+            <IconRefresh size={14} />
+          </ActionIcon>
+        </Tooltip>
+      </div>
+
+      {/* Quick mobile status info */}
+      <div className="mobile-status-quick">
+        <span className="pulse-dot" />
+        <span>{(metrics.totalUsers || 0).toLocaleString()} Users</span>
+        <span className="dot-sep">•</span>
+        <span>{(metrics.totalLinks || 0).toLocaleString()} Links</span>
+      </div>
+    </div>
+  )
+})
+
+const LiveServerUptime = memo(function LiveServerUptime({ baseUptime = 0 }) {
+  const [ticks, setTicks] = useState(0)
+
+  useEffect(() => {
+    setTicks(0)
+    const timer = setInterval(() => setTicks((t) => t + 1), 1000)
+    return () => clearInterval(timer)
+  }, [baseUptime])
+
+  const total = (baseUptime || 0) + ticks
+  const h = Math.floor(total / 3600)
+  const m = Math.floor((total % 3600) / 60)
+  const s = Math.floor(total % 60)
+
+  return (
+    <span className="sys-val">
+      {h}h {m}m {s}s
+    </span>
+  )
+})
+
+const shortDateFormatter = new Intl.DateTimeFormat(undefined, {
+  month: 'short',
+  day: 'numeric',
+  year: 'numeric',
+})
+
+const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
+  month: 'short',
+  day: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+})
+
+const UserTableRow = memo(function UserTableRow({
+  u,
+  isSelf,
+  isBusy,
+  onInspect,
+  onResetPassword,
+  onForceLogout,
+  onToggleStatus,
+  onToggleRole,
+  onDeleteUser,
+}) {
+  const formattedCreated = u.createdAt ? shortDateFormatter.format(new Date(u.createdAt)) : '—'
+  const formattedLastLogin = u.lastLoginAt ? dateTimeFormatter.format(new Date(u.lastLoginAt)) : 'Never'
+
+  return (
+    <Table.Tr
+      className={`inspectable-row ${u.status === 'suspended' ? 'row-suspended' : ''}`}
+      onClick={(e) => onInspect(e, u._id)}
+      tabIndex={0}
+      aria-label={`Inspect user ${u.name}`}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          const interactive = e.target.closest('button, a, input, select, textarea, .action-buttons-cell')
+          if (interactive) return
+          e.preventDefault()
+          onInspect(e, u._id)
+        }
+      }}
+    >
+      {/* User Identity */}
+      <Table.Td className="user-id-cell">
+        <div className="user-flex-item">
+          <span
+            className="user-table-avatar"
+            style={{ background: u.avatarColor || '#3b82f6' }}
+          >
+            {initialsOf(u.name)}
+          </span>
+          <div className="user-text-cluster">
+            <div className="user-name-title">
+              {u.name}
+              {u.isMaster && (
+                <Tooltip label="Master Account with Root Authority">
+                  <span className="crown-icon-inline">👑</span>
+                </Tooltip>
+              )}
+              {isSelf && (
+                <Badge size="xs" color="indigo" variant="light">
+                  You
+                </Badge>
+              )}
+            </div>
+            <div className="user-email-subtitle">
+              {u.email}
+            </div>
+          </div>
+        </div>
+      </Table.Td>
+
+      {/* Role */}
+      <Table.Td className="user-role-cell">
+        {u.isMaster ? (
+          <span className="role-pill master">👑 Master</span>
+        ) : u.role === 'admin' ? (
+          <span className="role-pill admin">🛡️ Admin</span>
+        ) : (
+          <span className="role-pill user">👤 User</span>
+        )}
+      </Table.Td>
+
+      {/* Status */}
+      <Table.Td className="user-status-cell">
+        {u.status === 'suspended' ? (
+          <span className="status-pill suspended">
+            <span className="status-dot-indicator red" /> Suspended
+          </span>
+        ) : (
+          <span className="status-pill active">
+            <span className="status-dot-indicator green" /> Active
+          </span>
+        )}
+      </Table.Td>
+
+      {/* Security (2FA) */}
+      <Table.Td className="user-security-cell">
+        {u.twoFactorEnabled ? (
+          <Tooltip label="Two-factor authentication active">
+            <span className="security-pill on">
+              <IconShieldCheck size={14} /> 2FA On
+            </span>
+          </Tooltip>
+        ) : (
+          <span className="security-pill off">
+            <IconShield size={14} /> None
+          </span>
+        )}
+      </Table.Td>
+
+      {/* Links Breakdown */}
+      <Table.Td>
+        <div className="metric-pill links" title={`${u.activeLinks || 0} active, ${u.trashLinks || 0} trash`}>
+          <IconLink size={12} />
+          <span>{(u.totalLinks || 0).toLocaleString()}</span>
+        </div>
+      </Table.Td>
+
+      {/* Visits */}
+      <Table.Td className="visits-count-cell">
+        <div className="metric-pill visits">
+          <IconFlame size={12} color="#f59e0b" />
+          <span>{(u.totalVisits || 0).toLocaleString()}</span>
+        </div>
+      </Table.Td>
+
+      {/* Collections */}
+      <Table.Td>
+        <div className="metric-pill collections">
+          <IconFolder size={12} />
+          <span>{u.collectionsCount || 0}</span>
+        </div>
+      </Table.Td>
+
+      {/* Active Devices */}
+      <Table.Td>
+        <div className={`metric-pill devices ${u.activeSessionsCount > 0 ? 'online' : 'offline'}`}>
+          <IconDeviceDesktop size={12} />
+          <span>{u.activeSessionsCount || 0} online</span>
+        </div>
+      </Table.Td>
+
+      {/* Last Login & IP */}
+      <Table.Td className="last-login-cell">
+        <div className="timeline-cluster">
+          <div className="last-login-time">
+            {formattedLastLogin}
+          </div>
+          <div className="last-login-ip code-font">
+            {u.lastLoginIp || '—'}
+          </div>
+        </div>
+      </Table.Td>
+
+      {/* Joined Date */}
+      <Table.Td className="joined-date-cell">
+        {formattedCreated}
+      </Table.Td>
+
+      {/* Actions Dropdown */}
+      <Table.Td style={{ textAlign: 'right', width: 64 }} onClick={(e) => e.stopPropagation()}>
+        <div className="action-buttons-cell">
+          <Menu position="bottom-end" shadow="md" width={250}>
+            <Menu.Target>
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                size="sm"
+                loading={isBusy}
+                disabled={isBusy}
+                aria-label={`User actions for ${u.name}`}
+              >
+                <IconDotsVertical size={16} />
+              </ActionIcon>
+            </Menu.Target>
+            <Menu.Dropdown>
+              <Menu.Item
+                leftSection={<IconEye size={15} />}
+                onClick={() => onInspect(null, u._id)}
+              >
+                Deep Inspector
+              </Menu.Item>
+
+              {!u.isMaster ? (
+                <Menu.Item
+                  leftSection={<IconKey size={15} />}
+                  onClick={() => onResetPassword(u)}
+                >
+                  Reset Password
+                </Menu.Item>
+              ) : (
+                <Menu.Item
+                  leftSection={<IconKey size={15} />}
+                  disabled
+                  title="The master password is controlled by the MASTER_ADMIN_PASSWORD environment variable."
+                >
+                  Password managed by server
+                </Menu.Item>
+              )}
+
+              {isSelf ? (
+                <Menu.Item leftSection={<IconLogout size={15} />} disabled>
+                  Sign Out All Devices (use header)
+                </Menu.Item>
+              ) : (
+                <Menu.Item
+                  leftSection={<IconLogout size={15} />}
+                  onClick={() => onForceLogout(u)}
+                >
+                  Sign Out All Devices
+                </Menu.Item>
+              )}
+
+              {!u.isMaster && !isSelf && (
+                <>
+                  <Menu.Divider />
+                  <Menu.Item
+                    leftSection={
+                      u.status === 'suspended' ? (
+                        <IconUserCheck size={15} />
+                      ) : (
+                        <IconBan size={15} />
+                      )
+                    }
+                    color={u.status === 'suspended' ? 'teal' : 'orange'}
+                    onClick={() => onToggleStatus(u)}
+                  >
+                    {u.status === 'suspended'
+                      ? 'Re-activate Account'
+                      : 'Suspend Account'}
+                  </Menu.Item>
+
+                  <Menu.Item
+                    leftSection={<IconCrown size={15} />}
+                    onClick={() => onToggleRole(u)}
+                  >
+                    {u.role === 'admin' ? 'Demote to User' : 'Make Administrator'}
+                  </Menu.Item>
+
+                  <Menu.Divider />
+                  <Menu.Item
+                    color="red"
+                    leftSection={<IconTrash size={15} />}
+                    onClick={() => onDeleteUser(u)}
+                  >
+                    Delete User
+                  </Menu.Item>
+                </>
+              )}
+
+              {isSelf && (
+                <>
+                  <Menu.Divider />
+                  <Menu.Item disabled style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                    Active Root Session
+                  </Menu.Item>
+                </>
+              )}
+            </Menu.Dropdown>
+          </Menu>
+        </div>
+      </Table.Td>
+    </Table.Tr>
+  )
+})
+
 export default function AdminDashboard() {
   const navigate = useNavigate()
   const logout = useAuthStore((s) => s.logout)
@@ -88,10 +470,9 @@ export default function AdminDashboard() {
   const [refreshing, setRefreshing] = useState(false)
 
   // Real-Time Dynamic Synchronization Engine State
-  const [autoSyncSecs, setAutoSyncSecs] = useState(5) // Default 5-second live telemetry pulse
+  const [autoSyncSecs, setAutoSyncSecs] = useState(15) // Default 15-second live telemetry pulse (stable 60fps)
   const [isLiveSyncing, setIsLiveSyncing] = useState(false)
   const [lastSyncedAt, setLastSyncedAt] = useState(() => Date.now())
-  const [secondsAgo, setSecondsAgo] = useState(0)
   const [activityEvents, setActivityEvents] = useState([])
   const [loadingActivity, setLoadingActivity] = useState(true)
 
@@ -403,12 +784,11 @@ export default function AdminDashboard() {
       if (isLiveSyncing) return false
       setIsLiveSyncing(true)
       try {
-        const tasks = [
-          fetchOverview({ silent }),
-          fetchActivityStream({ silent }),
-        ]
+        const tasks = [fetchOverview({ silent })]
 
-        if (activeTab === 'users') {
+        if (activeTab === 'overview') {
+          tasks.push(fetchActivityStream({ silent }))
+        } else if (activeTab === 'users') {
           tasks.push(fetchUsers({ silent }))
         } else if (activeTab === 'links') {
           tasks.push(fetchGlobalLinks({ silent }))
@@ -421,7 +801,6 @@ export default function AdminDashboard() {
 
         const res = await Promise.all(tasks)
         setLastSyncedAt(Date.now())
-        setSecondsAgo(0)
         return res.every(Boolean)
       } finally {
         setIsLiveSyncing(false)
@@ -442,14 +821,6 @@ export default function AdminDashboard() {
       isLiveSyncing,
     ]
   )
-
-  // 1-second live ticker for relative time and active server uptime
-  useEffect(() => {
-    const ticker = setInterval(() => {
-      setSecondsAgo(Math.max(0, Math.floor((Date.now() - lastSyncedAt) / 1000)))
-    }, 1000)
-    return () => clearInterval(ticker)
-  }, [lastSyncedAt])
 
   // Smart background live polling with tab visibility detection
   useEffect(() => {
@@ -531,9 +902,19 @@ export default function AdminDashboard() {
   }
 
   // User Actions
-  const requestConfirm = (options) => setConfirmAction(options)
+  const handleRowInspect = useCallback((e, userId) => {
+    if (e && e.target) {
+      const interactive = e.target.closest(
+        'button, a, input, select, textarea, .action-buttons-cell, .mantine-Menu-target, .mantine-Menu-dropdown, [data-stop-propagation="true"]'
+      )
+      if (interactive) return
+    }
+    setInspectUserId(userId)
+  }, [])
 
-  const handleConfirmAction = async () => {
+  const requestConfirm = useCallback((options) => setConfirmAction(options), [])
+
+  const handleConfirmAction = useCallback(async () => {
     if (!confirmAction) return
     setConfirmBusy(true)
     try {
@@ -542,9 +923,9 @@ export default function AdminDashboard() {
       setConfirmBusy(false)
       setConfirmAction(null)
     }
-  }
+  }, [confirmAction])
 
-  const handleToggleStatus = (user) => {
+  const handleToggleStatus = useCallback((user) => {
     const nextStatus = user.status === 'suspended' ? 'active' : 'suspended'
     requestConfirm({
       title: nextStatus === 'suspended' ? 'Suspend this account?' : 'Reactivate this account?',
@@ -565,7 +946,6 @@ export default function AdminDashboard() {
           })
           await Promise.all([fetchUsers(), fetchOverview(), fetchActivityStream()])
           setLastSyncedAt(Date.now())
-          setSecondsAgo(0)
         } catch (err) {
           notifications.show({ title: 'Error', message: err.message || 'Failed to change status.', color: 'red' })
         } finally {
@@ -573,9 +953,9 @@ export default function AdminDashboard() {
         }
       },
     })
-  }
+  }, [fetchUsers, fetchOverview, fetchActivityStream, requestConfirm])
 
-  const handleToggleRole = (user) => {
+  const handleToggleRole = useCallback((user) => {
     const nextRole = user.role === 'admin' ? 'user' : 'admin'
     requestConfirm({
       title: nextRole === 'admin' ? 'Grant administrator access?' : 'Remove administrator access?',
@@ -596,7 +976,6 @@ export default function AdminDashboard() {
           })
           await Promise.all([fetchUsers(), fetchOverview(), fetchActivityStream()])
           setLastSyncedAt(Date.now())
-          setSecondsAgo(0)
         } catch (err) {
           notifications.show({ title: 'Error', message: err.message || 'Failed to update role.', color: 'red' })
         } finally {
@@ -604,9 +983,9 @@ export default function AdminDashboard() {
         }
       },
     })
-  }
+  }, [fetchUsers, fetchOverview, fetchActivityStream, requestConfirm])
 
-  const handleForceLogout = (user) => {
+  const handleForceLogout = useCallback((user) => {
     requestConfirm({
       title: 'Sign out all devices?',
       message: `${user.name} (${user.email}) will be signed out of every active browser and device. They can sign back in with their existing password.`,
@@ -623,7 +1002,6 @@ export default function AdminDashboard() {
           })
           await Promise.all([fetchUsers(), fetchOverview(), fetchActivityStream()])
           setLastSyncedAt(Date.now())
-          setSecondsAgo(0)
         } catch (err) {
           notifications.show({ title: 'Error', message: err.message || 'Failed to terminate sessions.', color: 'red' })
         } finally {
@@ -631,9 +1009,9 @@ export default function AdminDashboard() {
         }
       },
     })
-  }
+  }, [fetchUsers, fetchOverview, fetchActivityStream, requestConfirm])
 
-  const handleDeleteUser = (user) => {
+  const handleDeleteUser = useCallback((user) => {
     requestConfirm({
       title: 'Delete user permanently?',
       message: `This permanently deletes ${user.name} (${user.email}), ${user.totalLinks || 0} links, ${user.collectionsCount || 0} collections, every session and all related records. This action cannot be undone.`,
@@ -650,7 +1028,6 @@ export default function AdminDashboard() {
           })
           await Promise.all([fetchUsers(), fetchOverview(), fetchActivityStream()])
           setLastSyncedAt(Date.now())
-          setSecondsAgo(0)
         } catch (err) {
           notifications.show({ title: 'Error', message: err.message || 'Failed to delete user.', color: 'red' })
         } finally {
@@ -658,7 +1035,7 @@ export default function AdminDashboard() {
         }
       },
     })
-  }
+  }, [fetchUsers, fetchOverview, fetchActivityStream, requestConfirm])
 
   const handleDeleteLink = (linkId, title) => {
     const label = (title || '').trim() || 'Untitled link'
@@ -674,7 +1051,6 @@ export default function AdminDashboard() {
           notifications.show({ message: 'Link permanently deleted', color: 'teal' })
           await Promise.all([fetchGlobalLinks(), fetchOverview(), fetchActivityStream()])
           setLastSyncedAt(Date.now())
-          setSecondsAgo(0)
         } catch (err) {
           notifications.show({ message: err.message || 'Failed to delete link', color: 'red' })
         } finally {
@@ -698,7 +1074,6 @@ export default function AdminDashboard() {
           notifications.show({ message: 'Session revoked successfully', color: 'teal' })
           await Promise.all([fetchGlobalSessions(), fetchOverview(), fetchActivityStream()])
           setLastSyncedAt(Date.now())
-          setSecondsAgo(0)
         } catch (err) {
           notifications.show({ message: err.message || 'Failed to revoke session', color: 'red' })
         } finally {
@@ -856,78 +1231,22 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Live Dynamic Sync Control Bar */}
-        <div className="admin-sync-bar-row">
-          <div className="live-sync-pill">
-            <span className={`live-radar-dot ${autoSyncSecs > 0 ? 'active' : 'paused'}`} />
-            <div className="live-sync-meta">
-              <span className="live-sync-label">
-                {autoSyncSecs > 0 ? (
-                  <>
-                    <strong>LIVE</strong> <span className="sync-rate">({autoSyncSecs}s)</span>
-                  </>
-                ) : (
-                  <span className="text-dimmed">PAUSED</span>
-                )}
-              </span>
-              <span className="live-sync-time">
-                {isLiveSyncing ? 'Syncing...' : secondsAgo === 0 ? 'Just now' : `${secondsAgo}s ago`}
-              </span>
-            </div>
-
-            <Select
-              size="xs"
-              variant="unstyled"
-              value={String(autoSyncSecs)}
-              onChange={(val) => setAutoSyncSecs(Number(val))}
-              data={[
-                { value: '3', label: '⚡ Ultra (3s)' },
-                { value: '5', label: '🟢 Realtime (5s)' },
-                { value: '15', label: '⏱️ Normal (15s)' },
-                { value: '30', label: '🐢 Eco (30s)' },
-                { value: '0', label: '⏸️ Paused' },
-              ]}
-              className="sync-interval-select"
-              styles={{
-                input: {
-                  color: '#94a3b8',
-                  fontSize: '0.72rem',
-                  padding: '2px 6px',
-                  height: '24px',
-                  minHeight: '24px',
-                  cursor: 'pointer',
-                },
-              }}
-            />
-
-            <Tooltip label="Instant Telemetry Sync" withArrow>
-              <ActionIcon
-                size="sm"
-                variant="subtle"
-                color="cyan"
-                loading={isLiveSyncing || refreshing}
-                onClick={handleRefreshAll}
-                className="sync-now-btn"
-              >
-                <IconRefresh size={14} />
-              </ActionIcon>
-            </Tooltip>
-          </div>
-
-          {/* Quick mobile status info */}
-          <div className="mobile-status-quick">
-            <span className="pulse-dot" />
-            <span>{(metrics.totalUsers || 0).toLocaleString()} Users</span>
-            <span className="dot-sep">•</span>
-            <span>{(metrics.totalLinks || 0).toLocaleString()} Links</span>
-          </div>
-        </div>
+        {/* Live Dynamic Sync Control Bar (Isolated component to prevent whole-page re-renders) */}
+        <LiveSyncControl
+          autoSyncSecs={autoSyncSecs}
+          setAutoSyncSecs={setAutoSyncSecs}
+          isLiveSyncing={isLiveSyncing}
+          refreshing={refreshing}
+          lastSyncedAt={lastSyncedAt}
+          onRefreshAll={handleRefreshAll}
+          metrics={metrics}
+        />
       </header>
 
       {/* Main Container */}
       <main className="admin-main-stage">
-        {/* Navigation Tabs */}
-        <Tabs value={activeTab} onChange={setActiveTab} variant="outline" className="admin-tabs">
+        {/* Navigation Tabs - keepMounted={false} ensures unmounted tabs don't waste DOM & CPU cycles */}
+        <Tabs value={activeTab} onChange={setActiveTab} variant="outline" className="admin-tabs" keepMounted={false}>
           <div className={`admin-tab-nav-container ${canScrollLeft ? 'has-left-fade' : ''} ${canScrollRight ? 'has-right-fade' : ''}`}>
             {canScrollLeft && (
               <button
@@ -1150,11 +1469,7 @@ export default function AdminDashboard() {
                       </div>
                       <div className="sys-metric-box">
                         <span className="sys-lbl">Server Uptime (Live)</span>
-                        <span className="sys-val">
-                          {Math.floor(((system.uptime || 0) + secondsAgo) / 3600)}h{' '}
-                          {Math.floor((((system.uptime || 0) + secondsAgo) % 3600) / 60)}m{' '}
-                          {Math.floor(((system.uptime || 0) + secondsAgo) % 60)}s
-                        </span>
+                        <LiveServerUptime baseUptime={system.uptime || 0} />
                       </div>
                       <div className="sys-metric-box">
                         <span className="sys-lbl">RAM Usage (RSS)</span>
@@ -1438,6 +1753,23 @@ export default function AdminDashboard() {
 
               {/* High-Density Users Table */}
               <div className="glass-panel table-panel">
+                <div className="table-top-strip">
+                  <div className="table-top-left">
+                    <span className="live-status-dot pulse" />
+                    <span className="table-top-heading">User Directory &amp; Governance Matrix</span>
+                    <span className="table-top-count-badge">
+                      {users.length} of {usersPagination.total || users.length} users
+                    </span>
+                  </div>
+                  <div className="table-top-right">
+                    <div className="scroll-indicator-pill" title="Scroll horizontally with mouse wheel, trackpad, or swipe to view full metrics and actions">
+                      <span className="scroll-arrow">←</span>
+                      <span>Swipe or scroll table for full metrics &amp; actions</span>
+                      <span className="scroll-arrow">→</span>
+                    </div>
+                  </div>
+                </div>
+
                 {loadingUsers ? (
                   <div className="tab-loading-state">
                     <Loader color="orange" size="md" />
@@ -1446,276 +1778,48 @@ export default function AdminDashboard() {
                 ) : users.length === 0 ? (
                   <div className="empty-sub">No users found matching current filters.</div>
                 ) : (
-                  <Table.ScrollContainer minWidth={1180} type="native" className="admin-table-scroll-container">
-                    <Table
-                      highlightOnHover
-                      verticalSpacing="md"
-                      horizontalSpacing="md"
-                      className="admin-mantine-table"
-                    >
-                      <Table.Thead>
-                        <Table.Tr>
-                          <Table.Th style={{ minWidth: 240 }}>User Identity</Table.Th>
-                          <Table.Th style={{ minWidth: 120 }}>Role</Table.Th>
-                          <Table.Th style={{ minWidth: 110 }}>Status</Table.Th>
-                          <Table.Th style={{ minWidth: 110 }}>Security</Table.Th>
-                          <Table.Th style={{ minWidth: 90 }}>Links</Table.Th>
-                          <Table.Th style={{ minWidth: 90 }}>Visits</Table.Th>
-                          <Table.Th style={{ minWidth: 110 }}>Collections</Table.Th>
-                          <Table.Th style={{ minWidth: 120 }}>Active Devices</Table.Th>
-                          <Table.Th style={{ minWidth: 160 }}>Last Login &amp; IP</Table.Th>
-                          <Table.Th style={{ minWidth: 110 }}>Joined</Table.Th>
-                          <Table.Th style={{ textAlign: 'right', minWidth: 160 }}>Actions</Table.Th>
-                        </Table.Tr>
-                      </Table.Thead>
-                      <Table.Tbody>
-                        {users.map((u) => (
-                          <Table.Tr key={u._id} className={u.status === 'suspended' ? 'row-suspended' : ''}>
-                            {/* User Identity */}
-                            <Table.Td className="user-id-cell">
-                              <div className="user-flex-item">
-                                <span
-                                  className="user-table-avatar"
-                                  style={{ background: u.avatarColor || '#3b82f6' }}
-                                >
-                                  {initialsOf(u.name)}
-                                </span>
-                                <div className="user-text-cluster">
-                                  <div className="user-name-title">
-                                    {u.name}
-                                    {u.isMaster && (
-                                      <Tooltip label="Master Account with Root Authority">
-                                        <span className="crown-icon-inline">👑</span>
-                                      </Tooltip>
-                                    )}
-                                    {isSelfUser(u) && (
-                                      <Badge size="xs" color="indigo" variant="light">
-                                        You
-                                      </Badge>
-                                    )}
-                                  </div>
-                                  <div className="user-email-subtitle">
-                                    {u.email}
-                                  </div>
-                                </div>
-                              </div>
-                            </Table.Td>
-
-                            {/* Role */}
-                            <Table.Td className="user-role-cell">
-                              {u.isMaster ? (
-                                <Badge color="yellow" variant="filled" size="sm">
-                                  👑 Master
-                                </Badge>
-                              ) : u.role === 'admin' ? (
-                                <Badge color="blue" variant="light" size="sm">
-                                  🛡️ Admin
-                                </Badge>
-                              ) : (
-                                <Badge color="gray" variant="light" size="sm">
-                                  👤 User
-                                </Badge>
-                              )}
-                            </Table.Td>
-
-                            {/* Status */}
-                            <Table.Td className="user-status-cell">
-                              {u.status === 'suspended' ? (
-                                <Badge color="red" variant="filled" size="sm">
-                                  Suspended
-                                </Badge>
-                              ) : (
-                                <Badge color="teal" variant="light" size="sm">
-                                  Active
-                                </Badge>
-                              )}
-                            </Table.Td>
-
-                            {/* Security (2FA) */}
-                            <Table.Td className="user-security-cell">
-                              {u.twoFactorEnabled ? (
-                                <Tooltip label="Two-factor authentication active">
-                                  <span className="shield-active">
-                                    <IconShieldCheck size={16} /> 2FA On
-                                  </span>
-                                </Tooltip>
-                              ) : (
-                                <span className="shield-none">
-                                  <IconShield size={14} /> None
-                                </span>
-                              )}
-                            </Table.Td>
-
-                            {/* Links Breakdown */}
-                            <Table.Td>
-                              <div className="links-count-pill" title={`${u.activeLinks || 0} active, ${u.trashLinks || 0} trash`}>
-                                <IconLink size={13} />
-                                <strong>{u.totalLinks || 0}</strong>
-                              </div>
-                            </Table.Td>
-
-                            {/* Visits */}
-                            <Table.Td className="visits-count-cell">
-                              <span className="visit-badge">
-                                <IconFlame size={13} color="#f59e0b" />
-                                {u.totalVisits || 0}
-                              </span>
-                            </Table.Td>
-
-                            {/* Collections */}
-                            <Table.Td>
-                              <span className="coll-count-text">
-                                {u.collectionsCount || 0}
-                              </span>
-                            </Table.Td>
-
-                            {/* Active Devices */}
-                            <Table.Td>
-                              <span className={`device-pill ${u.activeSessionsCount > 0 ? 'online' : ''}`}>
-                                <IconDeviceDesktop size={13} />
-                                {u.activeSessionsCount || 0}
-                              </span>
-                            </Table.Td>
-
-                            {/* Last Login & IP */}
-                            <Table.Td className="last-login-cell">
-                              <div className="last-login-time">
-                                {u.lastLoginAt
-                                  ? new Date(u.lastLoginAt).toLocaleDateString(undefined, {
-                                      month: 'short',
-                                      day: 'numeric',
-                                      hour: '2-digit',
-                                      minute: '2-digit',
-                                    })
-                                  : 'Never'}
-                              </div>
-                              <div className="last-login-ip code-font">
-                                {u.lastLoginIp || '—'}
-                              </div>
-                            </Table.Td>
-
-                            {/* Joined Date */}
-                            <Table.Td className="joined-date-cell">
-                              {new Date(u.createdAt).toLocaleDateString()}
-                            </Table.Td>
-
-                            {/* Actions Dropdown */}
-                            <Table.Td style={{ textAlign: 'right' }}>
-                              <div className="action-buttons-cell">
-                                <Button
-                                  size="xs"
-                                  variant="light"
-                                  color="blue"
-                                  leftSection={<IconEye size={13} />}
-                                  onClick={() => setInspectUserId(u._id)}
-                                >
-                                  Inspect
-                                </Button>
-
-                                <Menu position="bottom-end" shadow="md" width={250}>
-                                  <Menu.Target>
-                                    <ActionIcon
-                                      variant="subtle"
-                                      color="gray"
-                                      size="sm"
-                                      loading={busyUserId === u._id}
-                                      disabled={busyUserId === u._id}
-                                    >
-                                      <IconDotsVertical size={16} />
-                                    </ActionIcon>
-                                  </Menu.Target>
-                                  <Menu.Dropdown>
-                                    <Menu.Item
-                                      leftSection={<IconEye size={15} />}
-                                      onClick={() => setInspectUserId(u._id)}
-                                    >
-                                      Deep Inspector
-                                    </Menu.Item>
-
-                                    {!u.isMaster ? (
-                                      <Menu.Item
-                                        leftSection={<IconKey size={15} />}
-                                        onClick={() => setResetPasswordUser(u)}
-                                      >
-                                        Reset Password
-                                      </Menu.Item>
-                                    ) : (
-                                      <Menu.Item
-                                        leftSection={<IconKey size={15} />}
-                                        disabled
-                                        title="The master password is controlled by the MASTER_ADMIN_PASSWORD environment variable."
-                                      >
-                                        Password managed by server
-                                      </Menu.Item>
-                                    )}
-
-                                    {isSelfUser(u) ? (
-                                      <Menu.Item leftSection={<IconLogout size={15} />} disabled>
-                                        Sign Out All Devices (use header)
-                                      </Menu.Item>
-                                    ) : (
-                                      <Menu.Item
-                                        leftSection={<IconLogout size={15} />}
-                                        onClick={() => handleForceLogout(u)}
-                                      >
-                                        Sign Out All Devices
-                                      </Menu.Item>
-                                    )}
-
-                                    {!u.isMaster && !isSelfUser(u) && (
-                                      <>
-                                        <Menu.Divider />
-                                        <Menu.Item
-                                          leftSection={
-                                            u.status === 'suspended' ? (
-                                              <IconUserCheck size={15} />
-                                            ) : (
-                                              <IconBan size={15} />
-                                            )
-                                          }
-                                          color={u.status === 'suspended' ? 'teal' : 'orange'}
-                                          onClick={() => handleToggleStatus(u)}
-                                        >
-                                          {u.status === 'suspended'
-                                            ? 'Re-activate Account'
-                                            : 'Suspend Account'}
-                                        </Menu.Item>
-
-                                        <Menu.Item
-                                          leftSection={<IconCrown size={15} />}
-                                          onClick={() => handleToggleRole(u)}
-                                        >
-                                          {u.role === 'admin' ? 'Demote to User' : 'Make Administrator'}
-                                        </Menu.Item>
-
-                                        <Menu.Divider />
-                                        <Menu.Item
-                                          color="red"
-                                          leftSection={<IconTrash size={15} />}
-                                          onClick={() => handleDeleteUser(u)}
-                                        >
-                                          Delete User
-                                        </Menu.Item>
-                                      </>
-                                    )}
-
-                                    {isSelfUser(u) && (
-                                      <>
-                                        <Menu.Divider />
-                                        <Menu.Label>
-                                          Self-protected — status, role and deletion are disabled.
-                                        </Menu.Label>
-                                      </>
-                                    )}
-                                  </Menu.Dropdown>
-                                </Menu>
-                              </div>
-                            </Table.Td>
+                  <div className="table-scroll-wrapper">
+                    <Table.ScrollContainer minWidth={1260} type="native" className="admin-table-scroll-container">
+                      <Table
+                        highlightOnHover
+                        verticalSpacing="md"
+                        horizontalSpacing="md"
+                        className="admin-mantine-table"
+                      >
+                        <Table.Thead>
+                          <Table.Tr>
+                            <Table.Th style={{ minWidth: 220 }}>User Identity</Table.Th>
+                            <Table.Th style={{ minWidth: 105 }}>Role</Table.Th>
+                            <Table.Th style={{ minWidth: 95 }}>Status</Table.Th>
+                            <Table.Th style={{ minWidth: 95 }}>Security</Table.Th>
+                            <Table.Th style={{ minWidth: 85 }}>Links</Table.Th>
+                            <Table.Th style={{ minWidth: 85 }}>Visits</Table.Th>
+                            <Table.Th style={{ minWidth: 95 }}>Collections</Table.Th>
+                            <Table.Th style={{ minWidth: 110 }}>Active Devices</Table.Th>
+                            <Table.Th style={{ minWidth: 155 }}>Last Login &amp; IP</Table.Th>
+                            <Table.Th style={{ minWidth: 105 }}>Joined</Table.Th>
+                            <Table.Th style={{ textAlign: 'right', minWidth: 64, width: 64 }}>Actions</Table.Th>
                           </Table.Tr>
-                        ))}
-                      </Table.Tbody>
-                    </Table>
-                  </Table.ScrollContainer>
+                        </Table.Thead>
+                        <Table.Tbody>
+                          {users.map((u) => (
+                            <UserTableRow
+                              key={u._id}
+                              u={u}
+                              isSelf={isSelfUser(u)}
+                              isBusy={busyUserId === u._id}
+                              onInspect={handleRowInspect}
+                              onResetPassword={setResetPasswordUser}
+                              onForceLogout={handleForceLogout}
+                              onToggleStatus={handleToggleStatus}
+                              onToggleRole={handleToggleRole}
+                              onDeleteUser={handleDeleteUser}
+                            />
+                          ))}
+                        </Table.Tbody>
+                      </Table>
+                    </Table.ScrollContainer>
+                  </div>
                 )}
                 {!loadingUsers && users.length > 0 && (
                   <TablePager
@@ -1792,7 +1896,7 @@ export default function AdminDashboard() {
                 ) : globalLinks.length === 0 ? (
                   <div className="empty-sub">No links found matching search query.</div>
                 ) : (
-                  <Table.ScrollContainer minWidth={980} type="native" className="admin-table-scroll-container">
+                  <Table.ScrollContainer minWidth={1050} type="native" className="admin-table-scroll-container">
                     <Table
                       highlightOnHover
                       verticalSpacing="md"
@@ -2423,18 +2527,20 @@ export default function AdminDashboard() {
         </Tabs>
       </main>
 
-      {/* Deep User Inspector Modal */}
-      <UserInspectorModal
-        opened={Boolean(inspectUserId)}
-        onClose={() => setInspectUserId(null)}
-        userId={inspectUserId}
-        onRefreshParent={() => {
-          fetchUsers()
-          fetchOverview()
-        }}
-      />
+      {/* Deep User Inspector Modal - Lazy Rendered */}
+      {inspectUserId && (
+        <UserInspectorModal
+          opened={Boolean(inspectUserId)}
+          onClose={() => setInspectUserId(null)}
+          userId={inspectUserId}
+          onRefreshParent={() => {
+            fetchUsers()
+            fetchOverview()
+          }}
+        />
+      )}
 
-      {/* Admin Reset Password Modal */}
+      {/* Admin Reset Password Modal - Lazy Rendered */}
       {resetPasswordUser && (
         <AdminResetPasswordModal
           opened={Boolean(resetPasswordUser)}
@@ -2447,35 +2553,41 @@ export default function AdminDashboard() {
         />
       )}
 
-      {/* Raw Document JSON Modal */}
-      <RawDocumentModal
-        opened={Boolean(rawDocModalData)}
-        onClose={() => setRawDocModalData(null)}
-        document={rawDocModalData?.document}
-        collectionName={rawDocModalData?.collectionName}
-      />
+      {/* Raw Document JSON Modal - Lazy Rendered */}
+      {rawDocModalData && (
+        <RawDocumentModal
+          opened={Boolean(rawDocModalData)}
+          onClose={() => setRawDocModalData(null)}
+          document={rawDocModalData?.document}
+          collectionName={rawDocModalData?.collectionName}
+        />
+      )}
 
-      {/* Dynamic Executive Report Card & Power BI Analytics Modal */}
-      <AdminReportModal
-        opened={reportModalOpen}
-        onClose={() => setReportModalOpen(false)}
-        overview={overview}
-        users={users}
-      />
+      {/* Dynamic Executive Report Card Modal - Lazy Rendered */}
+      {reportModalOpen && (
+        <AdminReportModal
+          opened={reportModalOpen}
+          onClose={() => setReportModalOpen(false)}
+          overview={overview}
+          users={users}
+        />
+      )}
 
-      {/* Branded confirmation dialog for destructive actions */}
-      <ConfirmDialog
-        opened={Boolean(confirmAction)}
-        title={confirmAction?.title}
-        message={confirmAction?.message}
-        confirmLabel={confirmAction?.confirmLabel}
-        color={confirmAction?.color}
-        loading={confirmBusy}
-        onConfirm={handleConfirmAction}
-        onClose={() => {
-          if (!confirmBusy) setConfirmAction(null)
-        }}
-      />
+      {/* Branded confirmation dialog - Lazy Rendered */}
+      {confirmAction && (
+        <ConfirmDialog
+          opened={Boolean(confirmAction)}
+          title={confirmAction?.title}
+          message={confirmAction?.message}
+          confirmLabel={confirmAction?.confirmLabel}
+          color={confirmAction?.color}
+          loading={confirmBusy}
+          onConfirm={handleConfirmAction}
+          onClose={() => {
+            if (!confirmBusy) setConfirmAction(null)
+          }}
+        />
+      )}
     </div>
   )
 }
