@@ -86,7 +86,7 @@ export default function QuickSave() {
             setValue(e.currentTarget.value)
             if (pop) setPop(null)
           }}
-          placeholder="Paste link to save…"
+          placeholder="Paste URL to save…"
           aria-label="Quick save a link"
           onKeyDown={(e) => {
             if (e.key === 'Enter') {

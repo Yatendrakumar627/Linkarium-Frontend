@@ -11,7 +11,6 @@ import ProfileDropdown from '../profile/ProfileDropdown'
 import ImportLinksModal from '../ImportLinksModal'
 import QuickSave from './QuickSave'
 import SearchBox from '../common/SearchBox'
-import SearchFilters from '../common/SearchFilters'
 import ColorModeSelector from '../common/ColorModeSelector'
 import './Topbar.css'
 
@@ -119,8 +118,7 @@ export default function Topbar({ onMenu }) {
 
       {showListControls && (
         <div className="topbar-controls">
-          <SearchBox placeholder={visualMode ? 'Search 3D universe…' : 'Search links, tags…  (tag: domain: is:)'} />
-          <SearchFilters />
+          <SearchBox placeholder={visualMode ? 'Search 3D universe…' : 'Search links, tags…'} />
           <ColorModeSelector />
           {showSort && (
             <Select

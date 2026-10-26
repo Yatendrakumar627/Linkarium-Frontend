@@ -40,24 +40,27 @@ const FLAG_GROUPS = [
   },
 ]
 
-export default function SearchFilters() {
+export default function SearchFilters({ className = '' }) {
   const search = useUiStore((s) => s.search)
   const setSearch = useUiStore((s) => s.setSearch)
   const tags = useLinkStore((s) => s.tags)
   const collections = useLinkStore((s) => s.collections)
 
   const toggle = (operator) => setSearch(toggleOperator(search, operator))
+  const hasActiveFilters = Boolean(
+    search && (search.includes(':') || search.includes('#'))
+  )
 
   return (
-    <Menu shadow="md" width={240} position="bottom-start" offset={6} withinPortal>
+    <Menu shadow="md" width={240} position="bottom-end" offset={6} withinPortal>
       <Menu.Target>
         <button
           type="button"
-          className="action-btn search-filter-btn"
+          className={`search-filter-btn ${hasActiveFilters ? 'is-active' : ''} ${className}`.trim()}
           aria-label="Search filters"
-          title="Search filters"
+          title={hasActiveFilters ? 'Search filters (active)' : 'Search filters'}
         >
-          <IconFilter size={16} />
+          <IconFilter size={14} />
         </button>
       </Menu.Target>
 

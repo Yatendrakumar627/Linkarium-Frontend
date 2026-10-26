@@ -10,6 +10,8 @@
   flex-direction: column;
   padding: 8px 14px 16px 14px;
   overflow: hidden;
+  container-type: inline-size;
+  container-name: main-shell;
 }
 .content {
   flex: 1;

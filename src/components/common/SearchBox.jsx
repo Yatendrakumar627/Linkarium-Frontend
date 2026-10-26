@@ -1,15 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
 import { TextInput } from '@mantine/core'
-import { useDebouncedValue } from '@mantine/hooks'
+import { useDebouncedValue, useMediaQuery } from '@mantine/hooks'
 import { IconSearch, IconX } from '@tabler/icons-react'
 import { useUiStore } from '../../store/uiStore'
 import { searchApi } from '../../api/endpoints'
 import { replaceLastWord } from '../../utils/searchQuery'
+import SearchFilters from './SearchFilters'
 import './SearchBox.css'
 
 const MIN_SUGGEST_LENGTH = 2
 
 export default function SearchBox({ placeholder = 'Search links, tags…' }) {
+  const isMobile = useMediaQuery('(max-width: 62em)')
   const search = useUiStore((s) => s.search)
   const setSearch = useUiStore((s) => s.setSearch)
 
@@ -90,30 +92,36 @@ export default function SearchBox({ placeholder = 'Search links, tags…' }) {
     <div className="search-box" ref={wrapRef}>
       <TextInput
         className="search-input"
-        placeholder={placeholder}
+        placeholder={isMobile ? 'Search…' : placeholder}
         leftSection={<IconSearch size={15} />}
+        rightSectionPointerEvents="auto"
+        rightSectionWidth={isMobile ? (search ? 46 : 28) : (search ? 48 : 56)}
         rightSection={
-          search ? (
-            <button
-              type="button"
-              className="search-clear-btn"
-              onClick={() => setSearch('')}
-              title="Clear search"
-              aria-label="Clear search"
-            >
-              <IconX size={14} />
-            </button>
-          ) : (
-            <button
-              type="button"
-              className="search-kbd-btn"
-              onClick={() => useUiStore.getState().openCommandPalette()}
-              title="Open Command Palette (⌘K / Ctrl+K)"
-              aria-label="Open Command Palette"
-            >
-              ⌘K
-            </button>
-          )
+          <div className="search-right-cluster">
+            {search ? (
+              <button
+                type="button"
+                className="search-clear-btn"
+                onClick={() => setSearch('')}
+                title="Clear search"
+                aria-label="Clear search"
+              >
+                <IconX size={13} />
+              </button>
+            ) : null}
+            <SearchFilters className="search-embedded-filter" />
+            {!isMobile && !search && (
+              <button
+                type="button"
+                className="search-kbd-btn"
+                onClick={() => useUiStore.getState().openCommandPalette()}
+                title="Open Command Palette (⌘K / Ctrl+K)"
+                aria-label="Open Command Palette"
+              >
+                ⌘K
+              </button>
+            )}
+          </div>
         }
         value={search}
         onChange={(e) => setSearch(e.currentTarget.value)}

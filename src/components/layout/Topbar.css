@@ -31,14 +31,17 @@
 .topbar-controls {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   flex: 1 1 auto;
   min-width: 0;
 }
-.search-input {
-  flex: 1 1 200px;
+.topbar-controls .search-box {
+  flex: 1 1 220px;
   min-width: 140px;
   max-width: 340px;
+}
+.topbar-controls .search-input {
+  width: 100%;
 }
 .search-filter-btn {
   flex-shrink: 0;
@@ -67,14 +70,16 @@
 }
 .topbar-sort {
   flex-shrink: 0;
-  width: 135px;
-  min-width: 125px;
+  width: 130px;
+  min-width: 115px;
 }
 .topbar .search-input .mantine-Input-input,
 .topbar .topbar-sort .mantine-Input-input {
+  height: 36px;
+  min-height: 36px;
   background: var(--surface-glass);
   border-color: var(--border-glass);
-  border-radius: 12px;
+  border-radius: 10px;
   font-size: 13px;
   transition: all var(--dur-fast) var(--ease);
 }
@@ -182,27 +187,79 @@
   order: 8;
 }
 
-@media (max-width: 80em) {
+@container main-shell (max-width: 1240px) {
   .topbar {
-    gap: 9px;
+    gap: 8px;
   }
   .page-title {
-    font-size: 20px;
+    font-size: 19px;
   }
   .page-subtitle {
     display: none;
   }
   .topbar-title {
-    max-width: 180px;
+    max-width: 150px;
   }
   .topbar-sort {
-    width: 120px;
+    width: 115px;
+  }
+  .topbar .quick-save {
+    flex: 0 1 180px;
+    min-width: 130px;
   }
   .visual-toggle-label {
     display: none;
   }
   .topbar .visual-toggle {
-    padding: 0 10px;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    justify-content: center;
+  }
+}
+
+@container main-shell (max-width: 1020px) {
+  .topbar-sort {
+    display: none !important;
+  }
+  .topbar .topbar-newlink-desktop .new-link-label {
+    display: none;
+  }
+  .topbar .topbar-newlink-desktop {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    justify-content: center;
+  }
+  .topbar .topbar-newlink-desktop .mantine-Button-section {
+    margin: 0;
+  }
+}
+
+@media (max-width: 96em) {
+  .topbar {
+    gap: 8px;
+  }
+  .page-title {
+    font-size: 19px;
+  }
+  .page-subtitle {
+    display: none;
+  }
+  .topbar-title {
+    max-width: 150px;
+  }
+  .topbar-sort {
+    width: 115px;
+  }
+  .visual-toggle-label {
+    display: none;
+  }
+  .topbar .visual-toggle {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    justify-content: center;
   }
 }
 
@@ -216,7 +273,7 @@
 @media (max-width: 62em) {
   .topbar {
     flex-wrap: wrap;
-    gap: 8px 6px;
+    gap: 7px 5px;
     align-items: center;
   }
   .topbar .topbar-title,
@@ -242,12 +299,13 @@
     display: grid;
     place-items: center;
     flex-shrink: 0;
+    border-radius: 9px;
   }
   .topbar .topbar-controls {
     order: 2;
     flex: 1 1 0%;
     min-width: 0;
-    gap: 4px;
+    gap: 5px;
   }
   .topbar .search-box {
     flex: 1 1 auto;
@@ -262,27 +320,40 @@
     min-height: 34px;
     font-size: 12.5px;
     padding-left: 28px;
-    padding-right: 8px;
+    border-radius: 9px;
   }
   /* Hide the ⌘K shortcut badge on touch/mobile viewports to avoid overlapping input text */
   .topbar .search-kbd-btn {
     display: none;
   }
-  .topbar .search-filter-btn {
+  .topbar .search-embedded-filter {
+    width: 22px;
+    height: 22px;
+  }
+  .topbar .color-mode-btn {
     width: 34px;
     height: 34px;
+    min-width: 34px;
     padding: 0;
-    display: grid;
-    place-items: center;
     border-radius: 9px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface-glass);
+    border: 1px solid var(--border-glass);
+    flex-shrink: 0;
+  }
+  .topbar .color-mode-btn-label {
+    display: none !important;
   }
   .topbar .topbar-visual-mobile {
     order: 3;
     width: 34px;
     height: 34px;
     padding: 0;
-    display: grid;
-    place-items: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     border-radius: 9px;
   }
   .topbar .topbar-newlink-mobile {
@@ -292,8 +363,9 @@
     min-width: 34px;
     padding: 0;
     border-radius: 9px;
-    display: grid;
-    place-items: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
   .topbar-newlink-mobile .new-link-label {
     display: none;
@@ -304,12 +376,16 @@
   .topbar .topbar-right {
     order: 5;
     margin-left: 0;
-    gap: 4px;
+    gap: 5px;
   }
   .topbar .pd-trigger {
     width: 34px;
     height: 34px;
     padding: 2px;
+    border-radius: 9px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
   .topbar .pd-trigger .pd-avatar {
     width: 28px;
@@ -319,10 +395,29 @@
   .topbar .quick-save {
     order: 6;
     flex: 1 1 100%;
-    margin-top: 2px;
+    margin-top: 5px;
   }
-  .quick-save-box {
-    height: 38px;
+  .topbar .quick-save-box {
+    height: 44px;
+    padding: 0 6px 0 14px;
+    border-radius: 999px;
+    background: var(--surface-glass, rgba(255, 255, 255, 0.04));
+    border: 1px solid var(--border-glass-strong, rgba(255, 255, 255, 0.12));
+    gap: 8px;
+  }
+  .topbar .quick-save input {
+    font-size: 13.5px;
+  }
+  .topbar .quick-save input::placeholder {
+    font-size: 13px;
+  }
+  .topbar .quick-save .qs-link-icon {
+    width: 18px;
+    height: 18px;
+  }
+  .topbar .quick-save .qs-go {
+    width: 32px;
+    height: 32px;
   }
 }
 
@@ -332,24 +427,42 @@
     padding-bottom: 8px;
   }
   .topbar .topbar-controls {
-    gap: 3px;
+    gap: 4px;
   }
   .topbar .menu-btn,
-  .topbar .search-filter-btn,
+  .topbar .color-mode-btn,
   .topbar .topbar-visual-mobile,
   .topbar .topbar-newlink-mobile,
   .topbar .pd-trigger {
     width: 32px;
     height: 32px;
     min-width: 32px;
+    border-radius: 8px;
   }
   .topbar .search-input .mantine-Input-input {
     height: 32px;
     min-height: 32px;
+    border-radius: 8px;
+    padding-left: 26px;
   }
   .topbar .pd-trigger .pd-avatar {
     width: 26px;
     height: 26px;
     font-size: 10px;
+  }
+  .topbar .quick-save-box {
+    height: 42px;
+    padding: 0 5px 0 12px;
+    gap: 7px;
+  }
+  .topbar .quick-save input {
+    font-size: 13px;
+  }
+  .topbar .quick-save input::placeholder {
+    font-size: 12.5px;
+  }
+  .topbar .quick-save .qs-go {
+    width: 30px;
+    height: 30px;
   }
 }
