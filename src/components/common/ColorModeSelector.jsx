@@ -24,7 +24,7 @@ const MODE_ICONS = {
   own: IconDiamond,
 }
 
-export default function ColorModeSelector() {
+export default function ColorModeSelector({ className = '' }) {
   const activeMode = useColorMode()
   const setColorModeOverride = useUiStore((s) => s.setColorModeOverride)
   const user = useAuthStore((s) => s.user)
@@ -78,7 +78,7 @@ export default function ColorModeSelector() {
         >
           <button
             type="button"
-            className="action-btn color-mode-btn"
+            className={`action-btn color-mode-btn ${className}`.trim()}
             aria-label="Color classification mode"
           >
             <IconPalette size={16} className="color-mode-btn-icon" />

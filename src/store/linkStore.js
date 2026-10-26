@@ -551,6 +551,7 @@ export const useLinkStore = create((set, get) => {
               .map((l) => (l._id === targetId ? { ...l, ...target } : l))
           : s.mapLinks,
       }))
+      get().refreshTags()
       get().refreshSummary()
       get().refreshHealth()
       return target

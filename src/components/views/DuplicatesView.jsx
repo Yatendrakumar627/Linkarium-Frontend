@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
-import { Button, Loader, Text, Group } from '@mantine/core'
-import { IconCopy, IconGitMerge, IconLink } from '@tabler/icons-react'
+import { useEffect, useState, useCallback } from 'react'
+import { Button, Loader, Text, Group, Tooltip } from '@mantine/core'
+import { IconCopy, IconGitMerge, IconLink, IconCheck } from '@tabler/icons-react'
 import { notifications } from '@mantine/notifications'
 import { linksApi } from '../../api/endpoints'
 import { useLinkStore } from '../../store/linkStore'
@@ -20,34 +20,84 @@ export default function DuplicatesView() {
   const [error, setError] = useState(null)
   const [busyId, setBusyId] = useState(null)
 
-  const load = async () => {
-    setLoading(true)
+  const load = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true)
     setError(null)
     try {
-      const data = await linksApi.duplicates({ limit: 25 })
+      const data = await linksApi.duplicates({ limit: 50 })
       setGroups(data?.groups || [])
     } catch (err) {
       setError(err.message)
     } finally {
-      setLoading(false)
+      if (!silent) setLoading(false)
     }
-  }
-
-  useEffect(() => {
-    load()
   }, [])
 
-  const handleMerge = async (sourceId, targetId) => {
-    setBusyId(sourceId)
+  useEffect(() => {
+    load(false)
+  }, [load])
+
+  // Merge all other links in the group into this chosen target link
+  const handleMergeInto = async (targetLink, group) => {
+    const sources = (group.links || []).filter((l) => l._id !== targetLink._id)
+    if (!sources.length) return
+
+    setBusyId(targetLink._id)
     try {
-      await mergeLinks(sourceId, targetId)
-      notifications.show({ message: 'Links merged', color: 'green' })
-      await load()
+      for (const src of sources) {
+        await mergeLinks(src._id, targetLink._id)
+      }
+      notifications.show({
+        message: 'Duplicate links merged successfully',
+        color: 'green',
+        icon: <IconCheck size={16} />,
+      })
+
+      // Optimistically remove merged items from this group
+      setGroups((prev) =>
+        prev
+          .map((g) => {
+            const isTargetGroup =
+              g === group ||
+              (g.links && g.links.some((l) => l._id === targetLink._id))
+            if (isTargetGroup) {
+              const remaining = (g.links || []).filter(
+                (l) => l._id === targetLink._id
+              )
+              return remaining.length > 1
+                ? { ...g, links: remaining, count: remaining.length }
+                : null
+            }
+            return g
+          })
+          .filter(Boolean)
+      )
+
+      // Silent background sync
+      await load(true)
     } catch (err) {
-      notifications.show({ message: err.message, color: 'red' })
+      notifications.show({
+        message: err.message || 'Failed to merge links',
+        color: 'red',
+      })
+      await load(true)
     } finally {
       setBusyId(null)
     }
+  }
+
+  // Safe unique key builder that handles objects or strings without collision
+  const getGroupKey = (group, idx) => {
+    const rawKey = group.key
+    let keyStr = ''
+    if (typeof rawKey === 'string') {
+      keyStr = rawKey
+    } else if (rawKey && typeof rawKey === 'object') {
+      keyStr = `${rawKey.host || ''}::${rawKey.title || ''}`
+    } else {
+      keyStr = String(idx)
+    }
+    return `${group.reason || 'dup'}-${keyStr}-${idx}`
   }
 
   if (loading) {
@@ -91,13 +141,13 @@ export default function DuplicatesView() {
     <div className="dup-view">
       <div className="dup-intro">
         <Text size="sm" c="dimmed">
-          These groups hold links that look like the same page. Merge one into the other to keep
-          the tags, the summary and the visit count in one place.
+          These groups hold links that look like the same page. Choose which link to keep —
+          tags, notes, and visit counts from the duplicate will be folded into it.
         </Text>
       </div>
 
-      {groups.map((group) => (
-        <div key={`${group.reason}-${group.key}`} className="dup-group">
+      {groups.map((group, groupIdx) => (
+        <div key={getGroupKey(group, groupIdx)} className="dup-group">
           <div className="dup-group-head">
             <span className="dup-group-reason">
               {group.reason === 'same-url' ? 'Same URL' : 'Same title & site'}
@@ -105,7 +155,7 @@ export default function DuplicatesView() {
             <span className="dup-group-count">{group.count} links</span>
           </div>
 
-          {group.links.map((link, index) => (
+          {group.links.map((link) => (
             <div key={link._id} className="dup-row">
               <div className="dup-row-main">
                 <div className="dup-row-title">{link.title || link.url}</div>
@@ -140,19 +190,23 @@ export default function DuplicatesView() {
                 >
                   Open
                 </Button>
-                {index > 0 && (
+                <Tooltip
+                  label="Keep this link and merge duplicates into it"
+                  withArrow
+                  position="top"
+                >
                   <Button
                     size="xs"
                     variant="light"
                     color="violet"
                     loading={busyId === link._id}
+                    disabled={busyId !== null && busyId !== link._id}
                     leftSection={<IconGitMerge size={13} />}
-                    onClick={() => handleMerge(link._id, group.links[0]._id)}
-                    title="Merge into the first link of this group"
+                    onClick={() => handleMergeInto(link, group)}
                   >
-                    Merge
+                    Keep this
                   </Button>
-                )}
+                </Tooltip>
               </Group>
             </div>
           ))}

@@ -105,112 +105,126 @@ export default function Topbar({ onMenu }) {
 
   return (
     <header className="topbar">
-      <button className="action-btn menu-btn" onClick={handleMenuClick} aria-label="Toggle menu">
-        <IconMenu2 size={20} />
-      </button>
+      {/* ROW 1: Header bar (Menu + Title on left, Action buttons on right) */}
+      <div className="topbar-row topbar-row-primary">
+        <div className="topbar-left">
+          <button className="action-btn menu-btn" onClick={handleMenuClick} aria-label="Toggle menu">
+            <IconMenu2 size={20} />
+          </button>
 
-      <div className="topbar-title">
-        <h1 className="page-title">{title}</h1>
-        {subtitle && !['dashboard', 'all'].includes(view.type) && !visualMode && (
-          <div className="page-subtitle">{subtitle}</div>
-        )}
+          <div className="topbar-title">
+            <h1 className="page-title">{title}</h1>
+            {subtitle && !['dashboard', 'all'].includes(view.type) && !visualMode && (
+              <div className="page-subtitle">{subtitle}</div>
+            )}
+          </div>
+        </div>
+
+        <div className="topbar-actions">
+          {showListControls && (
+            <ColorModeSelector className="topbar-colormode-mobile" />
+          )}
+
+          {/* Desktop: visual toggle */}
+          <button 
+            className={`visual-toggle topbar-visual-desktop ${visualMode ? 'active' : ''}`} 
+            onClick={toggleVisual} 
+            title={visualMode ? "Return to list view (Esc)" : "Switch to 3D Universe"}
+            aria-label="Toggle visual view"
+          >
+            {visualMode ? <IconLayoutGrid size={15} /> : <IconBox size={15} />}
+            <span className="visual-toggle-label">{visualMode ? 'List View' : '3D View'}</span>
+          </button>
+          {/* Mobile: compact 3D toggle */}
+          <button className={`visual-toggle topbar-visual-mobile ${visualMode ? 'active' : ''}`} onClick={toggleVisual} aria-label="Toggle visual view">
+            {visualMode ? <IconLayoutGrid size={15} /> : <IconBox size={15} />}
+          </button>
+
+          {/* Desktop: New Link */}
+          <Button
+            className="topbar-new-link gradient-btn topbar-newlink-desktop"
+            leftSection={<IconPlus size={16} />}
+            onClick={() => openEditor(null)}
+            aria-label="New link"
+          >
+            <span className="new-link-label">New Link</span>
+          </Button>
+          {/* Mobile: add link */}
+          <Button
+            className="topbar-new-link gradient-btn topbar-newlink-mobile"
+            leftSection={<IconPlus size={16} />}
+            onClick={() => openEditor(null)}
+            aria-label="Add link"
+          >
+            <span className="new-link-label">add link</span>
+          </Button>
+
+          <div className="topbar-right">
+            {user?.role === 'admin' && (
+              <Button
+                size="xs"
+                variant="light"
+                color="orange"
+                className="topbar-admin-btn"
+                leftSection={<IconCrown size={15} color="#f59e0b" />}
+                onClick={() => navigate('/admin')}
+                style={{
+                  background: 'rgba(245, 158, 11, 0.12)',
+                  border: '1px solid rgba(245, 158, 11, 0.35)',
+                  color: '#fbbf24',
+                  fontWeight: 600,
+                }}
+              >
+                Admin Panel
+              </Button>
+            )}
+
+            <div className="more-wrap">
+              <Menu shadow="md" width={196} position="bottom-end">
+                <Menu.Target>
+                  <button className="topbar-icon-btn topbar-more" aria-label="More options" title="Import & export">
+                    <IconDotsVertical size={18} />
+                  </button>
+                </Menu.Target>
+                <Menu.Dropdown>
+                  <Menu.Item leftSection={<IconUpload size={14} />} onClick={() => setImportOpened(true)}>
+                    Import links
+                  </Menu.Item>
+                  <Menu.Item leftSection={<IconDownload size={14} />} onClick={() => handleExport('xlsx')}>
+                    Export as Excel
+                  </Menu.Item>
+                  <Menu.Item leftSection={<IconDownload size={14} />} onClick={() => handleExport('csv')}>
+                    Export as CSV
+                  </Menu.Item>
+                </Menu.Dropdown>
+              </Menu>
+            </div>
+
+            <ProfileDropdown />
+          </div>
+        </div>
       </div>
 
-      {showListControls && (
-        <div className="topbar-controls">
-          <SearchBox placeholder={visualMode ? 'Search 3D universe…' : 'Search links, tags…'} />
-          <ColorModeSelector />
-          {showSort && (
-            <Select
-              className="topbar-sort"
-              data={SORTS}
-              value={sort}
-              onChange={(v) => v && setSort(v)}
-              aria-label="Sort"
-            />
-          )}
-        </div>
-      )}
-
-      <QuickSave />
-
-      <div className="topbar-spacer" />
-
-      {/* Desktop: visual toggle */}
-      <button 
-        className={`visual-toggle topbar-visual-desktop ${visualMode ? 'active' : ''}`} 
-        onClick={toggleVisual} 
-        title={visualMode ? "Return to list view (Esc)" : "Switch to 3D Universe"}
-        aria-label="Toggle visual view"
-      >
-        {visualMode ? <IconLayoutGrid size={15} /> : <IconBox size={15} />}
-        <span className="visual-toggle-label">{visualMode ? 'List View' : '3D View'}</span>
-      </button>
-      {/* Mobile: compact 3D toggle */}
-      <button className={`visual-toggle topbar-visual-mobile ${visualMode ? 'active' : ''}`} onClick={toggleVisual} aria-label="Toggle visual view">
-        {visualMode ? <IconLayoutGrid size={15} /> : <IconBox size={15} />}
-      </button>
-
-      {/* Desktop: New Link */}
-      <Button
-        className="topbar-new-link gradient-btn topbar-newlink-desktop"
-        leftSection={<IconPlus size={16} />}
-        onClick={() => openEditor(null)}
-        aria-label="New link"
-      >
-        <span className="new-link-label">New Link</span>
-      </Button>
-      {/* Mobile: add link */}
-      <Button
-        className="topbar-new-link gradient-btn topbar-newlink-mobile"
-        leftSection={<IconPlus size={16} />}
-        onClick={() => openEditor(null)}
-        aria-label="Add link"
-      >
-        <span className="new-link-label">add link</span>
-      </Button>
-
-      <div className="topbar-right">
-        {user?.role === 'admin' && (
-          <Button
-            size="xs"
-            variant="light"
-            color="orange"
-            leftSection={<IconCrown size={15} color="#f59e0b" />}
-            onClick={() => navigate('/admin')}
-            style={{
-              background: 'rgba(245, 158, 11, 0.12)',
-              border: '1px solid rgba(245, 158, 11, 0.35)',
-              color: '#fbbf24',
-              fontWeight: 600,
-            }}
-          >
-            Admin Panel
-          </Button>
+      {/* ROW 2: Search Controls & QuickSave */}
+      <div className="topbar-row topbar-row-secondary">
+        {showListControls && (
+          <div className="topbar-controls">
+            <SearchBox placeholder={visualMode ? 'Search 3D universe…' : 'Search links, tags…'} />
+            <ColorModeSelector className="topbar-colormode-desktop" />
+            {showSort && (
+              <Select
+                className="topbar-sort"
+                data={SORTS}
+                value={sort}
+                onChange={(v) => v && setSort(v)}
+                aria-label="Sort"
+              />
+            )}
+          </div>
         )}
 
-        <div className="more-wrap">
-          <Menu shadow="md" width={196} position="bottom-end">
-            <Menu.Target>
-              <button className="topbar-icon-btn topbar-more" aria-label="More options" title="Import & export">
-                <IconDotsVertical size={18} />
-              </button>
-            </Menu.Target>
-            <Menu.Dropdown>
-              <Menu.Item leftSection={<IconUpload size={14} />} onClick={() => setImportOpened(true)}>
-                Import links
-              </Menu.Item>
-              <Menu.Item leftSection={<IconDownload size={14} />} onClick={() => handleExport('xlsx')}>
-                Export as Excel
-              </Menu.Item>
-              <Menu.Item leftSection={<IconDownload size={14} />} onClick={() => handleExport('csv')}>
-                Export as CSV
-              </Menu.Item>
-            </Menu.Dropdown>
-          </Menu>
-        </div>
-
-        <ProfileDropdown />
+        <QuickSave />
+        <div className="topbar-spacer" />
       </div>
 
       <ImportLinksModal opened={importOpened} onClose={() => setImportOpened(false)} />

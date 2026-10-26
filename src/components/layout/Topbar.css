@@ -5,6 +5,19 @@
   padding: 2px 0 10px;
   flex-wrap: nowrap;
 }
+/* Desktop default: row wrappers dissolve so children are direct flex items of .topbar */
+.topbar-row-primary,
+.topbar-row-secondary,
+.topbar-left,
+.topbar-actions {
+  display: contents;
+}
+.topbar-colormode-mobile {
+  display: none !important;
+}
+.topbar-colormode-desktop {
+  display: inline-flex;
+}
 .page-title {
   font-family: var(--font-display);
   font-size: 22px;
@@ -269,168 +282,277 @@
   }
 }
 
-/* Mobile header: swap to the compact layout (☰ search filter 3D add avatar + full-width quick-save below) */
+/* Mobile header: 2-row layout — Row 1 for Navigation & Utility actions, Row 2 for Search & QuickSave */
 @media (max-width: 62em) {
   .topbar {
-    flex-wrap: wrap;
-    gap: 7px 5px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 2px 0 8px;
+    width: 100%;
+    align-items: stretch;
+    flex-wrap: nowrap;
+  }
+
+  /* ROW 1: Header bar (Menu + Title on left, Action buttons on right) */
+  .topbar-row-primary {
+    display: flex;
     align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 8px;
+    min-width: 0;
   }
-  .topbar .topbar-title,
-  .topbar .topbar-sort,
-  .topbar .topbar-spacer,
-  .topbar .topbar-visual-desktop,
-  .topbar .topbar-newlink-desktop,
-  .topbar .more-wrap {
-    display: none !important;
-  }
-  .topbar .topbar-visual-mobile,
-  .topbar .topbar-newlink-mobile {
-    display: inline-flex;
+
+  .topbar-left {
+    display: flex;
     align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
+    gap: 8px;
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
   }
+
   .topbar .menu-btn {
-    order: 1;
     width: 34px;
     height: 34px;
+    min-width: 34px;
     padding: 0;
     display: grid;
     place-items: center;
     flex-shrink: 0;
     border-radius: 9px;
   }
-  .topbar .topbar-controls {
-    order: 2;
-    flex: 1 1 0%;
+
+  .topbar .topbar-title {
+    display: block !important;
     min-width: 0;
-    gap: 5px;
-  }
-  .topbar .search-box {
+    max-width: none;
     flex: 1 1 auto;
-    min-width: 0;
   }
-  .topbar .search-input {
-    min-width: 0;
-    width: 100%;
+
+  .topbar .page-title {
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
-  .topbar .search-input .mantine-Input-input {
-    height: 34px;
-    min-height: 34px;
-    font-size: 12.5px;
-    padding-left: 28px;
-    border-radius: 9px;
+
+  .topbar .page-subtitle {
+    display: none !important;
   }
-  /* Hide the ⌘K shortcut badge on touch/mobile viewports to avoid overlapping input text */
-  .topbar .search-kbd-btn {
-    display: none;
+
+  .topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
   }
-  .topbar .search-embedded-filter {
-    width: 22px;
-    height: 22px;
-  }
-  .topbar .color-mode-btn {
+
+  /* Mobile Colormode in Row 1 */
+  .topbar-colormode-mobile {
+    display: inline-flex !important;
     width: 34px;
     height: 34px;
     min-width: 34px;
     padding: 0;
     border-radius: 9px;
-    display: inline-flex;
     align-items: center;
     justify-content: center;
     background: var(--surface-glass);
     border: 1px solid var(--border-glass);
     flex-shrink: 0;
   }
-  .topbar .color-mode-btn-label {
+  .topbar-colormode-mobile .color-mode-btn-label {
     display: none !important;
   }
+
+  .topbar-colormode-desktop {
+    display: none !important;
+  }
+
   .topbar .topbar-visual-mobile {
-    order: 3;
+    display: inline-flex !important;
     width: 34px;
     height: 34px;
+    min-width: 34px;
     padding: 0;
-    display: inline-flex;
     align-items: center;
     justify-content: center;
     border-radius: 9px;
+    flex-shrink: 0;
   }
+
   .topbar .topbar-newlink-mobile {
-    order: 4;
+    display: inline-flex !important;
     width: 34px;
     height: 34px;
     min-width: 34px;
     padding: 0;
     border-radius: 9px;
-    display: inline-flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
   }
   .topbar-newlink-mobile .new-link-label {
-    display: none;
+    display: none !important;
   }
   .topbar-newlink-mobile .mantine-Button-section {
-    margin: 0;
+    margin: 0 !important;
   }
+
   .topbar .topbar-right {
-    order: 5;
+    display: flex;
+    align-items: center;
+    gap: 6px;
     margin-left: 0;
-    gap: 5px;
+    flex-shrink: 0;
   }
+
   .topbar .pd-trigger {
     width: 34px;
     height: 34px;
+    min-width: 34px;
     padding: 2px;
     border-radius: 9px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
   }
   .topbar .pd-trigger .pd-avatar {
     width: 28px;
     height: 28px;
     font-size: 11px;
   }
-  .topbar .quick-save {
-    order: 6;
-    flex: 1 1 100%;
-    margin-top: 5px;
+
+  /* Hide desktop-only controls */
+  .topbar .topbar-sort,
+  .topbar .topbar-spacer,
+  .topbar .topbar-visual-desktop,
+  .topbar .topbar-newlink-desktop,
+  .topbar .more-wrap,
+  .topbar .topbar-admin-btn {
+    display: none !important;
   }
-  .topbar .quick-save-box {
-    height: 44px;
-    padding: 0 6px 0 14px;
+
+  /* ROW 2: Search Controls & QuickSave */
+  .topbar-row-secondary {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .topbar .topbar-controls {
+    flex: 1 1 50%;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .topbar .search-box {
+    flex: 1 1 100%;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .topbar .search-input {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .topbar .search-input .mantine-Input-input {
+    height: 36px;
+    min-height: 36px;
+    font-size: 13px;
+    padding-left: 30px;
     border-radius: 999px;
     background: var(--surface-glass, rgba(255, 255, 255, 0.04));
     border: 1px solid var(--border-glass-strong, rgba(255, 255, 255, 0.12));
-    gap: 8px;
   }
+
+  .topbar .search-kbd-btn {
+    display: none !important;
+  }
+
+  .topbar .search-embedded-filter {
+    width: 24px;
+    height: 24px;
+  }
+
+  .topbar .quick-save {
+    flex: 1 1 50% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    margin-top: 0 !important;
+  }
+
+  /* If controls are hidden (e.g. Analytics / Trash), QuickSave takes 100% of Row 2 */
+  .topbar-row-secondary .quick-save:only-child {
+    flex: 1 1 100% !important;
+  }
+
+  .topbar .quick-save-box {
+    height: 36px;
+    padding: 0 5px 0 10px;
+    border-radius: 999px;
+    background: var(--surface-glass, rgba(255, 255, 255, 0.04));
+    border: 1px solid var(--border-glass-strong, rgba(255, 255, 255, 0.12));
+    gap: 6px;
+    width: 100%;
+  }
+
   .topbar .quick-save input {
-    font-size: 13.5px;
-  }
-  .topbar .quick-save input::placeholder {
     font-size: 13px;
   }
-  .topbar .quick-save .qs-link-icon {
-    width: 18px;
-    height: 18px;
+
+  .topbar .quick-save input::placeholder {
+    font-size: 12px;
   }
+
+  .topbar .quick-save .qs-link-icon {
+    width: 16px;
+    height: 16px;
+  }
+
   .topbar .quick-save .qs-go {
-    width: 32px;
-    height: 32px;
+    width: 26px;
+    height: 26px;
+  }
+
+  .quick-save-pop {
+    min-width: 260px;
+    max-width: calc(100vw - 28px);
+    right: 0;
   }
 }
 
 @media (max-width: 30em) {
   .topbar {
-    gap: 6px 4px;
-    padding-bottom: 8px;
+    gap: 6px;
+    padding-bottom: 6px;
   }
-  .topbar .topbar-controls {
+  .topbar-row-primary {
+    gap: 6px;
+  }
+  .topbar-left {
+    gap: 6px;
+  }
+  .topbar-actions {
     gap: 4px;
   }
+  .topbar-row-secondary {
+    gap: 6px;
+  }
   .topbar .menu-btn,
-  .topbar .color-mode-btn,
+  .topbar .topbar-colormode-mobile,
   .topbar .topbar-visual-mobile,
   .topbar .topbar-newlink-mobile,
   .topbar .pd-trigger {
@@ -439,30 +561,33 @@
     min-width: 32px;
     border-radius: 8px;
   }
-  .topbar .search-input .mantine-Input-input {
-    height: 32px;
-    min-height: 32px;
-    border-radius: 8px;
-    padding-left: 26px;
-  }
   .topbar .pd-trigger .pd-avatar {
     width: 26px;
     height: 26px;
     font-size: 10px;
   }
+  .topbar .page-title {
+    font-size: 15px;
+  }
+  .topbar .search-input .mantine-Input-input {
+    height: 34px;
+    min-height: 34px;
+    font-size: 12.5px;
+    padding-left: 28px;
+  }
   .topbar .quick-save-box {
-    height: 42px;
-    padding: 0 5px 0 12px;
-    gap: 7px;
+    height: 34px;
+    padding: 0 4px 0 8px;
+    gap: 5px;
   }
   .topbar .quick-save input {
-    font-size: 13px;
-  }
-  .topbar .quick-save input::placeholder {
     font-size: 12.5px;
   }
+  .topbar .quick-save input::placeholder {
+    font-size: 11.5px;
+  }
   .topbar .quick-save .qs-go {
-    width: 30px;
-    height: 30px;
+    width: 24px;
+    height: 24px;
   }
 }
