@@ -148,8 +148,9 @@
   .sidebar.sidebar-collapsed .section-label,
   .sidebar.sidebar-collapsed .sidebar-collections-empty,
   .sidebar.sidebar-collapsed .collection-edit,
-  .sidebar.sidebar-collapsed .collection-delete {
-    display: none;
+  .sidebar.sidebar-collapsed .collection-delete,
+  .sidebar.sidebar-collapsed .nav-item-actions {
+    display: none !important;
   }
   .sidebar.sidebar-collapsed .sidebar-brand {
     justify-content: center;
@@ -188,35 +189,71 @@
   flex-shrink: 0;
   box-shadow: 0 0 10px currentColor;
 }
-.collection-edit {
-  padding: 4px;
-  margin-left: 2px;
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Hover Action Toolbar for Tags, Collections, Saved Views, Rules
+   Industry-standard pattern: Action toolbar replaces the count badge on hover
+   so label width is 100% unconstrained and tag names never truncate needlessly.
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* Ensure the nav label flexes cleanly, taking all available room */
+.nav-item .nav-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Count badge is pushed to the far right edge when unhovered */
+.nav-item .nav-count {
+  margin-left: auto;
+  flex-shrink: 0;
+  transition: opacity var(--dur-fast) var(--ease);
+}
+
+/* Actions container is completely removed from layout flow when unhovered */
+.nav-item-actions {
+  display: none;
+  align-items: center;
+  gap: 3px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* Individual sub-action buttons */
+.nav-sub-action {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  display: grid;
+  place-items: center;
   border-radius: 6px;
   color: var(--text-faint);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
 }
-.collection-edit:hover {
+.nav-sub-action:hover {
   color: #fff;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.12);
 }
-.collection-delete {
-  padding: 4px;
+.nav-sub-action.danger:hover {
+  color: #ff8080;
+  background: rgba(255, 107, 107, 0.22);
 }
-.sidebar-collections .collection-edit,
-.sidebar-collections .collection-delete,
-.sidebar-tags .collection-edit {
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity var(--dur-fast) var(--ease), visibility 0s linear var(--dur-fast);
+
+/* On hover / focus-within: action toolbar takes the place of the count badge */
+.nav-item:hover .nav-item-actions,
+.nav-item:focus-within .nav-item-actions {
+  display: flex;
 }
-.sidebar-collections .nav-item:hover .collection-edit,
-.sidebar-collections .nav-item:hover .collection-delete,
-.sidebar-collections .nav-item:focus-within .collection-edit,
-.sidebar-collections .nav-item:focus-within .collection-delete,
-.sidebar-tags .nav-item:hover .collection-edit,
-.sidebar-tags .nav-item:focus-within .collection-edit {
-  opacity: 1;
-  visibility: visible;
-  transition: opacity var(--dur-fast) var(--ease), visibility 0s;
+
+.nav-item:hover .nav-count,
+.nav-item:focus-within .nav-count {
+  display: none;
 }
 .nav-action-btn {
   padding: 4px;

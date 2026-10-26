@@ -12,6 +12,7 @@ import ImportLinksModal from '../ImportLinksModal'
 import QuickSave from './QuickSave'
 import SearchBox from '../common/SearchBox'
 import SearchFilters from '../common/SearchFilters'
+import ColorModeSelector from '../common/ColorModeSelector'
 import './Topbar.css'
 
 // Determines if we are on a mobile-sized viewport
@@ -120,6 +121,7 @@ export default function Topbar({ onMenu }) {
         <div className="topbar-controls">
           <SearchBox placeholder={visualMode ? 'Search 3D universe…' : 'Search links, tags…  (tag: domain: is:)'} />
           <SearchFilters />
+          <ColorModeSelector />
           {showSort && (
             <Select
               className="topbar-sort"

@@ -20,6 +20,7 @@ import GradientAreaChart from '../common/GradientAreaChart'
 import LoadingSkeletons from '../common/LoadingSkeletons'
 import EmptyState from '../common/EmptyState'
 import ErrorState from '../common/ErrorState'
+import { tagToColor, normalizeHsl } from '../../utils/colorUtils'
 import './Dashboard.css'
 
 export default function Dashboard() {
@@ -181,7 +182,7 @@ export default function Dashboard() {
                   className="dash-chip"
                   onClick={() => setView({ type: 'collection', id: c.id, label: c.name })}
                 >
-                  <span className="dash-chip-dot" style={{ background: c.color || '#8b5cf6' }} />
+                  <span className="dash-chip-dot" style={{ background: normalizeHsl(c.color) || c.color || '#8b5cf6' }} />
                   <span className="dash-chip-label">{c.name}</span>
                   <span className="dash-chip-count">{c.count}</span>
                 </button>
@@ -196,8 +197,11 @@ export default function Dashboard() {
                   className="dash-chip"
                   onClick={() => setView({ type: 'tag', id: t.tag, label: t.tag })}
                 >
-                  <IconFolder size={13} className="dash-chip-tag-icon" />
-                  <span className="dash-chip-label">#{t.tag}</span>
+                  <IconFolder size={13} className="dash-chip-tag-icon" style={{ color: tagToColor(t.tag) }} />
+                  <span className="dash-chip-label">
+                    <span style={{ color: tagToColor(t.tag), fontWeight: 700, marginRight: 2 }}>#</span>
+                    {t.tag}
+                  </span>
                   <span className="dash-chip-count">{t.count}</span>
                 </button>
               ))}

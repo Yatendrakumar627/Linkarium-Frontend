@@ -154,3 +154,155 @@
 .profile-card-body {
   padding: 0 14px 14px;
 }
+
+/* Color Classification Mode section */
+.color-classification-card {
+  border-color: rgba(0, 229, 255, 0.15);
+}
+
+.color-mode-icon {
+  background: rgba(168, 85, 247, 0.15);
+  border-color: rgba(168, 85, 247, 0.35);
+  color: #c084fc;
+}
+
+.color-mode-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  padding: 0 14px 14px;
+}
+
+@media (max-width: 520px) {
+  .color-mode-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.color-mode-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.32);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  outline: none;
+}
+
+.color-mode-tile:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(0, 229, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.color-mode-tile.active {
+  background: rgba(0, 229, 255, 0.06);
+  border-color: rgba(0, 229, 255, 0.6);
+  box-shadow: 0 0 14px -3px rgba(0, 229, 255, 0.25);
+}
+
+.color-mode-tile-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.color-mode-indicator {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.color-mode-tile.active .color-mode-indicator {
+  border-color: #00e5ff;
+  background: #00e5ff;
+  box-shadow: 0 0 8px rgba(0, 229, 255, 0.6);
+}
+
+.color-mode-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.color-mode-summary {
+  font-size: 11px;
+  color: var(--text-faint, #94a3b8);
+  line-height: 1.3;
+}
+
+/* Micro preview chips inside the mode tile */
+.color-mode-preview-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.preview-chip-card {
+  width: 20px;
+  height: 6px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.preview-chip-col {
+  font-size: 9px;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 999px;
+  line-height: 1.3;
+}
+
+.preview-chip-tag {
+  font-size: 9px;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 999px;
+  line-height: 1.3;
+}
+
+/* Mode-specific preview color palettes */
+.mode-own .preview-chip-card { background: #00c4e8; box-shadow: 0 0 5px rgba(0, 196, 232, 0.5); }
+.mode-own .preview-chip-col { background: color-mix(in srgb, #a855f7 18%, transparent); border: 1px solid color-mix(in srgb, #a855f7 40%, transparent); color: #c084fc; }
+.mode-own .preview-chip-tag { background: color-mix(in srgb, #f43f7d 18%, transparent); border: 1px solid color-mix(in srgb, #f43f7d 40%, transparent); color: #fb7185; }
+
+.mode-tag .preview-chip-card,
+.mode-tag-first .preview-chip-card { background: #00d68f; box-shadow: 0 0 5px rgba(0, 214, 143, 0.5); }
+.mode-tag .preview-chip-col,
+.mode-tag-first .preview-chip-col { background: color-mix(in srgb, #a855f7 18%, transparent); border: 1px solid color-mix(in srgb, #a855f7 40%, transparent); color: #c084fc; }
+.mode-tag .preview-chip-tag,
+.mode-tag-first .preview-chip-tag { background: color-mix(in srgb, #00d68f 22%, transparent); border: 1px solid color-mix(in srgb, #00d68f 50%, transparent); color: #00d68f; }
+
+.mode-collection .preview-chip-card,
+.mode-collection-first .preview-chip-card { background: #ef4444; box-shadow: 0 0 5px rgba(239, 68, 68, 0.5); }
+.mode-collection .preview-chip-col,
+.mode-collection-first .preview-chip-col { background: color-mix(in srgb, #ef4444 24%, transparent); border: 1px solid color-mix(in srgb, #ef4444 60%, transparent); color: #fca5a5; }
+.mode-collection .preview-chip-tag,
+.mode-collection-first .preview-chip-tag { background: color-mix(in srgb, #ef4444 16%, transparent); border: 1px solid color-mix(in srgb, #ef4444 40%, transparent); color: #fecaca; }
+
+.mode-blend .preview-chip-card { background: #d946ef; box-shadow: 0 0 5px rgba(217, 70, 239, 0.5); }
+.mode-blend .preview-chip-col { background: color-mix(in srgb, #a855f7 18%, transparent); border: 1px solid color-mix(in srgb, #a855f7 40%, transparent); color: #c084fc; }
+.mode-blend .preview-chip-tag { background: color-mix(in srgb, #ec4899 18%, transparent); border: 1px solid color-mix(in srgb, #ec4899 40%, transparent); color: #f472b6; }
+
+.mode-brand .preview-chip-card { background: #00c7b7; box-shadow: 0 0 5px rgba(0, 199, 183, 0.5); }
+.mode-brand .preview-chip-col { background: color-mix(in srgb, #58a6ff 18%, transparent); border: 1px solid color-mix(in srgb, #58a6ff 40%, transparent); color: #79c0ff; }
+.mode-brand .preview-chip-tag { background: color-mix(in srgb, #f43f7d 18%, transparent); border: 1px solid color-mix(in srgb, #f43f7d 40%, transparent); color: #fb7185; }
+
+.color-mode-footer-hint {
+  padding: 8px 14px 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+}

@@ -12,6 +12,7 @@ import { ACCENT_COLORS } from '../../constants'
 import { useLinkStore } from '../../store/linkStore'
 import { useUiStore } from '../../store/uiStore'
 import { readableTextOn } from '../../utils'
+import { normalizeHsl } from '../../utils/colorUtils'
 import ShareSettings from './ShareSettings'
 import {
   AppButton,
@@ -226,7 +227,18 @@ function CollectionForm({ collection, isEdit, addCollection, updateCollection, o
               </span>
               <span className="collection-preview-count">0</span>
             </div>
-            <span className="collection-preview-caption">How it appears in your sidebar</span>
+            <span className="collection-preview-caption">Sidebar item</span>
+
+            <div className="collection-card-preview-row">
+              <span
+                className="collection-card-pill-preview"
+                style={{ '--col-color': normalizeHsl(pickerColor) || pickerColor }}
+              >
+                <IconFolder size={11} stroke={1.8} />
+                <span>{trimmedName || 'Collection name'}</span>
+              </span>
+              <span className="collection-preview-caption">Card badge (balanced)</span>
+            </div>
           </div>
         </AppModalSection>
 

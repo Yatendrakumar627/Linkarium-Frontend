@@ -10,6 +10,7 @@ export const useUiStore = create((set) => ({
   editingLink: null,
   profileOpen: false,
   collectionEditor: null,
+  tagEditor: null, // { tag: 'website', color: '#00e5ff', count: 37 }
 
   commandPaletteOpen: false,
   triageOpen: false,
@@ -26,6 +27,9 @@ export const useUiStore = create((set) => ({
   selectionMode: false,
   selectedIds: new Set(),
 
+  // Temporary UI color mode override (for live preview or local toggle)
+  colorModeOverride: null,
+
   // Reset transient per-user UI state (selections, open modals, current view).
   // Keeps device-level prefs (sidebarCollapsed) intact.
   reset: () =>
@@ -38,6 +42,7 @@ export const useUiStore = create((set) => ({
       editingLink: null,
       profileOpen: false,
       collectionEditor: null,
+      tagEditor: null,
       commandPaletteOpen: false,
       triageOpen: false,
       shortcutsOpen: false,
@@ -50,8 +55,10 @@ export const useUiStore = create((set) => ({
       readerLink: null,
       selectionMode: false,
       selectedIds: new Set(),
+      colorModeOverride: null,
     }),
 
+  setColorModeOverride: (colorModeOverride) => set({ colorModeOverride }),
   setView: (view) => set({ view, selectionMode: false, selectedIds: new Set() }),
   toggleSidebar: () =>
     set((s) => {
@@ -68,6 +75,8 @@ export const useUiStore = create((set) => ({
   closeProfile: () => set({ profileOpen: false }),
   openCollectionEditor: (mode) => set({ collectionEditor: mode }),
   closeCollectionEditor: () => set({ collectionEditor: null }),
+  openTagEditor: (tag) => set({ tagEditor: tag }),
+  closeTagEditor: () => set({ tagEditor: null }),
 
   openCommandPalette: () => set({ commandPaletteOpen: true }),
   closeCommandPalette: () => set({ commandPaletteOpen: false }),

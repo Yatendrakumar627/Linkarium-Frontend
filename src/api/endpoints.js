@@ -58,6 +58,9 @@ export const collectionsApi = {
 
 export const tagsApi = {
   list: () => api.get('/tags'),
+  updateColor: (tag, color) => api.patch(`/tags/${encodeURIComponent(tag)}/color`, { color }),
+  rename: (tag, newTag) => api.patch(`/tags/${encodeURIComponent(tag)}/rename`, { newTag }),
+  remove: (tag) => api.del(`/tags/${encodeURIComponent(tag)}`),
 }
 
 export const searchApi = {

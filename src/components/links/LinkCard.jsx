@@ -27,6 +27,8 @@ import { notifications } from '@mantine/notifications'
 import { useLinkStore } from '../../store/linkStore'
 import { useUiStore } from '../../store/uiStore'
 import { faviconUrl, hostOf, safeUrl, timeAgoShort, timeAgo } from '../../utils'
+import { resolveCardColor, resolveTagColor, normalizeHsl } from '../../utils/colorUtils'
+import { useColorMode } from '../../hooks/useColorMode'
 import LinkHealthBadge from './LinkHealthBadge'
 import MergeLinkModal from './MergeLinkModal'
 import './LinkCard.css'
@@ -36,108 +38,6 @@ function useTouch() {
 }
 
 const TRASH_RETENTION_DAYS = 7
-
-const LUXURY_PALETTE = [
-  '#00d68f', // 01 Balanced Electric Mint (Kie Ai)
-  '#00c4e8', // 02 Laser Cyan (GitLab)
-  '#f43f7d', // 03 Electric Rose Pink (YouTube)
-  '#f59e0b', // 04 Luxury Golden Amber (Skill Course)
-  '#a855f7', // 05 Cyber Violet
-  '#38bdf8', // 06 Vivid Sky Blue
-]
-
-function hexToHsl(hex) {
-  let c = hex.replace('#', '')
-  if (c.length === 3) c = c.split('').map((x) => x + x).join('')
-  const num = parseInt(c, 16)
-  if (isNaN(num)) return null
-  const r = (num >> 16) / 255
-  const g = ((num >> 8) & 255) / 255
-  const b = (num & 255) / 255
-
-  const max = Math.max(r, g, b)
-  const min = Math.min(r, g, b)
-  let h = 0
-  let s = 0
-  const l = (max + min) / 2
-
-  if (max !== min) {
-    const d = max - min
-    s = l > 0.5 ? d / (2 - max - min) : d / (max + min)
-    switch (max) {
-      case r:
-        h = (g - b) / d + (g < b ? 6 : 0)
-        break
-      case g:
-        h = (b - r) / d + 2
-        break
-      case b:
-        h = (r - g) / d + 4
-        break
-    }
-    h = Math.round(h * 60)
-  }
-  return { h, s: Math.round(s * 100), l: Math.round(l * 100) }
-}
-
-function normalizeToBalancedLuxury(color) {
-  if (!color || typeof color !== 'string') return null
-  const trimmed = color.trim()
-  if (!trimmed.startsWith('#')) return trimmed
-  const hsl = hexToHsl(trimmed)
-  if (!hsl) return trimmed
-
-  const h = hsl.h
-  // Calibrate perceptual luminance based on human vision:
-  // Yellow/lime has ~3.5x higher natural luminance than blue/violet.
-  // We calibrate lightness and saturation per hue bracket so every card
-  // has the exact same visual weight, intensity, and elegance.
-  let targetL = 50
-  let targetS = 85
-
-  if (h >= 35 && h <= 85) {
-    // Yellow / Lime region: lower lightness to warm amber so it doesn't blow out
-    targetL = 46
-    targetS = 82
-  } else if (h > 85 && h <= 150) {
-    // Green / Mint region
-    targetL = 48
-    targetS = 84
-  } else if (h >= 210 && h <= 280) {
-    // Blue / Violet region: slightly raise lightness to match amber & mint
-    targetL = 54
-    targetS = 88
-  } else {
-    // Cyan, Red, Pink, Magenta
-    targetL = 50
-    targetS = 86
-  }
-
-  return `hsl(${h}, ${targetS}%, ${targetL}%)`
-}
-
-function resolveCardColor(link, collection) {
-  // If title/URL matches reference brands, give them their authentic balanced colors
-  const searchStr = `${link?.title || ''} ${link?.url || ''}`.toLowerCase()
-  if (searchStr.includes('kie') || searchStr.includes('kie.ai')) return '#00d68f'
-  if (searchStr.includes('gitlab')) return '#00c4e8'
-  if (searchStr.includes('youtube')) return '#f43f7d'
-  if (searchStr.includes('skill') || searchStr.includes('course')) return '#f59e0b'
-
-  if (link?.color && typeof link.color === 'string' && link.color.trim()) {
-    return normalizeToBalancedLuxury(link.color) || link.color
-  }
-  if (collection?.color && typeof collection.color === 'string' && collection.color.trim()) {
-    return normalizeToBalancedLuxury(collection.color) || collection.color
-  }
-  const key = String(link?._id || link?.url || link?.title || 'link')
-  let hash = 0
-  for (let i = 0; i < key.length; i++) {
-    hash = (hash << 5) - hash + key.charCodeAt(i)
-    hash |= 0
-  }
-  return LUXURY_PALETTE[Math.abs(hash) % LUXURY_PALETTE.length]
-}
 
 function LinkCard({ link, trashMode = false }) {
   const collections = useLinkStore((s) => s.collections)
@@ -154,6 +54,7 @@ function LinkCard({ link, trashMode = false }) {
   const openReader = useUiStore((s) => s.openReader)
   const openConfirmDialog = useUiStore((s) => s.openConfirmDialog)
   const setView = useUiStore((s) => s.setView)
+  const view = useUiStore((s) => s.view)
   const openTagWebsitesModal = useUiStore((s) => s.openTagWebsitesModal)
 
   const selectionMode = useUiStore((s) => s.selectionMode)
@@ -466,7 +367,8 @@ function LinkCard({ link, trashMode = false }) {
     if (!rawId || rawId === 'null' || rawId === 'undefined') return null
     return collections?.find((c) => String(c.id || c._id) === rawId) || null
   }, [link.collectionId, link.collection, collections])
-  const cardColor = resolveCardColor(link, collection)
+  const colorMode = useColorMode()
+  const cardColor = resolveCardColor(link, collection, colorMode, view)
 
   const host = hostOf(link.url)
   const rawTitle = (link.title || '').trim()
@@ -834,7 +736,7 @@ function LinkCard({ link, trashMode = false }) {
             >
               <span
                 className="link-collection-pill"
-                style={{ '--col-color': collection.color || '#a78bfa' }}
+                style={{ '--col-color': normalizeHsl(collection.color) || collection.color || '#a78bfa' }}
                 onClick={(e) => {
                   e.stopPropagation()
                   setView({
@@ -890,6 +792,7 @@ function LinkCard({ link, trashMode = false }) {
           >
             <span
               className="link-tag-chip"
+              style={{ '--tag-color': resolveTagColor(tag, collection, colorMode) }}
               onClick={(e) => {
                 e.stopPropagation()
                 openTagWebsitesModal(tag)
@@ -915,6 +818,7 @@ function LinkCard({ link, trashMode = false }) {
           >
             <span
               className="link-tag-more"
+              style={{ '--tag-color': resolveTagColor(tags[0], collection, colorMode) }}
               onClick={(e) => {
                 e.stopPropagation()
                 openTagWebsitesModal(tags[0])

@@ -1,9 +1,12 @@
 import { IconEye, IconTrophy, IconArrowUpRight } from '@tabler/icons-react'
 import { useLinkStore } from '../../store/linkStore'
 import { faviconUrl, hostOf, safeUrl } from '../../utils'
+import { resolveCardColor } from '../../utils/colorUtils'
+import { useColorMode } from '../../hooks/useColorMode'
 
 export default function MostVisitedList({ links = [] }) {
   const recordVisit = useLinkStore((s) => s.recordVisit)
+  const colorMode = useColorMode()
 
   if (!links.length) {
     return (
@@ -73,7 +76,7 @@ export default function MostVisitedList({ links = [] }) {
               ) : null}
               <div
                 className="dash-toplink-chip"
-                style={{ background: link.color || '#6366f1' }}
+                style={{ background: resolveCardColor(link, null, colorMode) }}
               >
                 {initial}
               </div>

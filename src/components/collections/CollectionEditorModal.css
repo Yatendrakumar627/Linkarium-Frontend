@@ -246,9 +246,35 @@
 
 .collection-preview-caption {
   display: block;
-  margin-top: 8px;
+  margin-top: 6px;
   font-size: 11px;
   color: var(--text-faint);
+}
+
+.collection-card-preview-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.collection-card-pill-preview {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--col-color, #a78bfa);
+  background: color-mix(in srgb, var(--col-color, #a78bfa) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--col-color, #a78bfa) 28%, transparent);
+  border-radius: 999px;
+  padding: 3px 9px;
+  white-space: nowrap;
+  line-height: 1.4;
+  box-shadow: 0 0 7px -2px color-mix(in srgb, var(--col-color, #a78bfa) 22%, transparent);
+  pointer-events: none;
 }
 
 /* Share settings (edit mode) */

@@ -13,6 +13,7 @@ import {
   AppModalNote,
 } from '../common/ModalShell'
 import { accessibleClearButtonProps, renderAccessibleTagPill } from '../common/tagInput'
+import { tagToColor } from '../../utils/colorUtils'
 import './BulkTagModal.css'
 
 // Tag several links at once.
@@ -112,7 +113,8 @@ export default function BulkTagModal({ opened, onClose, onConfirm }) {
                   className="bulk-tag-chip"
                   onClick={() => setValue((prev) => [...prev, t])}
                 >
-                  #{t}
+                  <span style={{ color: tagToColor(t), fontWeight: 700, marginRight: 2 }}>#</span>
+                  {t}
                 </button>
               ))}
             </div>

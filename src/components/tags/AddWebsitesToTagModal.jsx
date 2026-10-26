@@ -12,6 +12,7 @@ import { linksApi } from '../../api/endpoints'
 import { useLinkStore } from '../../store/linkStore'
 import { useUiStore } from '../../store/uiStore'
 import { hostOf, faviconUrl } from '../../utils'
+import { tagToColor } from '../../utils/colorUtils'
 import {
   AppButton,
   AppModal,
@@ -244,9 +245,11 @@ export default function AddWebsitesToTagModal() {
                     key={t.tag}
                     type="button"
                     className={`tag-chip-btn ${isSelected ? 'active' : ''}`}
+                    style={{ '--tag-color': tagToColor(t.tag) }}
                     onClick={() => handleTagChipClick(t.tag)}
                   >
-                    #{t.tag}
+                    <span style={{ color: tagToColor(t.tag), fontWeight: 700 }}>#</span>
+                    {t.tag}
                     <span className="tag-chip-count">{t.count}</span>
                   </button>
                 )
@@ -402,7 +405,7 @@ export default function AddWebsitesToTagModal() {
                       className="tag-link-favicon-fallback"
                       style={{
                         display: favicon ? 'none' : 'grid',
-                        background: link.color || '#6a18b8',
+                        background: link.color || (link.tags?.[0] ? tagToColor(link.tags[0]) : '#6a18b8'),
                       }}
                     >
                       {(link.title || host || '?')[0].toUpperCase()}
@@ -427,7 +430,8 @@ export default function AddWebsitesToTagModal() {
                         <div className="tag-link-chips">
                           {link.tags.slice(0, 3).map((t) => (
                             <span key={t} className="tag-micro-chip">
-                              #{t}
+                              <span style={{ color: tagToColor(t), fontWeight: 700, marginRight: 1 }}>#</span>
+                              {t}
                             </span>
                           ))}
                           {link.tags.length > 3 && (

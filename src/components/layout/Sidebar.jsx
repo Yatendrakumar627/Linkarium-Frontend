@@ -22,6 +22,7 @@ import {
   IconFlame,
   IconPlayerPlay,
   IconCrown,
+  IconCheck,
 } from '@tabler/icons-react'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -31,6 +32,7 @@ import { useUiStore } from '../../store/uiStore'
 import { useAuthStore } from '../../store/authStore'
 import { useSavedViewStore } from '../../store/savedViewStore'
 import { iconFor } from '../../utils/icons'
+import { tagToColor } from '../../utils/colorUtils'
 import './Sidebar.css'
 
 export default function Sidebar({ open, collapsed = false, onNavigate, onMouseEnter, onMouseLeave }) {
@@ -41,10 +43,12 @@ export default function Sidebar({ open, collapsed = false, onNavigate, onMouseEn
   const tags = useLinkStore((s) => s.tags)
   const health = useLinkStore((s) => s.health)
   const removeCollection = useLinkStore((s) => s.removeCollection)
+  const deleteTag = useLinkStore((s) => s.deleteTag)
   const view = useUiStore((s) => s.view)
   const setView = useUiStore((s) => s.setView)
   const setSearch = useUiStore((s) => s.setSearch)
   const openCollectionEditor = useUiStore((s) => s.openCollectionEditor)
+  const openTagEditor = useUiStore((s) => s.openTagEditor)
   const openSavedViewEditor = useUiStore((s) => s.openSavedViewEditor)
   const openRuleEditor = useUiStore((s) => s.openRuleEditor)
   const openTagWebsitesModal = useUiStore((s) => s.openTagWebsitesModal)
@@ -179,6 +183,55 @@ export default function Sidebar({ open, collapsed = false, onNavigate, onMouseEn
         await removeCollection(c.id)
         if (view.type === 'collection' && view.id === c.id) go({ type: 'all' })
         notifications.show({ message: 'Collection deleted', color: 'cyan' })
+      },
+    })
+  }
+
+  const handleDeleteTag = (t) => {
+    const linkCount = t.count || 0
+    const color = t.color || tagToColor(t.tag)
+    openConfirmDialog({
+      title: `Delete tag #${t.tag}?`,
+      subtitle: 'The tag is removed from all bookmarks',
+      tone: 'danger',
+      icon: <IconTrash size={20} />,
+      confirmLabel: 'Delete tag',
+      body: (
+        <div>
+          <div className="app-modal-entity">
+            <IconFolder
+              size={15}
+              style={{ color }}
+            />
+            <span className="app-modal-entity-name">#{t.tag}</span>
+            <span className="app-modal-entity-count">
+              {linkCount} {linkCount === 1 ? 'link' : 'links'}
+            </span>
+          </div>
+          <ul className="app-modal-consequences">
+            <li className="is-destructive">
+              <IconTrash size={14} />
+              <span>
+                Tag <strong>#{t.tag}</strong> and its color settings are removed.
+              </span>
+            </li>
+            <li className="is-safe">
+              <IconCheck size={14} />
+              <span>
+                Your bookmarks are kept safe in your library.
+              </span>
+            </li>
+          </ul>
+        </div>
+      ),
+      onConfirm: async () => {
+        try {
+          await deleteTag(t.tag)
+          if (view.type === 'tag' && view.id === t.tag) go({ type: 'all' })
+          notifications.show({ message: `Tag #${t.tag} deleted`, color: 'cyan' })
+        } catch (err) {
+          notifications.show({ message: err.message, color: 'red' })
+        }
       },
     })
   }
@@ -337,30 +390,32 @@ export default function Sidebar({ open, collapsed = false, onNavigate, onMouseEn
                     className="sidebar-tag-icon"
                   />
                   <span className="nav-label">{v.name}</span>
-                  <button
-                    type="button"
-                    className="action-btn collection-edit"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      openSavedViewEditor({ mode: 'edit', view: v })
-                    }}
-                    title="Edit saved view"
-                    aria-label={`Edit ${v.name}`}
-                  >
-                    <IconPencil size={12} />
-                  </button>
-                  <button
-                    type="button"
-                    className="action-btn danger collection-delete"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleDeleteSavedView(v)
-                    }}
-                    title="Delete saved view"
-                    aria-label={`Delete ${v.name}`}
-                  >
-                    <IconTrash size={12} />
-                  </button>
+                  <div className="nav-item-actions">
+                    <button
+                      type="button"
+                      className="action-btn nav-sub-action"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        openSavedViewEditor({ mode: 'edit', view: v })
+                      }}
+                      title="Edit saved view"
+                      aria-label={`Edit ${v.name}`}
+                    >
+                      <IconPencil size={12} />
+                    </button>
+                    <button
+                      type="button"
+                      className="action-btn danger nav-sub-action"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleDeleteSavedView(v)
+                      }}
+                      title="Delete saved view"
+                      aria-label={`Delete ${v.name}`}
+                    >
+                      <IconTrash size={12} />
+                    </button>
+                  </div>
                 </div>
               )
             })}
@@ -410,50 +465,52 @@ export default function Sidebar({ open, collapsed = false, onNavigate, onMouseEn
                     className="sidebar-tag-icon"
                   />
                   <span className="nav-label">{rule.name}</span>
-                  <button
-                    type="button"
-                    className="action-btn collection-edit"
-                    onClick={async (e) => {
-                      e.stopPropagation()
-                      try {
-                        const { result } = await runRule(rule._id, true)
-                        notifications.show({
-                          message: `${result?.matched ?? 0} link(s) match this rule`,
-                          color: 'violet',
-                        })
-                      } catch (err) {
-                        notifications.show({ message: err.message, color: 'red' })
-                      }
-                    }}
-                    title="Run this rule now"
-                    aria-label={`Run ${rule.name}`}
-                  >
-                    <IconPlayerPlay size={12} />
-                  </button>
-                  <button
-                    type="button"
-                    className="action-btn collection-edit"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      openRuleEditor({ mode: 'edit', rule })
-                    }}
-                    title="Edit rule"
-                    aria-label={`Edit ${rule.name}`}
-                  >
-                    <IconPencil size={12} />
-                  </button>
-                  <button
-                    type="button"
-                    className="action-btn danger collection-delete"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleDeleteSavedView(rule)
-                    }}
-                    title="Delete rule"
-                    aria-label={`Delete ${rule.name}`}
-                  >
-                    <IconTrash size={12} />
-                  </button>
+                  <div className="nav-item-actions">
+                    <button
+                      type="button"
+                      className="action-btn nav-sub-action"
+                      onClick={async (e) => {
+                        e.stopPropagation()
+                        try {
+                          const { result } = await runRule(rule._id, true)
+                          notifications.show({
+                            message: `${result?.matched ?? 0} link(s) match this rule`,
+                            color: 'violet',
+                          })
+                        } catch (err) {
+                          notifications.show({ message: err.message, color: 'red' })
+                        }
+                      }}
+                      title="Run this rule now"
+                      aria-label={`Run ${rule.name}`}
+                    >
+                      <IconPlayerPlay size={12} />
+                    </button>
+                    <button
+                      type="button"
+                      className="action-btn nav-sub-action"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        openRuleEditor({ mode: 'edit', rule })
+                      }}
+                      title="Edit rule"
+                      aria-label={`Edit ${rule.name}`}
+                    >
+                      <IconPencil size={12} />
+                    </button>
+                    <button
+                      type="button"
+                      className="action-btn danger nav-sub-action"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleDeleteSavedView(rule)
+                      }}
+                      title="Delete rule"
+                      aria-label={`Delete ${rule.name}`}
+                    >
+                      <IconTrash size={12} />
+                    </button>
+                  </div>
                 </div>
               )
             })}
@@ -501,30 +558,32 @@ export default function Sidebar({ open, collapsed = false, onNavigate, onMouseEn
                   />
                   <span className="nav-label">{c.name}</span>
                   <span className="nav-count">{c.count}</span>
-                  <button
-                    type="button"
-                    className="action-btn collection-edit"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      openCollectionEditor({ mode: 'edit', collection: c })
-                    }}
-                    title="Edit collection"
-                    aria-label={`Edit ${c.name}`}
-                  >
-                    <IconPencil size={12} />
-                  </button>
-                  <button
-                    type="button"
-                    className="action-btn danger collection-delete"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleDeleteCollection(c)
-                    }}
-                    title="Delete collection"
-                    aria-label={`Delete ${c.name}`}
-                  >
-                    <IconTrash size={12} />
-                  </button>
+                  <div className="nav-item-actions">
+                    <button
+                      type="button"
+                      className="action-btn nav-sub-action"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        openCollectionEditor({ mode: 'edit', collection: c })
+                      }}
+                      title="Edit collection"
+                      aria-label={`Edit ${c.name}`}
+                    >
+                      <IconPencil size={12} />
+                    </button>
+                    <button
+                      type="button"
+                      className="action-btn danger nav-sub-action"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleDeleteCollection(c)
+                      }}
+                      title="Delete collection"
+                      aria-label={`Delete ${c.name}`}
+                    >
+                      <IconTrash size={12} />
+                    </button>
+                  </div>
                 </div>
               )
             })}
@@ -557,6 +616,7 @@ export default function Sidebar({ open, collapsed = false, onNavigate, onMouseEn
             <div className="sidebar-tags">
               {tags.map((t) => {
                 const active = view.type === 'tag' && view.id === t.tag
+                const tagColor = t.color || tagToColor(t.tag)
                 return (
                   <div
                     key={t.tag}
@@ -565,21 +625,54 @@ export default function Sidebar({ open, collapsed = false, onNavigate, onMouseEn
                     title={`#${t.tag}`}
                     aria-label={`Tag ${t.tag}`}
                   >
-                    <IconFolder size={15} className="sidebar-tag-icon" />
-                    <span className="nav-label">#{t.tag}</span>
+                    <IconFolder
+                      size={15}
+                      style={{ color: tagColor }}
+                      className="sidebar-tag-icon"
+                    />
+                    <span className="nav-label">
+                      <span style={{ color: tagColor, fontWeight: 700, marginRight: 2 }}>#</span>
+                      {t.tag}
+                    </span>
                     <span className="nav-count">{t.count}</span>
-                    <button
-                      type="button"
-                      className="action-btn collection-edit"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        openTagWebsitesModal(t.tag)
-                      }}
-                      title={`Add websites to #${t.tag}`}
-                      aria-label={`Add websites to #${t.tag}`}
-                    >
-                      <IconPlus size={12} />
-                    </button>
+                    <div className="nav-item-actions">
+                      <button
+                        type="button"
+                        className="action-btn nav-sub-action"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          openTagEditor(t)
+                        }}
+                        title={`Edit tag #${t.tag}`}
+                        aria-label={`Edit tag #${t.tag}`}
+                      >
+                        <IconPencil size={12} />
+                      </button>
+                      <button
+                        type="button"
+                        className="action-btn nav-sub-action"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          openTagWebsitesModal(t.tag)
+                        }}
+                        title={`Add websites to #${t.tag}`}
+                        aria-label={`Add websites to #${t.tag}`}
+                      >
+                        <IconPlus size={12} />
+                      </button>
+                      <button
+                        type="button"
+                        className="action-btn danger nav-sub-action"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleDeleteTag(t)
+                        }}
+                        title={`Delete tag #${t.tag}`}
+                        aria-label={`Delete tag #${t.tag}`}
+                      >
+                        <IconTrash size={12} />
+                      </button>
+                    </div>
                   </div>
                 )
               })}

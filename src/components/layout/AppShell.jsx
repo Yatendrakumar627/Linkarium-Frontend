@@ -25,6 +25,7 @@ const ReaderModal = lazy(() => import('../links/ReaderModal'))
 const SessionsModal = lazy(() => import('../profile/SessionsModal'))
 const ApiKeysModal = lazy(() => import('../profile/ApiKeysModal'))
 const AddWebsitesToTagModal = lazy(() => import('../tags/AddWebsitesToTagModal'))
+const TagEditorModal = lazy(() => import('../tags/TagEditorModal'))
 
 // The preference names and the internal view names do not match one-to-one.
 const DEFAULT_VIEW_TYPES = {
@@ -51,6 +52,7 @@ export default function AppShell() {
   const editorOpen = useUiStore((s) => s.editorOpen)
   const profileOpen = useUiStore((s) => s.profileOpen)
   const collectionEditor = useUiStore((s) => s.collectionEditor)
+  const tagEditor = useUiStore((s) => s.tagEditor)
   const setSearch = useUiStore((s) => s.setSearch)
   const setView = useUiStore((s) => s.setView)
 
@@ -235,6 +237,7 @@ export default function AppShell() {
         <SessionsModal />
         <ApiKeysModal />
         <AddWebsitesToTagModal />
+        {tagEditor && <TagEditorModal />}
 
         {/* Pro Features */}
         {commandPaletteOpen && <CommandPalette />}

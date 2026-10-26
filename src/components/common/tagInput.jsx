@@ -1,4 +1,5 @@
 import { Pill } from '@mantine/core'
+import { tagToColor } from '../../utils/colorUtils'
 
 /**
  * Mantine ships the tags input's clear button and the per-tag remove button
@@ -13,18 +14,25 @@ import { Pill } from '@mantine/core'
 
 /** Renders one tag pill with a named, focusable remove button. */
 export function renderAccessibleTagPill({ value, onRemove, disabled, reorderProps }) {
+  const color = tagToColor(value)
   return (
     <Pill
       withRemoveButton={!disabled}
       onRemove={onRemove}
       disabled={disabled}
       {...reorderProps}
+      style={{
+        borderColor: `color-mix(in srgb, ${color} 35%, transparent)`,
+        background: `color-mix(in srgb, ${color} 12%, rgba(14, 18, 26, 0.88))`,
+        color: '#e2e8f0',
+      }}
       removeButtonProps={{
         'aria-label': `Remove tag ${value}`,
         'aria-hidden': false,
         tabIndex: 0,
       }}
     >
+      <span style={{ color, fontWeight: 700, marginRight: 2 }}>#</span>
       {value}
     </Pill>
   )

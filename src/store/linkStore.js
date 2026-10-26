@@ -6,6 +6,8 @@ import {
   analyticsApi,
   linkHealthApi,
 } from '../api/endpoints'
+import { resolveTagColor, setCustomTagColors, setCustomTagColor } from '../utils/colorUtils'
+import { useAuthStore } from './authStore'
 import {
   cacheLinks,
   getCachedLinks,
@@ -75,6 +77,18 @@ export const useLinkStore = create((set, get) => {
     error: null,
     collections: [],
     tags: [],
+    // Pure tag color helper for components (delegates to colorUtils)
+    getTagColor: (tag, collection = null, mode = 'own') => resolveTagColor(tag, collection, mode),
+    get tagColorMap() {
+      const map = {}
+      for (const item of get().tags || []) {
+        const tagName = typeof item === 'string' ? item : item?.tag
+        if (tagName) {
+          map[tagName] = resolveTagColor(tagName)
+        }
+      }
+      return map
+    },
     summary: null,
     lastParams: null,
     activeParamsKey: null,
@@ -134,6 +148,11 @@ export const useLinkStore = create((set, get) => {
         tagsApi.list(),
         analyticsApi.summary(),
       ])
+      const tagColorMap = {}
+      for (const t of tags || []) {
+        if (t?.tag && t?.color) tagColorMap[String(t.tag).toLowerCase()] = t.color
+      }
+      setCustomTagColors(tagColorMap)
       set({ collections, tags, summary })
       // The health counters live on their own endpoint — a failure there must
       // not break the whole boot.
@@ -165,6 +184,11 @@ export const useLinkStore = create((set, get) => {
     async refreshTags() {
       try {
         const tags = await tagsApi.list()
+        const tagColorMap = {}
+        for (const t of tags || []) {
+          if (t?.tag && t?.color) tagColorMap[String(t.tag).toLowerCase()] = t.color
+        }
+        setCustomTagColors(tagColorMap)
         set({ tags })
       } catch {
         /* ignore */
@@ -718,6 +742,62 @@ export const useLinkStore = create((set, get) => {
           ? s.mapLinks.map((l) => (l.collectionId === id ? { ...l, collectionId: null } : l))
           : s.mapLinks,
       }))
+    },
+
+    async updateTagColor(tagName, color) {
+      const cleanTag = String(tagName).trim().toLowerCase().replace(/^#/, '')
+      const res = await tagsApi.updateColor(cleanTag, color)
+      setCustomTagColor(cleanTag, res?.color || null)
+      set((s) => ({
+        tags: (s.tags || []).map((t) =>
+          String(t.tag).toLowerCase() === cleanTag ? { ...t, color: res?.color || null } : t
+        ),
+      }))
+      if (res?.user) {
+        useAuthStore.getState().setUser(res.user)
+      }
+      return res
+    },
+
+    async renameTag(oldTag, newTag) {
+      const cleanOld = String(oldTag).trim().toLowerCase().replace(/^#/, '')
+      const cleanNew = String(newTag).trim().toLowerCase().replace(/^#/, '')
+      const res = await tagsApi.rename(cleanOld, cleanNew)
+      const updateLinkTags = (l) => {
+        if (!Array.isArray(l.tags)) return l
+        const hasOld = l.tags.some((t) => String(t).toLowerCase() === cleanOld)
+        if (!hasOld) return l
+        const nextTags = l.tags.map((t) => (String(t).toLowerCase() === cleanOld ? cleanNew : t))
+        return { ...l, tags: Array.from(new Set(nextTags)) }
+      }
+      set((s) => ({
+        links: s.links.map(updateLinkTags),
+        mapLinks: s.mapLoaded ? s.mapLinks.map(updateLinkTags) : s.mapLinks,
+      }))
+      if (res?.user) {
+        useAuthStore.getState().setUser(res.user)
+      }
+      await get().refreshTags()
+      return res
+    },
+
+    async deleteTag(tagName) {
+      const cleanTag = String(tagName).trim().toLowerCase().replace(/^#/, '')
+      const res = await tagsApi.remove(cleanTag)
+      const removeTagFromLink = (l) => {
+        if (!Array.isArray(l.tags)) return l
+        return { ...l, tags: l.tags.filter((t) => String(t).toLowerCase() !== cleanTag) }
+      }
+      set((s) => ({
+        links: s.links.map(removeTagFromLink),
+        mapLinks: s.mapLoaded ? s.mapLinks.map(removeTagFromLink) : s.mapLinks,
+      }))
+      setCustomTagColor(cleanTag, null)
+      if (res?.user) {
+        useAuthStore.getState().setUser(res.user)
+      }
+      await get().refreshTags()
+      return res
     },
   }
 })
