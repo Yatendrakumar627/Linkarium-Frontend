@@ -22,6 +22,7 @@ import {
   IconBook,
   IconClock,
   IconFolder,
+  IconActivity,
 } from '@tabler/icons-react'
 import { notifications } from '@mantine/notifications'
 import { useLinkStore } from '../../store/linkStore'
@@ -50,6 +51,7 @@ function LinkCard({ link, trashMode = false }) {
   const unarchiveLink = useLinkStore((s) => s.unarchiveLink)
   const enrichLink = useLinkStore((s) => s.enrichLink)
   const applyRulesToLink = useLinkStore((s) => s.applyRulesToLink)
+  const checkHealth = useLinkStore((s) => s.checkHealth)
   const openEditor = useUiStore((s) => s.openEditor)
   const openReader = useUiStore((s) => s.openReader)
   const openConfirmDialog = useUiStore((s) => s.openConfirmDialog)
@@ -66,6 +68,7 @@ function LinkCard({ link, trashMode = false }) {
   const [expanded, setExpanded] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [mergeOpen, setMergeOpen] = useState(false)
+  const [checkingHealth, setCheckingHealth] = useState(false)
   const [copied, setCopied] = useState(false)
   const copyTimerRef = useRef(null)
   const cardRef = useRef(null)
@@ -338,6 +341,39 @@ function LinkCard({ link, trashMode = false }) {
       })
     } catch (err) {
       notifications.show({ message: err.message, color: 'red' })
+    }
+  }
+
+  const handleCheckHealth = async (e) => {
+    e?.stopPropagation?.()
+    if (checkingHealth) return
+    setCheckingHealth(true)
+    notifications.show({
+      id: `health-${link._id}`,
+      message: 'Checking link health…',
+      loading: true,
+      autoClose: 8000,
+    })
+    try {
+      const res = await checkHealth(link._id)
+      const isHealthy = res?.status === 'healthy'
+      notifications.update({
+        id: `health-${link._id}`,
+        message: isHealthy ? 'Link is healthy and reachable!' : `Status: ${res?.status || 'unreachable'} (${res?.error || 'failed'})`,
+        color: isHealthy ? 'green' : 'red',
+        loading: false,
+        autoClose: 3500,
+      })
+    } catch (err) {
+      notifications.update({
+        id: `health-${link._id}`,
+        message: err.message || 'Health check failed',
+        color: 'red',
+        loading: false,
+        autoClose: 4000,
+      })
+    } finally {
+      setCheckingHealth(false)
     }
   }
 
@@ -659,6 +695,15 @@ function LinkCard({ link, trashMode = false }) {
                       Fetch details
                     </Menu.Item>
                     <Menu.Item
+                      leftSection={<IconActivity size={16} />}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleCheckHealth(e)
+                      }}
+                    >
+                      Check health
+                    </Menu.Item>
+                    <Menu.Item
                       leftSection={<IconGitMerge size={16} />}
                       onClick={(e) => {
                         e.stopPropagation()
@@ -761,6 +806,8 @@ function LinkCard({ link, trashMode = false }) {
               checkedAt={link.health?.checkedAt}
               httpStatus={link.health?.httpStatus}
               error={link.health?.error}
+              checking={checkingHealth}
+              onClick={handleCheckHealth}
             />
           )}
 

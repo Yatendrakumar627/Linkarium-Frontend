@@ -181,6 +181,17 @@ export const useLinkStore = create((set, get) => {
       }
     },
 
+    async checkHealth(id) {
+      const { health } = await linkHealthApi.checkOne(id)
+      if (health) {
+        set((state) => ({
+          links: state.links.map((l) => (l._id === id ? { ...l, health } : l)),
+        }))
+        get().refreshHealth()
+      }
+      return health
+    },
+
     async refreshTags() {
       try {
         const tags = await tagsApi.list()

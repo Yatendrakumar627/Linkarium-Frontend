@@ -33,6 +33,7 @@ const BUCKETS = [
 export default function ResurfaceView({ bucket }) {
   const archiveLink = useLinkStore((s) => s.archiveLink)
   const removeLink = useLinkStore((s) => s.removeLink)
+  const recordVisit = useLinkStore((s) => s.recordVisit)
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -176,6 +177,7 @@ export default function ResurfaceView({ bucket }) {
                   href={link.url}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={() => recordVisit(link)}
                   leftSection={<IconExternalLink size={13} />}
                 >
                   Open

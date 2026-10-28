@@ -15,6 +15,7 @@ import './DuplicatesView.css'
 // copy is simply invisible.
 export default function DuplicatesView() {
   const mergeLinks = useLinkStore((s) => s.mergeLinks)
+  const recordVisit = useLinkStore((s) => s.recordVisit)
   const [groups, setGroups] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -186,6 +187,7 @@ export default function DuplicatesView() {
                   href={link.url}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={() => recordVisit(link)}
                   leftSection={<IconCopy size={13} />}
                 >
                   Open

@@ -95,6 +95,9 @@ export const enrichApi = {
 
 export const linkHealthApi = {
   summary: () => api.get('/link-health/summary'),
+  links: (params) => api.get(withQuery('/link-health/links', params || {})),
+  checkOne: (id) => api.post(`/link-health/${id}/check`),
+  recheck: (ids = []) => api.post('/link-health/recheck', { ids }),
 }
 
 export const savedViewsApi = {

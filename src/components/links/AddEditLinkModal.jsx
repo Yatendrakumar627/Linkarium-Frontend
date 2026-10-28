@@ -34,17 +34,20 @@ function CollectionSelect({ collections, value, onChange, addCollection }) {
     onDropdownClose: () => combobox.resetSelectedOption(),
   })
 
-  const [search, setSearch] = useState(() => collections.find((c) => c.id === value)?.name || '')
-  const selected = collections.find((c) => c.id === value)
+  const [search, setSearch] = useState(() => collections.find((c) => (c.id || c._id) === value)?.name || '')
+  const selected = collections.find((c) => (c.id || c._id) === value)
 
-  const options = collections.map((c) => (
-    <Combobox.Option value={c.id} key={c.id}>
-      <div className="le-col-option">
-        <IconFolder size={14} className="le-col-option-icon" />
-        <span>{c.name}</span>
-      </div>
-    </Combobox.Option>
-  ))
+  const options = collections.map((c) => {
+    const cid = c.id || c._id
+    return (
+      <Combobox.Option value={cid} key={cid}>
+        <div className="le-col-option">
+          <IconFolder size={14} className="le-col-option-icon" />
+          <span>{c.name}</span>
+        </div>
+      </Combobox.Option>
+    )
+  })
 
   const trimmed = search.trim()
   const createName = trimmed && !collections.some((c) => c.name.toLowerCase() === trimmed.toLowerCase())
@@ -53,7 +56,7 @@ function CollectionSelect({ collections, value, onChange, addCollection }) {
 
   const selectExisting = (id) => {
     onChange(id)
-    const col = collections.find((c) => c.id === id)
+    const col = collections.find((c) => (c.id || c._id) === id)
     setSearch(col ? col.name : '')
     combobox.closeDropdown()
   }
@@ -320,8 +323,7 @@ function LinkEditorForm({ link: editingLink, links, collections, tags, addLink, 
       }
 
       if (editingLink) {
-        const canFavorite = links.some((l) => l._id === editingLink._id)
-        await updateLink(editingLink._id, { ...payload, favorite: canFavorite ? favorite : undefined })
+        await updateLink(editingLink._id, { ...payload, favorite })
         notifications.show({ message: 'Link updated successfully', color: 'green' })
       } else {
         await addLink({ ...payload, favorite })

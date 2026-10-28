@@ -221,19 +221,23 @@ export default function CommandPalette() {
 
   // Collection items
   const collectionItems = useMemo(() => {
-    return (collections || []).map((col) => ({
-      id: `col-${col.id}`,
-      type: 'collection',
-      category: 'Collections',
-      title: col.name,
-      subtitle: `${col.linkCount || 0} bookmarks`,
-      icon: IconFolder,
-      color: col.color || '#6366f1',
-      action: () => {
-        if (visualMode) toggleVisual()
-        setView({ type: 'collection', id: col.id, label: col.name })
-      },
-    }))
+    return (collections || []).map((col) => {
+      const cid = col.id || col._id
+      const count = col.count ?? col.linkCount ?? 0
+      return {
+        id: `col-${cid}`,
+        type: 'collection',
+        category: 'Collections',
+        title: col.name,
+        subtitle: `${count} bookmark${count === 1 ? '' : 's'}`,
+        icon: IconFolder,
+        color: col.color || '#6366f1',
+        action: () => {
+          if (visualMode) toggleVisual()
+          setView({ type: 'collection', id: cid, label: col.name })
+        },
+      }
+    })
   }, [collections, visualMode, toggleVisual, setView])
 
   // Saved view items

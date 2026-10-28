@@ -1,4 +1,4 @@
-import { tagToColor } from './utils/colorUtils'
+import { tagToColor } from './utils/colorUtils.js'
 
 export function hostOf(url) {
   try {

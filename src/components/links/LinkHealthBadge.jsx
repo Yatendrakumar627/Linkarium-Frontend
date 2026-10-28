@@ -16,6 +16,7 @@ export default function LinkHealthBadge({
   error = null,
   checking = false,
   className = '',
+  onClick = null,
 }) {
   const effectiveStatus = checking ? 'checking' : (status || 'unknown')
 
@@ -49,6 +50,10 @@ export default function LinkHealthBadge({
     tooltip = checkedAt ? `Unknown · last checked ${timeAgo(checkedAt)}` : 'Health not checked'
   }
 
+  if (onClick && !checking) {
+    tooltip += ' · Click to re-check'
+  }
+
   return (
     <Tooltip
       label={tooltip}
@@ -60,9 +65,12 @@ export default function LinkHealthBadge({
       transitionProps={{ duration: 150 }}
     >
       <span
-        className={`link-health-badge link-health-badge--${effectiveStatus} ${className}`.trim()}
+        className={`link-health-badge link-health-badge--${effectiveStatus} ${onClick ? 'is-clickable' : ''} ${className}`.trim()}
         aria-label={tooltip}
-        role="status"
+        role={onClick ? 'button' : 'status'}
+        tabIndex={onClick ? 0 : undefined}
+        onClick={onClick ? (e) => { e.stopPropagation(); onClick(e); } : undefined}
+        onKeyDown={onClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); onClick(e); } } : undefined}
       >
         {effectiveStatus === 'checking' ? (
           <Loader size={8} color="yellow" type="dots" />

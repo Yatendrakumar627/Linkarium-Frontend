@@ -66,7 +66,9 @@ export default function AnalyticsView() {
     { label: 'Collections', value: summary?.totalCollections ?? '—', icon: IconFolder },
   ]
 
-  const chartData = visits?.labels.map((day, i) => ({ day, visits: visits.values[i] })) || []
+  const chartData = Array.isArray(visits?.labels)
+    ? visits.labels.map((day, i) => ({ day, visits: visits.values?.[i] ?? 0 }))
+    : []
 
   if (error) {
     return <ErrorState message={error} onRetry={retry} />

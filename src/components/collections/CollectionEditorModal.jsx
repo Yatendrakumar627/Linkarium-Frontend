@@ -55,15 +55,17 @@ function CollectionForm({ collection, isEdit, addCollection, updateCollection, o
   // Roving tabindex: the active swatch is the only one in the tab order.
   const rovingIndex = selectedIndex === -1 ? 0 : selectedIndex
 
+  const targetId = collection?.id || collection?._id
+
   const duplicate = useMemo(() => {
     if (!trimmedName) return null
     const key = trimmedName.toLowerCase()
     return (
       collections.find(
-        (c) => c.id !== collection?.id && String(c.name || '').trim().toLowerCase() === key
+        (c) => (c.id || c._id) !== targetId && String(c.name || '').trim().toLowerCase() === key
       ) || null
     )
-  }, [collections, trimmedName, collection?.id])
+  }, [collections, trimmedName, targetId])
 
   const error = duplicate
     ? 'A collection with this name already exists.'
@@ -81,7 +83,7 @@ function CollectionForm({ collection, isEdit, addCollection, updateCollection, o
     setBusy(true)
     try {
       if (isEdit) {
-        await updateCollection(collection.id, { name: trimmedName, color })
+        await updateCollection(targetId, { name: trimmedName, color })
         notifications.show({ message: 'Collection updated', color: 'cyan' })
       } else {
         await addCollection(trimmedName, color)
@@ -279,7 +281,7 @@ export default function CollectionEditorModal() {
     >
       {state && (
         <CollectionForm
-          key={editing?.id || 'create'}
+          key={editing?.id || editing?._id || 'create'}
           collection={editing}
           isEdit={isEdit}
           addCollection={addCollection}
