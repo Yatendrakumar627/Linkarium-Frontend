@@ -15,7 +15,7 @@ import {
 import { ACCENT_COLORS } from '../../constants'
 import { useLinkStore } from '../../store/linkStore'
 import { useUiStore } from '../../store/uiStore'
-import { metadataApi } from '../../api/endpoints'
+import { metadataApi, linksApi } from '../../api/endpoints'
 import { cleanUrl, faviconUrl, hostOf, safeUrl, suggestTagsForUrl } from '../../utils'
 import OgPreview from './OgPreview'
 import { AppButton, AppModal, AppModalFooter, AppModalHeader } from '../common/ModalShell'
@@ -140,7 +140,7 @@ function CollectionSelect({ collections, value, onChange, addCollection }) {
   )
 }
 
-function LinkEditorForm({ link: editingLink, links, collections, tags, addLink, updateLink, addCollection, onClose }) {
+function LinkEditorForm({ link: editingLink, links, collections, tags, addLink, updateLink, replaceLink, addCollection, onClose }) {
   const [title, setTitle] = useState(editingLink?.title || '')
   const [url, setUrl] = useState(editingLink?.url || '')
   const [description, setDescription] = useState(editingLink?.description || '')
@@ -155,8 +155,38 @@ function LinkEditorForm({ link: editingLink, links, collections, tags, addLink, 
   const [siteName, setSiteName] = useState('')
   const [suggested, setSuggested] = useState(false)
   const [duplicate, setDuplicate] = useState(null)
+  const [detectedDuplicate, setDetectedDuplicate] = useState(null)
+  const checkDebounceRef = useRef(null)
   const [enriching, setEnriching] = useState(false)
   const [previewFavicon, setPreviewFavicon] = useState(editingLink?.og?.favicon || '')
+
+  // Real-time pre-save check across active, archive, and trash
+  useEffect(() => {
+    if (editingLink) return
+    const trimmed = url.trim()
+    if (!trimmed || !isLikelyUrl(trimmed)) {
+      setDetectedDuplicate(null)
+      return
+    }
+
+    if (checkDebounceRef.current) clearTimeout(checkDebounceRef.current)
+    checkDebounceRef.current = setTimeout(async () => {
+      try {
+        const res = await linksApi.checkDuplicate(trimmed)
+        if (res?.duplicate && res?.existing) {
+          setDetectedDuplicate(res.existing)
+        } else {
+          setDetectedDuplicate(null)
+        }
+      } catch {
+        // Silently ignore pre-flight check failures
+      }
+    }, 350)
+
+    return () => {
+      if (checkDebounceRef.current) clearTimeout(checkDebounceRef.current)
+    }
+  }, [url, editingLink])
 
   const handleEnrich = async () => {
     if (!editingLink?._id || enriching) return
@@ -345,7 +375,8 @@ function LinkEditorForm({ link: editingLink, links, collections, tags, addLink, 
     if (busy || !duplicate) return
     setBusy(true)
     try {
-      await updateLink(duplicate._id, {
+      const replacer = replaceLink || useLinkStore.getState().replaceLink
+      await replacer(duplicate._id, {
         title: title.trim(),
         url: url.trim(),
         description: description.trim(),
@@ -355,7 +386,13 @@ function LinkEditorForm({ link: editingLink, links, collections, tags, addLink, 
         color,
         favorite,
       })
-      notifications.show({ message: 'Replaced with your new link', color: 'green' })
+      const locText =
+        duplicate.location === 'trash'
+          ? 'Restored from Trash and updated in your universe'
+          : duplicate.location === 'archived'
+            ? 'Unarchived and updated in your universe'
+            : 'Bookmark replaced and updated in your universe'
+      notifications.show({ message: locText, color: 'green' })
       onClose()
     } catch (err) {
       notifications.show({ message: err.message || 'Something went wrong', color: 'red' })
@@ -401,6 +438,16 @@ function LinkEditorForm({ link: editingLink, links, collections, tags, addLink, 
   }
 
   if (duplicate) {
+    const loc = duplicate.location || (duplicate.deletedAt ? 'trash' : duplicate.archivedAt ? 'archived' : 'active')
+    const locBadge = loc === 'trash' ? 'In Trash' : loc === 'archived' ? 'In Archive' : 'Active in Library'
+    const locBadgeClass = loc === 'trash' ? 'le-badge-trash' : loc === 'archived' ? 'le-badge-archived' : 'le-badge-active'
+    const locNotice =
+      loc === 'trash'
+        ? 'This bookmark is currently in Trash. Replacing will restore and move it to your active library.'
+        : loc === 'archived'
+          ? 'This bookmark is currently in Archive. Replacing will unarchive and return it to your active library.'
+          : 'This link is already in your active library. Replacing will overwrite its details with your new inputs.'
+
     return (
       <div className="le-modal-shell">
         <div className="le-modal-scroll-area">
@@ -415,18 +462,29 @@ function LinkEditorForm({ link: editingLink, links, collections, tags, addLink, 
               </div>
             </div>
 
+            <div className="le-conflict-notice">
+              {locNotice}
+            </div>
+
             <div className="le-conflict-compare">
               <div className="le-conflict-card">
-                <div className="le-conflict-card-head">Saved in Universe</div>
+                <div className="le-conflict-card-head-row">
+                  <div className="le-conflict-card-head">Saved in Universe</div>
+                  <span className={`le-badge-loc ${locBadgeClass}`}>{locBadge}</span>
+                </div>
                 <div className="le-conflict-card-title">{duplicate.title || 'Untitled'}</div>
                 <div className="le-conflict-card-url">{duplicate.url}</div>
                 <div className="le-conflict-card-meta">
                   Preserved {new Date(duplicate.createdAt).toLocaleDateString()}
+                  {duplicate.visits ? ` • ${duplicate.visits} visits` : ''}
                 </div>
               </div>
               <div className="le-conflict-vs">vs</div>
               <div className="le-conflict-card le-conflict-card-new">
-                <div className="le-conflict-card-head">Your New Bookmark</div>
+                <div className="le-conflict-card-head-row">
+                  <div className="le-conflict-card-head">Your New Bookmark</div>
+                  <span className="le-badge-loc le-badge-new">New</span>
+                </div>
                 <div className="le-conflict-card-title">{title.trim() || 'Untitled'}</div>
                 <div className="le-conflict-card-url">{url.trim()}</div>
               </div>
@@ -505,6 +563,32 @@ function LinkEditorForm({ link: editingLink, links, collections, tags, addLink, 
             rightSection={extracting ? <Loader size={14} color="violet" /> : undefined}
             rightSectionPointerEvents="none"
           />
+
+          {detectedDuplicate && !duplicate && (
+            <div className="le-dup-banner">
+              <div className="le-dup-banner-content">
+                <IconAlertTriangle size={15} className="le-dup-banner-icon" />
+                <span className="le-dup-banner-text">
+                  Already in{' '}
+                  <strong className={`le-dup-banner-loc le-dup-banner-loc-${detectedDuplicate.location}`}>
+                    {detectedDuplicate.location === 'trash'
+                      ? 'Trash'
+                      : detectedDuplicate.location === 'archived'
+                        ? 'Archive'
+                        : 'Library'}
+                  </strong>
+                  : &ldquo;{detectedDuplicate.title || 'Untitled'}&rdquo;
+                </span>
+              </div>
+              <button
+                type="button"
+                className="le-dup-banner-btn"
+                onClick={() => setDuplicate(detectedDuplicate)}
+              >
+                Review &amp; Replace
+              </button>
+            </div>
+          )}
 
           {showPreview && (
             <div className="le-url-preview">
@@ -841,6 +925,7 @@ export default function AddEditLinkModal() {
   const tags = useLinkStore((s) => s.tags)
   const addLink = useLinkStore((s) => s.addLink)
   const updateLink = useLinkStore((s) => s.updateLink)
+  const replaceLink = useLinkStore((s) => s.replaceLink)
   const addCollection = useLinkStore((s) => s.addCollection)
 
   return (
@@ -875,6 +960,7 @@ export default function AddEditLinkModal() {
           tags={tags}
           addLink={addLink}
           updateLink={updateLink}
+          replaceLink={replaceLink}
           addCollection={addCollection}
           onClose={closeEditor}
         />

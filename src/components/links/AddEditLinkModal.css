@@ -749,6 +749,127 @@
   align-items: stretch;
 }
 
+/* ── Real-Time Duplicate Pre-Check Banner ── */
+.le-dup-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: rgba(245, 158, 11, 0.09);
+  border: 1px solid rgba(245, 158, 11, 0.32);
+  border-radius: 10px;
+  padding: 8px 12px;
+  margin-top: 8px;
+  animation: leFadeUp 0.2s ease both;
+}
+
+.le-dup-banner-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.le-dup-banner-icon {
+  color: #fbbf24;
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 4px rgba(251, 191, 36, 0.4));
+}
+
+.le-dup-banner-text {
+  font-size: 12px;
+  color: #f1f5f9;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.le-dup-banner-loc {
+  font-weight: 700;
+}
+
+.le-dup-banner-loc-active {
+  color: #34d399;
+}
+
+.le-dup-banner-loc-archived {
+  color: #c084fc;
+}
+
+.le-dup-banner-loc-trash {
+  color: #f87171;
+}
+
+.le-dup-banner-btn {
+  background: rgba(245, 158, 11, 0.16);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #fef08a;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.le-dup-banner-btn:hover {
+  background: rgba(245, 158, 11, 0.28);
+  border-color: rgba(245, 158, 11, 0.6);
+  color: #fff;
+}
+
+.le-conflict-notice {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #c4b5fd;
+  background: rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.25);
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+
+.le-conflict-card-head-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.le-badge-loc {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 999px;
+}
+
+.le-badge-active {
+  background: rgba(16, 185, 129, 0.18);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #34d399;
+}
+
+.le-badge-archived {
+  background: rgba(139, 92, 246, 0.18);
+  border: 1px solid rgba(139, 92, 246, 0.4);
+  color: #c084fc;
+}
+
+.le-badge-trash {
+  background: rgba(239, 68, 68, 0.18);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #f87171;
+}
+
+.le-badge-new {
+  background: rgba(34, 211, 238, 0.18);
+  border: 1px solid rgba(34, 211, 238, 0.4);
+  color: #38bdf8;
+}
+
 .le-conflict-card {
   border: 1px solid rgba(139, 92, 246, 0.22);
   background: rgba(255, 255, 255, 0.03);

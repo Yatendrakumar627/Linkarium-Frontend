@@ -12,6 +12,9 @@ export const authApi = {
 export const linksApi = {
   list: (params = {}) => api.get(withQuery('/links', params)),
   create: (payload) => api.post('/links', payload),
+  checkDuplicate: (url, excludeId = null) =>
+    api.get(withQuery('/links/check-duplicate', { url, excludeId })),
+  replace: (id, payload) => api.post(`/links/${id}/replace`, payload),
   update: (id, payload) => api.patch(`/links/${id}`, payload),
   remove: (id) => api.del(`/links/${id}`),
   restore: (id) => api.post(`/links/${id}/restore`),

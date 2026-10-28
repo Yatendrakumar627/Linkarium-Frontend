@@ -358,6 +358,37 @@ export const useLinkStore = create((set, get) => {
       return updated
     },
 
+    async replaceLink(id, payload) {
+      const updated = await linksApi.replace(id, payload)
+      await cacheLinks([updated]).catch(() => {})
+
+      set((s) => {
+        const inActiveList = s.links.some((l) => l._id === id)
+        const inTrashList = s.trashLinks?.some((l) => l._id === id)
+        const nextLinks = inActiveList
+          ? s.links.map((l) => (l._id === id ? updated : l))
+          : [updated, ...s.links]
+        const nextMapLinks = s.mapLoaded
+          ? (s.mapLinks.some((l) => l._id === id)
+              ? s.mapLinks.map((l) => (l._id === id ? updated : l))
+              : [updated, ...s.mapLinks])
+          : s.mapLinks
+
+        return {
+          links: nextLinks,
+          mapLinks: nextMapLinks,
+          total: inActiveList ? s.total : s.total + 1,
+          trashLinks: inTrashList ? s.trashLinks.filter((l) => l._id !== id) : s.trashLinks,
+          trashTotal: inTrashList ? Math.max((s.trashTotal || 0) - 1, 0) : s.trashTotal,
+        }
+      })
+
+      await refreshActiveFilteredList()
+      get().refreshTags()
+      get().refreshSummary()
+      return updated
+    },
+
     async removeLink(id) {
       try {
         await linksApi.remove(id)
